@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Github, Mail } from "lucide-react";
 import Dice3D from "@/components/Dice3D";
@@ -23,13 +23,48 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(String(DICE_FACES[0].id));
   const [targetFace, setTargetFace] = useState<number | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setToast(`${label} 已复制到剪贴板`);
-      setTimeout(() => setToast(null), 2500);
-    });
-  };
+  const showToast = useCallback((message: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast(message);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        if (!copied) {
+          throw new Error("copy_failed");
+        }
+      }
+      showToast(`${label} 已复制到剪贴板`);
+    } catch {
+      showToast("复制失败，请手动复制");
+    }
+  }, [showToast]);
 
   const activeFace = useMemo(
     () => DICE_FACES.find((face) => String(face.id) === activeTab) ?? DICE_FACES[0],
