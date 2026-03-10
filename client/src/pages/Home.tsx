@@ -17,6 +17,7 @@ function WechatIcon({ className }: { className?: string }) {
 }
 
 export default function App() {
+  const HOME_FUTURE_COLOR = "#F7EFA9";
   const [isRolling, setIsRolling] = useState(false);
   const [selectedFace, setSelectedFace] = useState<number | null>(null);
   const [showDimension, setShowDimension] = useState(false);
@@ -70,6 +71,9 @@ export default function App() {
     () => DICE_FACES.find((face) => String(face.id) === activeTab) ?? DICE_FACES[0],
     [activeTab]
   );
+  const getHomeFaceColor = (faceId: number, color: string) =>
+    faceId === 6 ? HOME_FUTURE_COLOR : color;
+  const activeHomeColor = getHomeFaceColor(activeFace.id, activeFace.color);
 
   const handleRollStart = useCallback(() => {
     setIsRolling(true);
@@ -254,7 +258,7 @@ export default function App() {
               <div
                 className="pointer-events-none absolute inset-x-0 -inset-y-3 rounded-2xl blur-2xl opacity-100"
                 style={{
-                  background: `radial-gradient(ellipse at center, ${activeFace.color}92 0%, ${activeFace.color}40 42%, transparent 74%)`,
+                  background: `radial-gradient(ellipse at center, ${activeHomeColor}92 0%, ${activeHomeColor}40 42%, transparent 74%)`,
                 }}
               />
               <motion.div
@@ -274,41 +278,44 @@ export default function App() {
                 }}
               />
               <TabsList className="relative z-10 h-auto w-full grid grid-cols-3 md:grid-cols-6 gap-0 rounded-2xl bg-black/[0.78] border border-white/20 p-[2px] mb-0 backdrop-blur-xl shadow-[0_0_36px_rgba(0,0,0,0.45)]">
-                {DICE_FACES.map((face) => (
-                  <TabsTrigger
-                    key={face.id}
-                    value={String(face.id)}
-                    className="h-full min-h-[52px] md:min-h-[58px] relative rounded-xl border border-white/22 px-2 py-1 text-[20px] md:text-[22px] leading-snug font-extrabold text-white text-center whitespace-normal
-                               data-[state=active]:text-white data-[state=active]:bg-white/[0.22] data-[state=active]:border-white/70
-                               hover:bg-white/[0.14] transition-all duration-150 cursor-pointer z-10"
-                    style={{
-                      color:
-                        activeTab === String(face.id)
-                          ? `color-mix(in srgb, ${face.color} 70%, #ffffff)`
-                          : "#ffffff",
-                      background:
-                        activeTab === String(face.id)
-                          ? `linear-gradient(135deg, ${face.color}66, rgba(16,16,22,0.88))`
-                          : undefined,
-                      boxShadow:
-                        activeTab === String(face.id)
-                          ? `0 0 52px ${face.color}a8, inset 0 0 34px ${face.color}55`
-                          : "inset 0 0 18px rgba(255,255,255,0.08)",
-                      textShadow:
-                        activeTab === String(face.id)
-                          ? `0 0 10px rgba(255,255,255,0.9), 0 0 24px ${face.color}cc`
-                          : "0 0 14px rgba(255,255,255,0.65)",
-                      filter:
-                        activeTab === String(face.id)
-                          ? "brightness(1.35) saturate(1.22)"
-                          : "brightness(1.2) saturate(1.1)",
-                    }}
-                  >
-                    <span className="lowercase first-letter:uppercase leading-tight">
-                      {face.tabLabel}
-                    </span>
-                  </TabsTrigger>
-                ))}
+                {DICE_FACES.map((face) => {
+                  const homeColor = getHomeFaceColor(face.id, face.color);
+                  return (
+                    <TabsTrigger
+                      key={face.id}
+                      value={String(face.id)}
+                      className="h-full min-h-[52px] md:min-h-[58px] relative rounded-xl border border-white/22 px-2 py-1 text-[20px] md:text-[22px] leading-snug font-extrabold text-white text-center whitespace-normal
+                                 data-[state=active]:text-white data-[state=active]:bg-white/[0.22] data-[state=active]:border-white/70
+                                 hover:bg-white/[0.14] transition-all duration-150 cursor-pointer z-10"
+                      style={{
+                        color:
+                          activeTab === String(face.id)
+                            ? `color-mix(in srgb, ${homeColor} 70%, #ffffff)`
+                            : "#ffffff",
+                        background:
+                          activeTab === String(face.id)
+                            ? `linear-gradient(135deg, ${homeColor}66, rgba(16,16,22,0.88))`
+                            : undefined,
+                        boxShadow:
+                          activeTab === String(face.id)
+                            ? `0 0 52px ${homeColor}a8, inset 0 0 34px ${homeColor}55`
+                            : "inset 0 0 18px rgba(255,255,255,0.08)",
+                        textShadow:
+                          activeTab === String(face.id)
+                            ? `0 0 10px rgba(255,255,255,0.9), 0 0 24px ${homeColor}cc`
+                            : "0 0 14px rgba(255,255,255,0.65)",
+                        filter:
+                          activeTab === String(face.id)
+                            ? "brightness(1.35) saturate(1.22)"
+                            : "brightness(1.2) saturate(1.1)",
+                      }}
+                    >
+                      <span className="lowercase first-letter:uppercase leading-tight">
+                        {face.tabLabel}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </div>
 
@@ -328,12 +335,12 @@ export default function App() {
                         className="group relative rounded-full px-9 py-4 text-sm font-semibold text-white 
                                    transition-all duration-300 hover:scale-105 overflow-hidden"
                         style={{
-                          background: `color-mix(in srgb, ${face.color} 13%, transparent)`,
+                          background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 13%, transparent)`,
                         }}
                       >
                         <div 
                           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{ background: `color-mix(in srgb, ${face.color} 21%, transparent)` }}
+                          style={{ background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 21%, transparent)` }}
                         />
                         <span className="relative flex items-center gap-2">
                           <span style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -363,7 +370,7 @@ export default function App() {
                   onRollStart={handleRollStart}
                   onTargetFaceSettled={handleTargetFaceSettled}
                   targetFace={targetFace}
-                  activeColor={activeFace.color}
+                  activeColor={activeHomeColor}
                 />
                 <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
                   <span>→</span>
