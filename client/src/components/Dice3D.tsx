@@ -48,7 +48,7 @@ export default function Dice3D({
   targetFace,
   activeColor,
 }: Dice3DProps) {
-  const cubeSize = "clamp(52px, 7.2vw, 84px)";
+  const cubeSize = "clamp(46.8px, 6.48vw, 75.6px)";
   const cubeRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: -20, y: 25 });
   const [spinDurationMs, setSpinDurationMs] = useState(SPIN_CONFIG.fastDurationMs);
