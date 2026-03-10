@@ -362,7 +362,7 @@ export default function App() {
                   scale: showDimension ? 0.8 : 1,
                 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-3 md:-bottom-2 left-[calc(66.6667%-20px)] -translate-x-1/2 z-0"
+                className="absolute -bottom-8 md:-bottom-7 left-[calc(61%-20px)] -translate-x-1/2 z-0"
               >
                 <Dice3D
                   onFaceSelected={handleFaceSelected}
@@ -372,8 +372,8 @@ export default function App() {
                   targetFace={targetFace}
                   activeColor={activeHomeColor}
                 />
-                <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
-                  <span>→</span>
+                <div className="absolute left-full ml-4 md:ml-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
+                  <span>←</span>
                   <span>没兴趣，玩一下骰子</span>
                 </div>
               </motion.div>
