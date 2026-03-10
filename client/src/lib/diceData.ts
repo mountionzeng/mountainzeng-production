@@ -383,7 +383,7 @@ export const DICE_FACES: DiceFace[] = [
     title: "无限可能",
     tabLabel: "Future",
     subtitle: "FUTURE",
-    color: "#CCCCCC",
+    color: "#FFD93D",
     icon: "♾️",
 
     homeDescription:
