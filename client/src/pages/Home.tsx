@@ -242,48 +242,48 @@ export default function App() {
               alt="Mountion"
               className="relative block h-auto w-[min(67.5vw,882px)]"
             />
-            <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-auto z-30">
+            <div className="absolute left-full ml-3 md:ml-4 top-0 md:top-1 flex items-center gap-2 pointer-events-auto z-30">
               <button
                 type="button"
                 title="微信"
                 aria-label="微信"
                 onClick={() => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831")}
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
+                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(196, 181, 253, 0.95)",
                   boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
                 }}
               >
-                <WechatIcon className="h-[12px] w-[12px]" />
+                <WechatIcon className="h-[15px] w-[15px]" />
               </button>
               <button
                 type="button"
                 title="GitHub"
                 aria-label="GitHub"
                 onClick={() => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng")}
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
+                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(180, 164, 255, 0.95)",
                   boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
                 }}
               >
-                <Github className="h-[12px] w-[12px]" />
+                <Github className="h-[15px] w-[15px]" />
               </button>
               <button
                 type="button"
                 title="邮箱"
                 aria-label="邮箱"
                 onClick={() => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com")}
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
+                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(216, 180, 254, 0.95)",
                   boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
                 }}
               >
-                <Mail className="h-[12px] w-[12px]" />
+                <Mail className="h-[15px] w-[15px]" />
               </button>
             </div>
           </div>
