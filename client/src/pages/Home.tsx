@@ -404,42 +404,42 @@ export default function App() {
             title="微信"
             aria-label="微信"
             onClick={() => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
+            className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
               color: "rgba(196, 181, 253, 0.95)",
               boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
             }}
           >
-            <WechatIcon className="h-5 w-5" />
+            <WechatIcon className="h-[12px] w-[12px]" />
           </button>
           <button
             type="button"
             title="GitHub"
             aria-label="GitHub"
             onClick={() => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
+            className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
               color: "rgba(180, 164, 255, 0.95)",
               boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
             }}
           >
-            <Github className="h-5 w-5" />
+            <Github className="h-[12px] w-[12px]" />
           </button>
           <button
             type="button"
             title="邮箱"
             aria-label="邮箱"
             onClick={() => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
+            className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
               color: "rgba(216, 180, 254, 0.95)",
               boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
             }}
           >
-            <Mail className="h-5 w-5" />
+            <Mail className="h-[12px] w-[12px]" />
           </button>
         </motion.div>
       </div>
