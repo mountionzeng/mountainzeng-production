@@ -130,11 +130,17 @@ export default function App() {
   }, [isRolling, showDimension]);
 
   return (
-    <div
-      className="h-screen bg-black relative overflow-hidden"
-      style={{ filter: "brightness(1.3)" }}
-    >
+    <div className="h-screen bg-black relative overflow-hidden">
       <ParticleField />
+
+      {/* 用轻量叠层提亮，避免整屏 filter 触发昂贵重采样 */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06), transparent 65%)",
+        }}
+      />
 
       {/* 背景装饰渐变 */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -174,10 +180,11 @@ export default function App() {
         >
           <div className="absolute left-[calc(33.333%-20px)] top-[calc(50%+170px)] -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
-              className="pointer-events-none absolute -inset-[10%] rounded-full blur-[52px] mix-blend-screen"
+              className="pointer-events-none absolute -inset-[10%] rounded-full blur-[44px] mix-blend-screen transform-gpu"
               style={{
                 background:
                   "conic-gradient(from 0deg, rgba(78,205,196,0.23), rgba(74,123,247,0.27), rgba(168,85,247,0.22), rgba(244,114,182,0.24), rgba(255,217,61,0.22), rgba(78,205,196,0.23))",
+                willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [0, 360],
@@ -191,10 +198,11 @@ export default function App() {
               }}
             />
             <motion.div
-              className="pointer-events-none absolute -inset-[14%] rounded-full blur-[72px] mix-blend-screen"
+              className="pointer-events-none absolute -inset-[14%] rounded-full blur-[60px] mix-blend-screen transform-gpu"
               style={{
                 background:
                   "radial-gradient(circle at 30% 30%, rgba(74,123,247,0.27), transparent 48%), radial-gradient(circle at 75% 35%, rgba(78,205,196,0.24), transparent 50%), radial-gradient(circle at 50% 75%, rgba(244,114,182,0.27), transparent 52%)",
+                willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [360, 0],
@@ -208,15 +216,14 @@ export default function App() {
               }}
             />
             <motion.div
-              className="pointer-events-none absolute -inset-[20%] rounded-full blur-[96px] mix-blend-screen"
+              className="pointer-events-none absolute -inset-[20%] rounded-full blur-[74px] mix-blend-screen transform-gpu"
               style={{
                 background:
                   "radial-gradient(circle at 20% 50%, rgba(78,205,196,0.24), transparent 46%), radial-gradient(circle at 80% 45%, rgba(168,85,247,0.24), transparent 48%), radial-gradient(circle at 50% 80%, rgba(255,217,61,0.20), transparent 52%)",
+                willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [0, 180, 360],
-                x: [-10, 10, -10],
-                y: [8, -8, 8],
                 scale: [1, 1.06, 1],
                 opacity: [0.18, 0.30, 0.18],
               }}
