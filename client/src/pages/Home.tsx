@@ -180,7 +180,7 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="relative z-20 mb-4 mt-8 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none translate-y-[16px]"
+          className="relative z-20 mb-4 mt-8 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-[64px]"
         >
           <div className="absolute left-[calc(33.333%-20px)] top-[calc(50%+170px)] -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
