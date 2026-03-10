@@ -38,6 +38,14 @@ export interface CourseItem {
   category: string;
 }
 
+/** 数学作业条目（算法维度使用） */
+export interface MathAssignmentItem {
+  subject: string;
+  previewImage: string;
+  pdfFile: string;
+  note?: string;
+}
+
 /** 骰子单面（一个维度）的完整数据结构 */
 export interface DiceFace {
   /** 维度编号，1-6 */
@@ -82,6 +90,8 @@ export interface DiceFace {
   techApplications?: { title: string; items: string[] }[];
   /** 编程语言掌握情况（算法维度使用） */
   courses?: CourseItem[];
+  /** 数学基础作业（算法维度使用） */
+  mathAssignments?: MathAssignmentItem[];
   /** 系统课程列表（系统维度使用） */
   systemCourses?: { code: string; name: string }[];
   /** 系统能力模块（系统维度使用） */
@@ -280,6 +290,26 @@ export const DICE_FACES: DiceFace[] = [
       { code: "Python", name: "熟练", category: "编程语言" },
       { code: "C/C++", name: "熟悉", category: "编程语言" },
       { code: "Java", name: "熟悉（CS501 课程训练）", category: "编程语言" },
+    ],
+    mathAssignments: [
+      {
+        subject: "线性代数",
+        previewImage: "/math-assignments/linear-algebra-assignment.webp",
+        pdfFile: "/math-assignments/linear-algebra-assignment.pdf",
+        note: "矩阵分解与特征值练习",
+      },
+      {
+        subject: "概率论",
+        previewImage: "/math-assignments/probability-assignment.webp",
+        pdfFile: "/math-assignments/probability-assignment.pdf",
+        note: "条件概率与分布推导",
+      },
+      {
+        subject: "微积分",
+        previewImage: "/math-assignments/calculus-assignment.webp",
+        pdfFile: "/math-assignments/calculus-assignment.pdf",
+        note: "极限、导数与积分综合题",
+      },
     ],
     works: [],
   },

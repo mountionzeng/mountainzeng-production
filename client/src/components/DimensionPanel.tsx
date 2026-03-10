@@ -10,6 +10,8 @@ import * as LucideIcons from "lucide-react";
 import { DICE_FACES } from "@/lib/diceData";
 import type { DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 import {
   buildVisualImageUrl,
   buildVisualPosterUrl,
@@ -377,6 +379,138 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
           )}
         </motion.div>
       ))}
+    </div>
+  );
+}
+
+/* ─── 数学作业浏览组件（算法页专用）─── */
+function MathAssignmentsPanel({
+  assignments,
+  color,
+}: {
+  assignments: NonNullable<DiceFace["mathAssignments"]>;
+  color: string;
+}) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    const onSelect = () => setActiveIndex(api.selectedScrollSnap());
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => {
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
+    };
+  }, [api]);
+
+  return (
+    <div
+      className="rounded-2xl p-4 md:p-6"
+      style={{
+        background: `linear-gradient(145deg, ${color}10, ${color}05)`,
+        border: `1px solid ${color}22`,
+      }}
+    >
+      <Carousel setApi={setApi} opts={{ align: "start", loop: false }} className="w-full">
+        <CarouselContent className="-ml-0">
+          {assignments.map((assignment) => (
+            <CarouselItem key={assignment.subject} className="pl-0 basis-full">
+              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] gap-4 md:gap-5">
+                <a
+                  href={assignment.previewImage}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-xl overflow-hidden"
+                  style={{ border: `1px solid ${color}28`, background: `${color}08` }}
+                >
+                  <img
+                    src={assignment.previewImage}
+                    alt={`${assignment.subject}作业预览`}
+                    className="w-full h-[300px] md:h-[440px] object-cover"
+                    loading="lazy"
+                  />
+                </a>
+                <div className="flex flex-col justify-between gap-4">
+                  <div>
+                    <div
+                      className="text-xs tracking-[0.16em] uppercase mb-2"
+                      style={{ color: `${color}B8`, fontFamily: "var(--font-label)" }}
+                    >
+                      数学基础模块
+                    </div>
+                    <h4 className="text-lg md:text-xl font-semibold text-white/92 mb-2" style={{ fontFamily: "var(--font-display)" }}>
+                      {assignment.subject}
+                    </h4>
+                    {assignment.note && <p className="text-sm text-white/62 leading-relaxed">{assignment.note}</p>}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <a
+                      href={assignment.pdfFile}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-between rounded-lg px-4 py-2.5 text-sm text-white/85 transition-colors hover:text-white"
+                      style={{ border: `1px solid ${color}36`, background: `${color}12` }}
+                    >
+                      查看 PDF 原件
+                      <ExternalLink size={14} />
+                    </a>
+                    <a
+                      href={assignment.previewImage}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-between rounded-lg px-4 py-2.5 text-sm text-white/70 transition-colors hover:text-white/90"
+                      style={{ border: `1px solid ${color}24`, background: `${color}08` }}
+                    >
+                      查看高清预览
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {assignments.map((assignment, index) => (
+            <button
+              key={assignment.subject}
+              type="button"
+              onClick={() => api?.scrollTo(index)}
+              className="h-2.5 rounded-full transition-all duration-200"
+              style={{
+                width: activeIndex === index ? "26px" : "10px",
+                background: activeIndex === index ? color : `${color}40`,
+              }}
+              aria-label={`切换到${assignment.subject}`}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => api?.scrollPrev()}
+            className="rounded-lg px-3 py-1.5 text-xs text-white/75 transition-colors hover:text-white"
+            style={{ border: `1px solid ${color}30`, background: `${color}12` }}
+          >
+            上一个
+          </button>
+          <button
+            type="button"
+            onClick={() => api?.scrollNext()}
+            className="rounded-lg px-3 py-1.5 text-xs text-white/75 transition-colors hover:text-white"
+            style={{ border: `1px solid ${color}30`, background: `${color}12` }}
+          >
+            下一个
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1287,6 +1421,13 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                           <div className="max-w-2xl mx-auto">
                             <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
                           </div>
+                        </div>
+                      )}
+
+                      {face.mathAssignments && face.mathAssignments.length > 0 && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="MATH FOUNDATIONS" color={face.color} />
+                          <MathAssignmentsPanel assignments={face.mathAssignments} color={face.color} />
                         </div>
                       )}
 
