@@ -236,7 +236,7 @@ export default function App() {
             <img
               src="/Mountion.png"
               alt="Mountion"
-              className="relative block h-auto w-[min(75vw,980px)]"
+              className="relative block h-auto w-[min(67.5vw,882px)]"
             />
           </div>
         </motion.div>
@@ -321,11 +321,6 @@ export default function App() {
                       {face.homeDescription ?? face.description}
                     </p>
 
-                    <div className="flex items-center gap-2 text-sm text-white/40 whitespace-nowrap mt-[10px]">
-                      <span>↙</span>
-                      <span>没兴趣，玩一下骰子</span>
-                    </div>
-
                     <div className="flex items-center gap-4 ml-[40px] mt-[16px]">
                       <button
                         type="button"
@@ -370,6 +365,10 @@ export default function App() {
                   targetFace={targetFace}
                   activeColor={activeFace.color}
                 />
+                <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
+                  <span>→</span>
+                  <span>没兴趣，玩一下骰子</span>
+                </div>
               </motion.div>
             </div>
           </Tabs>
