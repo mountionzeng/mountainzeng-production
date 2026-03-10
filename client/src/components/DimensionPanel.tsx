@@ -265,6 +265,60 @@ function CourseList({ courses, color }: { courses: DiceFace["courses"]; color: s
   );
 }
 
+/* ─── 编程语言能力组件（系统页专用）─── */
+function ProgrammingLanguageCapability({ color }: { color: string }) {
+  return (
+    <div
+      className="rounded-2xl p-6 md:p-8 space-y-6"
+      style={{
+        background: `linear-gradient(145deg, ${color}12, ${color}06)`,
+        border: `1px solid ${color}28`,
+      }}
+    >
+      <div
+        className="text-sm tracking-[0.16em] uppercase font-semibold"
+        style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
+      >
+        编程语言能力
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          className="rounded-xl p-4"
+          style={{ border: `1px solid ${color}20`, background: `${color}0A` }}
+        >
+          <div className="text-sm font-semibold text-white/88 mb-3">【底层系统】</div>
+          <div className="text-sm text-white/75">C / C++</div>
+          <div className="text-sm text-white/45 my-1.5">↓ 实现</div>
+          <div className="text-sm text-white/65 leading-relaxed">操作系统、数据库内核、编程语言解释器</div>
+          <div className="text-sm text-white/45 mt-2">↓ 提供基础设施</div>
+        </div>
+
+        <div
+          className="rounded-xl p-4"
+          style={{ border: `1px solid ${color}20`, background: `${color}0A` }}
+        >
+          <div className="text-sm font-semibold text-white/88 mb-3">【应用层】</div>
+          <div className="text-sm text-white/75">Java / Python</div>
+          <div className="text-sm text-white/45 my-1.5">↓ 开发</div>
+          <div className="text-sm text-white/65 leading-relaxed">Web 服务、数据分析、机器学习应用</div>
+        </div>
+      </div>
+
+      <div className="space-y-3 text-sm leading-relaxed">
+        <p className="text-white/72">
+          <span style={{ color: `${color}D8` }}>核心语言：</span>
+          Java、C、C++、Python
+        </p>
+        <p className="text-white/62">
+          <span style={{ color: `${color}D8` }}>补足方式：</span>
+          其他不熟悉的编程语言，通过 Voice Coding 快速补足
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ─── 技术应用组件 ─── */
 function TechApplications({ apps, color }: { apps: DiceFace["techApplications"]; color: string }) {
   if (!apps || apps.length === 0) return null;
@@ -1438,12 +1492,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                         </div>
                       )}
 
-                      {face.courses && (
-                        <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="PROGRAMMING LANGUAGES" color={face.color} />
-                          <CourseList courses={face.courses} color={face.color} />
-                        </div>
-                      )}
                     </>
                   )}
 
@@ -1492,6 +1540,11 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                           <SystemCapabilityCards capabilities={face.systemCapabilities} color={face.color} />
                         </div>
                       )}
+
+                      <div className="mb-12 lg:mb-16">
+                        <SectionTitle title="PROGRAMMING LANGUAGE CAPABILITY" color={face.color} />
+                        <ProgrammingLanguageCapability color={face.color} />
+                      </div>
 
                       {/* 系统仓库 */}
                       <div className="mb-12 lg:mb-16">
