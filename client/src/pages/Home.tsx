@@ -158,7 +158,7 @@ export default function App() {
         />
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4 overflow-hidden -translate-y-[40px]">
+      <div className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4 overflow-hidden -translate-y-[64px]">
         
         {/* 顶部品牌标识 */}
         <motion.div
@@ -180,7 +180,7 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="relative z-20 mb-4 mt-8 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none"
+          className="relative z-20 mb-4 mt-8 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none translate-y-[24px]"
         >
           <div className="absolute left-[calc(33.333%-20px)] top-[calc(50%+170px)] -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
@@ -362,7 +362,7 @@ export default function App() {
                   scale: showDimension ? 0.8 : 1,
                 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-8 md:-bottom-7 left-[calc(61%-20px)] -translate-x-1/2 z-0"
+                className="absolute -bottom-8 md:-bottom-7 left-[calc(61%-20px)] -translate-x-1/2 translate-y-[24px] z-0"
               >
                 <Dice3D
                   onFaceSelected={handleFaceSelected}
@@ -397,7 +397,7 @@ export default function App() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: showDimension ? 0 : 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.08 }}
-          className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-3"
+          className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 translate-y-[24px] flex items-center gap-3"
         >
           <button
             type="button"
