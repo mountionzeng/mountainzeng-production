@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>DICE — 多维超级个体</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- 中文注释：仅在配置了统计环境变量时才动态注入统计脚本，避免未配置时出现 URI 错误 -->
+    <script>
+      (() => {
+        const endpoint = "%VITE_ANALYTICS_ENDPOINT%";
+        const websiteId = "%VITE_ANALYTICS_WEBSITE_ID%";
+        const isPlaceholder = (value) => !value || value.includes("%VITE_");
+        if (isPlaceholder(endpoint) || isPlaceholder(websiteId)) return;
+        const analyticsScript = document.createElement("script");
+        analyticsScript.defer = true;
+        analyticsScript.src = `${endpoint.replace(/\/+$/, "")}/umami`;
+        analyticsScript.setAttribute("data-website-id", websiteId);
+        document.body.appendChild(analyticsScript);
+      })();
+    </script>
+  </body>
+
+</html>
