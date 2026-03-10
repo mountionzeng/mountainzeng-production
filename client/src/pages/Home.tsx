@@ -271,26 +271,9 @@ export default function App() {
                       {face.homeDescription ?? face.description}
                     </p>
 
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
-                      <div className="flex flex-wrap gap-2 min-w-0">
-                        {face.skills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-medium transition-all duration-200
-                                     hover:bg-white/[0.12] hover:scale-105"
-                            style={{
-                              color: face.color,
-                            }}
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm text-white/40 whitespace-nowrap mt-[10px]">
-                        <span>↙</span>
-                        <span>没兴趣，玩一下骰子</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-white/40 whitespace-nowrap mt-[10px]">
+                      <span>↙</span>
+                      <span>没兴趣，玩一下骰子</span>
                     </div>
 
                     <div className="flex items-center gap-4 ml-[40px] mt-[16px]">
