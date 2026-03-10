@@ -22,6 +22,14 @@ export default function App() {
   const [showDimension, setShowDimension] = useState(false);
   const [activeTab, setActiveTab] = useState(String(DICE_FACES[0].id));
   const [targetFace, setTargetFace] = useState<number | undefined>(undefined);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setToast(`${label} 已复制到剪贴板`);
+      setTimeout(() => setToast(null), 2500);
+    });
+  };
 
   const activeFace = useMemo(
     () => DICE_FACES.find((face) => String(face.id) === activeTab) ?? DICE_FACES[0],
@@ -347,6 +355,7 @@ export default function App() {
             type="button"
             title="微信"
             aria-label="微信"
+            onClick={() => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831")}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
@@ -360,6 +369,7 @@ export default function App() {
             type="button"
             title="GitHub"
             aria-label="GitHub"
+            onClick={() => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng")}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
@@ -373,6 +383,7 @@ export default function App() {
             type="button"
             title="邮箱"
             aria-label="邮箱"
+            onClick={() => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com")}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white
                        transition-all duration-200 hover:scale-105"
             style={{
@@ -384,6 +395,22 @@ export default function App() {
           </button>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs text-white/80"
+            style={{ background: "rgba(30,20,50,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(168,85,247,0.25)" }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showDimension && selectedFace && (
