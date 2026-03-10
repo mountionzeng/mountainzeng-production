@@ -121,6 +121,19 @@ pnpm start
 
 **自动部署：** 只要将代码推送到 GitHub 的 `main` 分支，Railway 会自动触发构建和部署，无需手动操作。
 
+### Railway 一键重部署
+
+```bash
+# 首次使用先登录 Railway
+NPM_CONFIG_CACHE=/tmp/.npm-cache npx -y @railway/cli login
+
+# 查看当前服务部署状态
+pnpm railway:status
+
+# 一键触发重部署
+pnpm railway:redeploy
+```
+
 ---
 
 ## 视觉作品集配置
