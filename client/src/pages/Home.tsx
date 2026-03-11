@@ -185,7 +185,10 @@ export default function App() {
         />
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4 overflow-hidden -translate-y-[64px]">
+      <div
+        className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4 overflow-hidden"
+        style={{ transform: "translate(0px, 44px)" }}
+      >
         
         {/* 顶部品牌标识 */}
         <motion.div
@@ -194,12 +197,14 @@ export default function App() {
           transition={{ duration: 0.5 }}
           className="absolute -top-[52px] md:-top-[48px] left-1/2 -translate-x-1/2 origin-top"
         >
-          <span
-            className="text-xs tracking-[0.6em] text-white/15 uppercase font-bold"
-            style={{ fontFamily: "var(--font-label)" }}
-          >
-            SUPER INDIVIDUAL
-          </span>
+          <div style={{ transform: "translate(7px, 0px)" }}>
+            <span
+              className="text-xs tracking-[0.6em] text-white/15 uppercase font-bold"
+              style={{ fontFamily: "var(--font-label)" }}
+            >
+              SUPER INDIVIDUAL
+            </span>
+          </div>
         </motion.div>
 
         {/* 主标题区域 */}
@@ -209,7 +214,12 @@ export default function App() {
           transition={{ duration: 0.35 }}
           className="absolute top-2/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
         >
-          <div className="absolute left-1/2 top-2/3 -translate-x-1/2 -translate-y-1/2 w-fit">
+          <div
+            className="absolute left-1/2 top-2/3 w-fit"
+            style={{
+              transform: "translate(-50%, -50%) translate(-105px, -212px)",
+            }}
+          >
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-full blur-[44px] mix-blend-screen transform-gpu"
               style={{
@@ -268,50 +278,56 @@ export default function App() {
               src="/Mountion.png"
               alt="Mountion"
               className="relative block h-auto w-[min(67.5vw,882px)]"
+              style={{ transform: "scale(1.13)", transformOrigin: "center" }}
             />
-            <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-auto z-30">
-              <button
-                type="button"
-                title="微信"
-                aria-label="微信"
-                onClick={(event) => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831", event)}
-                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
-                           transition-all duration-200 hover:scale-105"
-                style={{
-                  color: "rgba(196, 181, 253, 0.95)",
-                  boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
-                }}
+            <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 pointer-events-auto z-30">
+              <div
+                className="flex items-center gap-2"
+                style={{ transform: "translate(162px, -38px)" }}
               >
-                <WechatIcon className="h-[18px] w-[18px]" />
-              </button>
-              <button
-                type="button"
-                title="GitHub"
-                aria-label="GitHub"
-                onClick={(event) => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng", event)}
-                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
-                           transition-all duration-200 hover:scale-105"
-                style={{
-                  color: "rgba(180, 164, 255, 0.95)",
-                  boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
-                }}
-              >
-                <Github className="h-[18px] w-[18px]" />
-              </button>
-              <button
-                type="button"
-                title="邮箱"
-                aria-label="邮箱"
-                onClick={(event) => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com", event)}
-                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
-                           transition-all duration-200 hover:scale-105"
-                style={{
-                  color: "rgba(216, 180, 254, 0.95)",
-                  boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
-                }}
-              >
-                <Mail className="h-[18px] w-[18px]" />
-              </button>
+                <button
+                  type="button"
+                  title="微信"
+                  aria-label="微信"
+                  onClick={(event) => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831", event)}
+                  className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
+                             transition-all duration-200 hover:scale-105"
+                  style={{
+                    color: "rgba(196, 181, 253, 0.95)",
+                    boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
+                  }}
+                >
+                  <WechatIcon className="h-[18px] w-[18px]" />
+                </button>
+                <button
+                  type="button"
+                  title="GitHub"
+                  aria-label="GitHub"
+                  onClick={(event) => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng", event)}
+                  className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
+                             transition-all duration-200 hover:scale-105"
+                  style={{
+                    color: "rgba(180, 164, 255, 0.95)",
+                    boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
+                  }}
+                >
+                  <Github className="h-[18px] w-[18px]" />
+                </button>
+                <button
+                  type="button"
+                  title="邮箱"
+                  aria-label="邮箱"
+                  onClick={(event) => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com", event)}
+                  className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
+                             transition-all duration-200 hover:scale-105"
+                  style={{
+                    color: "rgba(216, 180, 254, 0.95)",
+                    boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
+                  }}
+                >
+                  <Mail className="h-[18px] w-[18px]" />
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -321,9 +337,10 @@ export default function App() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: showDimension ? 0 : 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-7xl mt-1 md:mt-2 -translate-y-[50px] md:-translate-y-[58px] relative origin-top"
+          className="w-full max-w-7xl mt-1 md:mt-2 translate-y-[98px] md:translate-y-[104px] relative origin-top"
         >
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">
+          <div style={{ transform: "translate(6px, 0px)" }}>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">
             {/* 标签栏 - 在卡片外面 */}
             <div className="relative -mt-[20px] mb-0">
               <div
@@ -426,30 +443,33 @@ export default function App() {
               </div>
 
               {/* 3D 骰子区域 - 放在标签卡片右下角 */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{
-                  opacity: showDimension ? 0 : 1,
-                  scale: showDimension ? 0.8 : 1,
-                }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-8 md:-bottom-7 left-[calc(61%-20px)] -translate-x-1/2 translate-y-[24px] z-0"
-              >
-                <Dice3D
-                  onFaceSelected={handleFaceSelected}
-                  isRolling={isRolling}
-                  onRollStart={handleRollStart}
-                  onTargetFaceSettled={handleTargetFaceSettled}
-                  targetFace={targetFace}
-                  activeColor={activeHomeColor}
-                />
-                <div className="absolute left-full ml-4 md:ml-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
-                  <span>←</span>
-                  <span>没兴趣，玩一下骰子</span>
-                </div>
-              </motion.div>
+              <div style={{ transform: "translate(76px, 29px)" }}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{
+                    opacity: showDimension ? 0 : 1,
+                    scale: showDimension ? 0.8 : 1,
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="absolute -bottom-8 md:-bottom-7 left-[calc(61%-20px)] -translate-x-1/2 translate-y-[24px] z-0"
+                >
+                  <Dice3D
+                    onFaceSelected={handleFaceSelected}
+                    isRolling={isRolling}
+                    onRollStart={handleRollStart}
+                    onTargetFaceSettled={handleTargetFaceSettled}
+                    targetFace={targetFace}
+                    activeColor={activeHomeColor}
+                  />
+                  <div className="absolute left-full ml-4 md:ml-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
+                    <span>←</span>
+                    <span>没兴趣，玩一下骰子</span>
+                  </div>
+                </motion.div>
+              </div>
             </div>
-          </Tabs>
+            </Tabs>
+          </div>
         </motion.div>
 
         {/* 底部装饰 */}
