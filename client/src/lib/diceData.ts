@@ -366,13 +366,12 @@ export const DICE_FACES: DiceFace[] = [
 
     homeDescription:
       "我发自内心地感受到，技术的进步可以激发出更多形式的艺术表达。所以在本科学艺术的基础上，我又修了计算机科学硕士。现在我可以用算法的严谨审视艺术创作的效率，也能用审美的直觉指导技术方案的设计。",
-    skills: ["技术 + 艺术", "理性 + 感性", "科学 + 人文", "创新思维"],
+    skills: [],
     buttonText: "美术生的代码怎么跑的？",
 
-    description:
-      "七年的一线项目经验让我理解技术真正要解决的问题，而不是为技术而技术。这种跨界让我能用算法的严谨性审视艺术创作的效率，也能用审美的直觉性指导技术方案的设计。",
+    description: "",
     quote: "最有趣的事情发生在边界。",
-    coreStatement: "双重视角融合",
+    coreStatement: "",
     educationTimeline: [
       {
         period: "2014 - 2018",

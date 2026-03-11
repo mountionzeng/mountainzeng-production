@@ -1356,30 +1356,32 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                       {/* 右侧：技能标签 + 统计数据 */}
                       <div className="space-y-8">
                         {/* 技能标签 */}
-                        <div>
-                          <div
-                            className="text-xs tracking-[0.4em] uppercase mb-5 text-white/40 font-semibold flex items-center gap-2"
-                            style={{ fontFamily: "var(--font-label)" }}
-                          >
-                            <div className="w-8 h-[2px]" style={{ background: `linear-gradient(90deg, ${face.color}, transparent)` }} />
-                            SKILL SET
+                        {face.skills.length > 0 && (
+                          <div>
+                            <div
+                              className="text-xs tracking-[0.4em] uppercase mb-5 text-white/40 font-semibold flex items-center gap-2"
+                              style={{ fontFamily: "var(--font-label)" }}
+                            >
+                              <div className="w-8 h-[2px]" style={{ background: `linear-gradient(90deg, ${face.color}, transparent)` }} />
+                              SKILL SET
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                              {face.skills.map((skill) => (
+                                <span
+                                  key={skill}
+                                  className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 hover:scale-105 cursor-default"
+                                  style={{
+                                    color: `${face.color}`,
+                                    background: `${face.color}15`,
+                                    boxShadow: `0 0 20px ${face.color}10`,
+                                  }}
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-3">
-                            {face.skills.map((skill) => (
-                              <span
-                                key={skill}
-                                className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 hover:scale-105 cursor-default"
-                                style={{
-                                  color: `${face.color}`,
-                                  background: `${face.color}15`,
-                                  boxShadow: `0 0 20px ${face.color}10`,
-                                }}
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+                        )}
 
                         {/* 统计数据 */}
                         {face.stats && face.stats.length > 0 && (
