@@ -1339,16 +1339,18 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                         )}
 
                         {/* 引用 */}
-                        <div
-                          className="pl-4 py-2 text-sm text-white/40 italic leading-relaxed"
-                          style={{ 
-                            borderLeft: `2px solid ${face.color}50`,
-                            background: `linear-gradient(90deg, ${face.color}05, transparent)`,
-                          }}
-                        >
-                          <Sparkles size={14} className="inline mb-1 mr-1" style={{ color: face.color }} />
-                          "{face.quote}"
-                        </div>
+                        {face.quote && (
+                          <div
+                            className="pl-4 py-2 text-sm text-white/40 italic leading-relaxed"
+                            style={{ 
+                              borderLeft: `2px solid ${face.color}50`,
+                              background: `linear-gradient(90deg, ${face.color}05, transparent)`,
+                            }}
+                          >
+                            <Sparkles size={14} className="inline mb-1 mr-1" style={{ color: face.color }} />
+                            "{face.quote}"
+                          </div>
+                        )}
                       </div>
 
                       {/* 右侧：技能标签 + 统计数据 */}

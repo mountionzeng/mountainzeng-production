@@ -261,9 +261,8 @@ export const DICE_FACES: DiceFace[] = [
     skills: ["深度学习", "计算机视觉", "模型优化", "AI应用"],
     buttonText: "👀Xiangyu的数学作业～",
 
-    description:
-      "数学教会我的不只是计算，而是一种严谨的思维方式：如何抽象问题、如何寻找模式、如何在复杂度与效率之间找到平衡。",
-    quote: "我懂 AI 的数学本质，不只是调用 API。",
+    description: "",
+    quote: "",
     coreStatement: "理解智能本质",
     knowledgeChain: [
       { level: "数学基础", items: ["线性代数", "概率论", "优化理论"] },
