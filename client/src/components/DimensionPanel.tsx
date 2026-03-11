@@ -980,15 +980,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                             >
                               {face.subtitle}
                             </div>
-                            <h1
-                              className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[0.95] tracking-tight"
-                              style={{ 
-                                fontFamily: "var(--font-display)",
-                                textShadow: `0 0 60px ${face.color}30`,
-                              }}
-                            >
-                              {face.title}
-                            </h1>
                             {face.coreStatement && (
                               <div
                                 className="text-lg md:text-xl font-medium leading-relaxed"
@@ -997,51 +988,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 {face.coreStatement}
                               </div>
                             )}
-                            <p
-                              className="text-white/55 text-base md:text-lg leading-relaxed"
-                              style={{ fontFamily: "var(--font-body)" }}
-                            >
-                              {face.description}
-                            </p>
-                            <div
-                              className="pl-4 py-2 text-sm text-white/40 italic leading-relaxed"
-                              style={{ 
-                                borderLeft: `2px solid ${face.color}50`,
-                                background: `linear-gradient(90deg, ${face.color}05, transparent)`,
-                              }}
-                            >
-                              <Sparkles size={14} className="inline mb-1 mr-1" style={{ color: face.color }} />
-                              "{face.quote}"
-                            </div>
                           </div>
 
                           {/* 右侧：能力标签 + 数据亮点 */}
                           <div className="space-y-8">
-                            <div>
-                              <div
-                                className="text-xs tracking-[0.4em] uppercase mb-5 text-white/40 font-semibold flex items-center gap-2"
-                                style={{ fontFamily: "var(--font-label)" }}
-                              >
-                                <div className="w-8 h-[2px]" style={{ background: `linear-gradient(90deg, ${face.color}, transparent)` }} />
-                                SKILL SET
-                              </div>
-                              <div className="flex flex-wrap gap-3">
-                                {face.skills.map((skill) => (
-                                  <span
-                                    key={skill}
-                                    className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 hover:scale-105 cursor-default"
-                                    style={{
-                                      color: `${face.color}`,
-                                      background: `${face.color}15`,
-                                      boxShadow: `0 0 20px ${face.color}10`,
-                                    }}
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-
                             {face.stats && face.stats.length > 0 && (
                               <StatsGrid stats={face.stats} color={face.color} />
                             )}
@@ -1067,16 +1017,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               <WorkCard key={i} work={work} color={face.color} index={i} />
                             ))}
                           </motion.div>
-                        </div>
-                      )}
-
-                      {/* 职业时间线 */}
-                      {face.timeline && (
-                        <div className="mb-8">
-                          <SectionTitle title="CAREER TIMELINE" color={face.color} />
-                          <div className="max-w-2xl">
-                            <Timeline timeline={face.timeline} color={face.color} />
-                          </div>
                         </div>
                       )}
 
