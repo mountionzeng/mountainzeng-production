@@ -1329,12 +1329,14 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                         )}
 
                         {/* 描述 */}
-                        <p
-                          className="text-white/55 text-base md:text-lg leading-relaxed"
-                          style={{ fontFamily: "var(--font-body)" }}
-                        >
-                          {face.description}
-                        </p>
+                        {face.description && (
+                          <p
+                            className="text-white/55 text-base md:text-lg leading-relaxed"
+                            style={{ fontFamily: "var(--font-body)" }}
+                          >
+                            {face.description}
+                          </p>
+                        )}
 
                         {/* 引用 */}
                         <div
