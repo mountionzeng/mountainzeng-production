@@ -326,8 +326,8 @@ export const DICE_FACES: DiceFace[] = [
     skills: ["插件开发", "性能优化", "工作流程设计", "系统架构"],
     buttonText: "《岱岱和计算机的量子纠缠》",
 
-    description: "这种能力让我能做出更优的技术选型判断，确保整个架构的健壮与高效。",
-    quote: "简洁的代码是最好的文档。",
+    description: "",
+    quote: "",
     coreStatement: "深入底层逻辑",
     systemCourses: [
       { code: "CS525", name: "系统编程" },
@@ -350,8 +350,6 @@ export const DICE_FACES: DiceFace[] = [
     ],
     works: [],
     stats: [
-      { label: "实际应用", value: "NUKE/MP 插件开发" },
-      { label: "跨平台", value: "工具开发经验" },
       { label: "系统架构", value: "复杂项目设计" },
       { label: "数据库", value: "设计与管理" },
     ],

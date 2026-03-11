@@ -1518,7 +1518,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               className="mt-4 text-sm md:text-base leading-relaxed text-white/80"
                               style={{ fontFamily: "var(--font-body)" }}
                             >
-                              NUKE/MP 插件开发（已投入使用）· 跨平台工具开发经验 · 复杂项目的系统架构设计 · 数据库设计与管理能力
+                              复杂项目的系统架构设计 · 数据库设计与管理能力
                             </p>
                           </div>
                         </div>
