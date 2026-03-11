@@ -207,9 +207,9 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="relative z-20 mb-4 mt-8 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-[1164px]"
+          className="absolute top-1/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
         >
-          <div className="absolute left-[calc(33.333%-20px)] top-[calc(50%+170px)] -translate-x-1/2 -translate-y-1/2 w-fit">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-full blur-[44px] mix-blend-screen transform-gpu"
               style={{
@@ -269,7 +269,7 @@ export default function App() {
               alt="Mountion"
               className="relative block h-auto w-[min(67.5vw,882px)]"
             />
-            <div className="absolute left-full ml-3 md:ml-4 top-[1700px] md:top-[1704px] flex items-center gap-2 pointer-events-auto z-30">
+            <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-auto z-30">
               <button
                 type="button"
                 title="微信"
