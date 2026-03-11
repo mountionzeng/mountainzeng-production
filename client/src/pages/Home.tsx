@@ -207,9 +207,9 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="absolute top-1/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
+          className="absolute top-2/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
         >
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-fit">
+          <div className="absolute left-1/2 top-2/3 -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-full blur-[44px] mix-blend-screen transform-gpu"
               style={{
@@ -321,7 +321,7 @@ export default function App() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: showDimension ? 0 : 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="absolute top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl mt-1 md:mt-2 relative origin-top"
+          className="w-full max-w-7xl mt-1 md:mt-2 -translate-y-[50px] md:-translate-y-[58px] relative origin-top"
         >
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">
             {/* 标签栏 - 在卡片外面 */}
