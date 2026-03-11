@@ -207,7 +207,7 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="absolute top-1/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
+          className="absolute top-1/2 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
         >
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-fit">
             <motion.div
