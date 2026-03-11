@@ -242,7 +242,7 @@ export default function App() {
               alt="Mountion"
               className="relative block h-auto w-[min(67.5vw,882px)]"
             />
-            <div className="absolute left-full ml-3 md:ml-4 top-[1100px] md:top-[1104px] flex items-center gap-2 pointer-events-auto z-30">
+            <div className="absolute left-full ml-3 md:ml-4 top-[1700px] md:top-[1704px] flex items-center gap-2 pointer-events-auto z-30">
               <button
                 type="button"
                 title="微信"
