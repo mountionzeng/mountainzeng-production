@@ -416,10 +416,9 @@ export const DICE_FACES: DiceFace[] = [
     skills: ["持续学习", "前沿探索", "创意实验", "无限进化"],
     buttonText: "下一步她想干嘛？",
 
-    description:
-      "基于左边的多项维度，我自信拥有更强大的生命力与创造力。我不希望被任何框架限制，我相信人本身的能力是无限的。",
-    quote: "不要定义我，我还在生长。",
-    coreStatement: "探索无限可能",
+    description: "",
+    quote: "",
+    coreStatement: "",
     futureDirections: [
       {
         title: "方向一：交叉学科研究",
@@ -439,11 +438,7 @@ export const DICE_FACES: DiceFace[] = [
         ],
       },
     ],
-    contactInfo: [
-      { type: "邮箱", value: "mountion@example.com", icon: "Mail" },
-      { type: "GitHub", value: "github.com/mountion", icon: "Github" },
-      { type: "LinkedIn", value: "linkedin.com/in/mountion", icon: "Linkedin" },
-    ],
+    contactInfo: [],
     works: [],
   },
 ];
