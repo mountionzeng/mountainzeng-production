@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Github, Mail } from "lucide-react";
 import Dice3D from "@/components/Dice3D";
@@ -24,7 +25,21 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(String(DICE_FACES[0].id));
   const [targetFace, setTargetFace] = useState<number | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastPosition, setToastPosition] = useState({ x: 24, y: 24 });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const placeToastNearPointer = useCallback((clientX: number, clientY: number) => {
+    if (typeof window === "undefined") return;
+    const offset = 16;
+    const minX = 12;
+    const minY = 12;
+    const maxX = Math.max(minX, window.innerWidth - 360);
+    const maxY = Math.max(minY, window.innerHeight - 80);
+    setToastPosition({
+      x: Math.min(maxX, Math.max(minX, clientX + offset)),
+      y: Math.min(maxY, Math.max(minY, clientY + offset)),
+    });
+  }, []);
 
   const showToast = useCallback((message: string) => {
     if (toastTimerRef.current) {
@@ -42,7 +57,19 @@ export default function App() {
     };
   }, []);
 
-  const copyToClipboard = useCallback(async (text: string, label: string) => {
+  useEffect(() => {
+    if (!toast) return;
+    const handleMouseMove = (event: MouseEvent) => {
+      placeToastNearPointer(event.clientX, event.clientY);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [toast, placeToastNearPointer]);
+
+  const copyToClipboard = useCallback(async (text: string, label: string, event?: ReactMouseEvent<HTMLButtonElement>) => {
+    if (event) {
+      placeToastNearPointer(event.clientX, event.clientY);
+    }
     try {
       if (navigator.clipboard?.writeText && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
@@ -65,7 +92,7 @@ export default function App() {
     } catch {
       showToast("复制失败，请手动复制");
     }
-  }, [showToast]);
+  }, [placeToastNearPointer, showToast]);
 
   const activeFace = useMemo(
     () => DICE_FACES.find((face) => String(face.id) === activeTab) ?? DICE_FACES[0],
@@ -247,43 +274,43 @@ export default function App() {
                 type="button"
                 title="微信"
                 aria-label="微信"
-                onClick={() => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831")}
-                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
+                onClick={(event) => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831", event)}
+                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(196, 181, 253, 0.95)",
                   boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
                 }}
               >
-                <WechatIcon className="h-[15px] w-[15px]" />
+                <WechatIcon className="h-[18px] w-[18px]" />
               </button>
               <button
                 type="button"
                 title="GitHub"
                 aria-label="GitHub"
-                onClick={() => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng")}
-                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
+                onClick={(event) => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng", event)}
+                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(180, 164, 255, 0.95)",
                   boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
                 }}
               >
-                <Github className="h-[15px] w-[15px]" />
+                <Github className="h-[18px] w-[18px]" />
               </button>
               <button
                 type="button"
                 title="邮箱"
                 aria-label="邮箱"
-                onClick={() => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com")}
-                className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-black text-white
+                onClick={(event) => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com", event)}
+                className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                            transition-all duration-200 hover:scale-105"
                 style={{
                   color: "rgba(216, 180, 254, 0.95)",
                   boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
                 }}
               >
-                <Mail className="h-[15px] w-[15px]" />
+                <Mail className="h-[18px] w-[18px]" />
               </button>
             </div>
           </div>
@@ -443,12 +470,18 @@ export default function App() {
         {toast && (
           <motion.div
             key="toast"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.25 }}
-            className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs text-white/80"
-            style={{ background: "rgba(30,20,50,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(168,85,247,0.25)" }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed z-50 px-4 py-2 rounded-full text-xs text-white/80 pointer-events-none"
+            style={{
+              left: `${toastPosition.x}px`,
+              top: `${toastPosition.y}px`,
+              background: "rgba(30,20,50,0.85)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(168,85,247,0.25)",
+            }}
           >
             {toast}
           </motion.div>
