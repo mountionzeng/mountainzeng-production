@@ -174,9 +174,11 @@ export default function App() {
       />
 
       {/* 背景装饰渐变 */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+      >
         <div 
-          className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl"
+          className="absolute -top-28 left-1/4 w-[28rem] h-[28rem] rounded-full opacity-10 blur-3xl"
           style={{ background: "radial-gradient(circle, #4A7BF7, transparent)" }}
         />
         <div 
@@ -185,8 +187,17 @@ export default function App() {
         />
       </div>
 
+      {/* 软化顶部背景过渡，避免合成层边界出现横向接缝 */}
       <div
-        className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4 overflow-hidden"
+        className="fixed inset-x-0 top-0 h-44 z-[1] pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(2,6,23,0.72) 0%, rgba(2,6,23,0.38) 52%, rgba(2,6,23,0) 100%)",
+        }}
+      />
+
+      <div
+        className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4"
         style={{ transform: "translate(0px, 44px)" }}
       >
         
@@ -416,11 +427,11 @@ export default function App() {
                       {face.homeDescription ?? face.description}
                     </p>
 
-                    <div className="flex items-center gap-4 ml-[40px] mt-[16px]">
+                    <div className="flex items-center gap-4 ml-[24px] mt-[16px]">
                       <button
                         type="button"
                         onClick={handleOpenCurrentTab}
-                        className="group relative rounded-full px-9 py-4 text-sm font-semibold text-white 
+                        className="group relative rounded-full px-8 py-[14px] text-[0.8rem] font-semibold text-white 
                                    transition-all duration-300 hover:scale-105 overflow-hidden"
                         style={{
                           background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 13%, transparent)`,
