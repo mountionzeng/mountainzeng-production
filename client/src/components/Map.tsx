@@ -86,7 +86,9 @@ declare global {
   }
 }
 
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
+// VITE_* variables are bundled into browser code. Only use browser-safe, referrer-restricted keys here.
+const PUBLIC_MAPS_BROWSER_KEY =
+  (import.meta.env.VITE_FRONTEND_FORGE_API_KEY as string | undefined)?.trim() || "";
 const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
   "https://forge.butterfly-effect.dev";
@@ -94,8 +96,13 @@ const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
 
 function loadMapScript() {
   return new Promise(resolve => {
+    if (!PUBLIC_MAPS_BROWSER_KEY) {
+      console.warn("Google Maps key is not configured; skipping map script load.");
+      resolve(null);
+      return;
+    }
     const script = document.createElement("script");
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
+    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${PUBLIC_MAPS_BROWSER_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {

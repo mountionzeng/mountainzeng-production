@@ -27,6 +27,8 @@
       ui: 500,
     },
     reportInterval: 2000,
+    captureRequestBodies: false,
+    captureResponseBodies: false,
     sensitiveFields: [
       "password",
       "token",
@@ -482,8 +484,10 @@
       method: method.toUpperCase(),
       url: url,
       request: {
-        headers: requestHeaders,
-        body: init.body ? sanitizeValue(tryParseJson(init.body)) : null,
+        headers: sanitizeValue(requestHeaders),
+        body: CONFIG.captureRequestBodies && init.body
+          ? sanitizeValue(tryParseJson(init.body))
+          : "[Disabled by default]",
       },
       response: null,
       duration: null,
@@ -500,7 +504,7 @@
         entry.response = {
           status: response.status,
           statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
+          headers: sanitizeValue(Object.fromEntries(response.headers.entries())),
           body: null,
         };
 
@@ -543,6 +547,13 @@
                        contentType.indexOf("application/zip") !== -1;
         if (isBinary) {
           entry.response.body = "[Binary content: " + contentType + "]";
+          store.networkRequests.push(entry);
+          pruneBuffer(store.networkRequests, CONFIG.bufferSize.network);
+          return response;
+        }
+
+        if (!CONFIG.captureResponseBodies) {
+          entry.response.body = "[Disabled by default]";
           store.networkRequests.push(entry);
           pruneBuffer(store.networkRequests, CONFIG.bufferSize.network);
           return response;
@@ -615,7 +626,9 @@
       xhr._manusData.url.indexOf("/__manus__/") !== 0
     ) {
       xhr._manusData.startTime = Date.now();
-      xhr._manusData.requestBody = body ? sanitizeValue(tryParseJson(body)) : null;
+      xhr._manusData.requestBody = CONFIG.captureRequestBodies && body
+        ? sanitizeValue(tryParseJson(body))
+        : "[Disabled by default]";
 
       xhr.addEventListener("load", function () {
         var contentType = (xhr.getResponseHeader("content-type") || "").toLowerCase();
@@ -638,6 +651,8 @@
           responseBody = "[Streaming response - not captured]";
         } else if (isBinary) {
           responseBody = "[Binary content: " + contentType + "]";
+        } else if (!CONFIG.captureResponseBodies) {
+          responseBody = "[Disabled by default]";
         } else {
           // Safe to read responseText for text responses
           try {

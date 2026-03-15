@@ -10,8 +10,6 @@ import * as LucideIcons from "lucide-react";
 import { DICE_FACES } from "@/lib/diceData";
 import type { DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import type { CarouselApi } from "@/components/ui/carousel";
 import {
   buildVisualImageUrl,
   buildVisualPosterUrl,
@@ -44,6 +42,7 @@ const VISUAL_IMAGE_EXCLUDED_DISPLAY_ROWS = new Set([5, 6]);
 const VISUAL_IMAGE_GRID_COLUMN_COUNT = 3;
 // 将网格区的第 2 行单独抽出来作为独立层展示
 const VISUAL_IMAGE_ISOLATED_GRID_ROW_INDEX = 1;
+const MOTION_EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 function getVisualImageDisplayRow(displayIndex: number): number {
   if (displayIndex <= VISUAL_IMAGE_SOLO_ROW_COUNT) {
@@ -58,7 +57,7 @@ const fadeInUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" },
+    transition: { delay: i * 0.08, duration: 0.5, ease: MOTION_EASE_OUT },
   }),
 };
 
@@ -232,39 +231,6 @@ function Timeline({ timeline, color }: { timeline: DiceFace["timeline"]; color: 
   );
 }
 
-/* ─── 课程列表组件 ─── */
-function CourseList({ courses, color }: { courses: DiceFace["courses"]; color: string }) {
-  if (!courses || courses.length === 0) return null;
-  const categories = Array.from(new Set(courses.map((c) => c.category)));
-  return (
-    <div className="space-y-6">
-      {categories.map((cat) => (
-        <div key={cat}>
-          <div className="text-xs tracking-[0.2em] uppercase font-semibold mb-3" style={{ color: `${color}AA`, fontFamily: "var(--font-label)" }}>
-            {cat}
-          </div>
-          <div className="space-y-2">
-            {courses
-              .filter((c) => c.category === cat)
-              .map((c) => (
-                <div
-                  key={c.code}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-white/[0.03]"
-                  style={{ border: `1px solid ${color}12` }}
-                >
-                  <span className="text-xs font-mono font-semibold tracking-wider" style={{ color: `${color}CC` }}>
-                    {c.code}
-                  </span>
-                  <span className="text-sm text-white/60">{c.name}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ─── 编程语言能力组件（系统页专用）─── */
 function ProgrammingLanguageCapability({ color }: { color: string }) {
   return (
@@ -319,42 +285,6 @@ function ProgrammingLanguageCapability({ color }: { color: string }) {
   );
 }
 
-/* ─── 技术应用组件 ─── */
-function TechApplications({ apps, color }: { apps: DiceFace["techApplications"]; color: string }) {
-  if (!apps || apps.length === 0) return null;
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {apps.map((app, i) => (
-        <motion.div
-          key={app.title}
-          custom={i}
-          variants={fadeInUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="rounded-xl p-5 relative overflow-hidden"
-          style={{
-            background: `linear-gradient(145deg, ${color}0D, ${color}05)`,
-            border: `1px solid ${color}20`,
-          }}
-        >
-          <div className="text-sm font-semibold text-white/80 mb-3" style={{ fontFamily: "var(--font-display)" }}>
-            {app.title}
-          </div>
-          <div className="space-y-1.5">
-            {app.items.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-xs text-white/45">
-                <div className="w-1 h-1 rounded-full" style={{ background: `${color}80` }} />
-                {item}
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 /* ─── 联系方式组件 ─── */
 function ContactSection({ contactInfo, color }: { contactInfo: DiceFace["contactInfo"]; color: string }) {
   if (!contactInfo || contactInfo.length === 0) return null;
@@ -378,6 +308,295 @@ function ContactSection({ contactInfo, color }: { contactInfo: DiceFace["contact
           </div>
           <ExternalLink size={14} className="ml-auto text-white/20" />
         </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── 算法课程实践组件（算法页专用）─── */
+function AlgorithmCourseDetails({
+  courses,
+  color,
+}: {
+  courses: NonNullable<DiceFace["algorithmCourseDetails"]>;
+  color: string;
+}) {
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      {courses.map((course, index) => (
+        <motion.div
+          key={`${course.code}-${course.title}`}
+          custom={index}
+          variants={fadeInUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="rounded-2xl p-5 md:p-6 space-y-5"
+          style={{
+            background: `linear-gradient(145deg, ${color}12, ${color}05)`,
+            border: `1px solid ${color}24`,
+          }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div
+                className="text-[11px] tracking-[0.22em] uppercase font-semibold mb-2"
+                style={{ color: `${color}C8`, fontFamily: "var(--font-label)" }}
+              >
+                {course.code}
+              </div>
+              <h3 className="text-2xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
+                {course.title}
+              </h3>
+            </div>
+            <span
+              className="px-3 py-1.5 rounded-full text-[10px] tracking-[0.16em] uppercase whitespace-nowrap"
+              style={{ color: `${color}E8`, background: `${color}18`, border: `1px solid ${color}28` }}
+            >
+              {course.depth}
+            </span>
+          </div>
+
+          <p className="text-sm leading-relaxed text-white/62">{course.summary}</p>
+
+          <div className="space-y-2">
+            {course.topics.map((topic) => (
+              <div key={topic} className="flex items-start gap-2 text-sm text-white/66">
+                <ChevronRight size={14} className="mt-0.5 shrink-0" style={{ color: `${color}8A` }} />
+                <span>{topic}</span>
+              </div>
+            ))}
+          </div>
+
+          {course.practice && (
+            <div
+              className="rounded-xl p-4"
+              style={{ background: `${color}0B`, border: `1px solid ${color}18` }}
+            >
+              <div
+                className="text-[11px] tracking-[0.2em] uppercase font-semibold mb-2"
+                style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
+              >
+                Practice
+              </div>
+              <div className="text-sm text-white/78 leading-relaxed">{course.practice}</div>
+            </div>
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── 算法技术应用组件（算法页专用）─── */
+function AlgorithmApplicationAreas({
+  areas,
+  color,
+}: {
+  areas: NonNullable<DiceFace["algorithmApplicationAreas"]>;
+  color: string;
+}) {
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      {areas.map((area, index) => (
+        <motion.div
+          key={area.title}
+          custom={index}
+          variants={fadeInUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="rounded-2xl p-5 md:p-6 space-y-5"
+          style={{
+            background: `linear-gradient(145deg, ${color}10, ${color}05)`,
+            border: `1px solid ${color}22`,
+          }}
+        >
+          <div>
+            <div
+              className="text-[11px] tracking-[0.22em] uppercase font-semibold mb-2"
+              style={{ color: `${color}C8`, fontFamily: "var(--font-label)" }}
+            >
+              {area.subtitle}
+            </div>
+            <h3 className="text-2xl font-semibold text-white/92 mb-2" style={{ fontFamily: "var(--font-display)" }}>
+              {area.title}
+            </h3>
+            {area.description && <p className="text-sm text-white/60 leading-relaxed">{area.description}</p>}
+          </div>
+
+          <div className="space-y-4">
+            {area.clusters.map((cluster) => (
+              <div
+                key={`${area.title}-${cluster.title}`}
+                className="rounded-xl p-4"
+                style={{ background: `${color}0B`, border: `1px solid ${color}18` }}
+              >
+                <div className="text-sm font-semibold text-white/85 mb-3">{cluster.title}</div>
+                <div className="space-y-2">
+                  {cluster.items.map((item) => (
+                    <div key={item} className="flex items-start gap-2 text-sm text-white/64">
+                      <div className="mt-[7px] h-1.5 w-1.5 rounded-full shrink-0" style={{ background: `${color}90` }} />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── 算法实战项目组件（算法页专用）─── */
+function AlgorithmProjects({
+  projects,
+  color,
+}: {
+  projects: NonNullable<DiceFace["algorithmProjects"]>;
+  color: string;
+}) {
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      {projects.map((project, index) => (
+        <motion.div
+          key={project.title}
+          custom={index}
+          variants={fadeInUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="rounded-2xl p-6 md:p-7 space-y-6 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(145deg, ${color}12, ${color}05)`,
+            border: `1px solid ${color}24`,
+          }}
+        >
+          <div
+            className="absolute inset-0 opacity-35"
+            style={{ background: `radial-gradient(circle at 90% 10%, ${color}22, transparent 48%)` }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div
+                  className="text-[11px] tracking-[0.22em] uppercase font-semibold mb-2"
+                  style={{ color: `${color}C8`, fontFamily: "var(--font-label)" }}
+                >
+                  {project.subtitle}
+                </div>
+                <h3 className="text-2xl md:text-3xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
+                  {project.title}
+                </h3>
+              </div>
+              <span
+                className="px-3 py-1.5 rounded-full text-[10px] tracking-[0.16em] uppercase whitespace-nowrap"
+                style={{ color: `${color}E8`, background: `${color}18`, border: `1px solid ${color}28` }}
+              >
+                {project.status}
+              </span>
+            </div>
+
+            <p className="text-sm md:text-base text-white/64 leading-relaxed">{project.summary}</p>
+
+            <div className="flex flex-wrap gap-2">
+              {project.techStack.map((item) => (
+                <span
+                  key={`${project.title}-${item}`}
+                  className="px-3 py-1.5 rounded-full text-xs text-white/78"
+                  style={{ background: `${color}14`, border: `1px solid ${color}22` }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            {project.features && project.features.length > 0 && (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: `${color}0B`, border: `1px solid ${color}18` }}
+              >
+                <div
+                  className="text-[11px] tracking-[0.2em] uppercase font-semibold mb-3"
+                  style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
+                >
+                  Features
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {project.features.map((feature) => (
+                    <span
+                      key={feature}
+                      className="px-3 py-1.5 rounded-full text-xs text-white/72"
+                      style={{ background: `${color}14`, border: `1px solid ${color}22` }}
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {project.architecture && project.architecture.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {project.architecture.map((item) => (
+                  <div
+                    key={`${project.title}-${item.title}`}
+                    className="rounded-xl p-4"
+                    style={{ background: `${color}0B`, border: `1px solid ${color}18` }}
+                  >
+                    <div className="text-sm font-semibold text-white/86 mb-2">{item.title}</div>
+                    <p className="text-sm text-white/58 leading-relaxed">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {project.highlights && project.highlights.length > 0 && (
+              <div className="space-y-2">
+                {project.highlights.map((highlight) => (
+                  <div key={highlight} className="flex items-start gap-2 text-sm text-white/68">
+                    <ChevronRight size={14} className="mt-0.5 shrink-0" style={{ color: `${color}90` }} />
+                    <span>{highlight}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {project.outcomes && project.outcomes.length > 0 && (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: `${color}0B`, border: `1px solid ${color}18` }}
+              >
+                <div
+                  className="text-[11px] tracking-[0.2em] uppercase font-semibold mb-3"
+                  style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
+                >
+                  Outcomes
+                </div>
+                <div className="space-y-2">
+                  {project.outcomes.map((outcome) => (
+                    <div key={outcome} className="flex items-start gap-2 text-sm text-white/70">
+                      <div className="mt-[7px] h-1.5 w-1.5 rounded-full shrink-0" style={{ background: `${color}96` }} />
+                      <span>{outcome}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {project.openSourceNote && (
+              <div
+                className="rounded-xl px-4 py-3 text-sm text-white/76 leading-relaxed"
+                style={{ background: `${color}10`, border: `1px solid ${color}20` }}
+              >
+                {project.openSourceNote}
+              </div>
+            )}
+          </div>
+        </motion.div>
       ))}
     </div>
   );
@@ -424,6 +643,139 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
                 </span>
               ))}
             </div>
+
+            {level.papers && level.papers.length > 0 && (
+              <div className="mt-5 space-y-3">
+                <div
+                  className="text-[11px] tracking-[0.2em] uppercase font-semibold"
+                  style={{ color: `${color}B8`, fontFamily: "var(--font-label)" }}
+                >
+                  Long Papers
+                </div>
+
+                <div className="space-y-3">
+                  {level.papers.map((paper) => (
+                    <details
+                      key={`${level.level}-${paper.title}`}
+                      className="group rounded-xl"
+                      style={{ border: `1px solid ${color}18`, background: `${color}08` }}
+                    >
+                      <summary className="list-none cursor-pointer px-4 py-3">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="mt-1 h-2 w-2 rounded-full shrink-0 transition-transform duration-200 group-open:scale-125"
+                            style={{ background: `${color}A0` }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-white/88 mb-1">{paper.title}</div>
+                            <p className="text-xs md:text-sm leading-relaxed text-white/54">{paper.summary}</p>
+                            {paper.keywords && paper.keywords.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {paper.keywords.map((keyword) => (
+                                  <span
+                                    key={`${paper.title}-${keyword}`}
+                                    className="px-2.5 py-1 rounded-full text-[10px] tracking-[0.14em] uppercase text-white/70"
+                                    style={{ background: `${color}14`, border: `1px solid ${color}20` }}
+                                  >
+                                    {keyword}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <ChevronDown
+                            size={16}
+                            className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
+                            style={{ color: `${color}80` }}
+                          />
+                        </div>
+                      </summary>
+
+                      <div
+                        className="px-4 pb-4 pt-1 space-y-4"
+                        style={{ borderTop: `1px solid ${color}14` }}
+                      >
+                        {paper.sections.map((section) => (
+                          <div key={`${paper.title}-${section.heading}`}>
+                            <div
+                              className="text-[11px] tracking-[0.18em] uppercase font-semibold mb-2"
+                              style={{ color: `${color}BE`, fontFamily: "var(--font-label)" }}
+                            >
+                              {section.heading}
+                            </div>
+                            <div className="space-y-2">
+                              {section.paragraphs.map((paragraph, paragraphIndex) => (
+                                <p
+                                  key={`${paper.title}-${section.heading}-${paragraphIndex}`}
+                                  className="text-sm leading-relaxed text-white/62"
+                                >
+                                  {paragraph}
+                                </p>
+                              ))}
+                            </div>
+
+                            {section.bullets && section.bullets.length > 0 && (
+                              <ul className="mt-3 space-y-2">
+                                {section.bullets.map((bullet, bulletIndex) => (
+                                  <li
+                                    key={`${paper.title}-${section.heading}-bullet-${bulletIndex}`}
+                                    className="flex items-start gap-2 text-sm leading-relaxed text-white/60"
+                                  >
+                                    <ChevronRight
+                                      size={14}
+                                      className="mt-0.5 shrink-0"
+                                      style={{ color: `${color}86` }}
+                                    />
+                                    <span>{bullet}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+
+                            {section.image && (
+                              <figure
+                                className="mt-4 overflow-hidden rounded-xl"
+                                style={{ border: `1px solid ${color}18`, background: `${color}06` }}
+                              >
+                                <img
+                                  src={section.image.src}
+                                  alt={section.image.alt}
+                                  className="w-full h-auto object-cover"
+                                  loading="lazy"
+                                />
+                                {section.image.caption && (
+                                  <figcaption className="px-4 py-3 text-xs leading-relaxed text-white/46">
+                                    {section.image.caption}
+                                  </figcaption>
+                                )}
+                              </figure>
+                            )}
+
+                            {section.links && section.links.length > 0 && (
+                              <div className="mt-4 flex flex-col gap-2">
+                                {section.links.map((link) => (
+                                  <a
+                                    key={`${paper.title}-${section.heading}-${link.href}`}
+                                    href={link.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm transition-opacity hover:opacity-100 opacity-85"
+                                    style={{ color: `${color}D4` }}
+                                  >
+                                    <ExternalLink size={14} />
+                                    <span>{link.label}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           {/* 连接箭头 */}
           {i < chain.length - 1 && (
@@ -433,138 +785,6 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
           )}
         </motion.div>
       ))}
-    </div>
-  );
-}
-
-/* ─── 数学作业浏览组件（算法页专用）─── */
-function MathAssignmentsPanel({
-  assignments,
-  color,
-}: {
-  assignments: NonNullable<DiceFace["mathAssignments"]>;
-  color: string;
-}) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (!api) return;
-    const onSelect = () => setActiveIndex(api.selectedScrollSnap());
-    onSelect();
-    api.on("select", onSelect);
-    api.on("reInit", onSelect);
-    return () => {
-      api.off("select", onSelect);
-      api.off("reInit", onSelect);
-    };
-  }, [api]);
-
-  return (
-    <div
-      className="rounded-2xl p-4 md:p-6"
-      style={{
-        background: `linear-gradient(145deg, ${color}10, ${color}05)`,
-        border: `1px solid ${color}22`,
-      }}
-    >
-      <Carousel setApi={setApi} opts={{ align: "start", loop: false }} className="w-full">
-        <CarouselContent className="-ml-0">
-          {assignments.map((assignment) => (
-            <CarouselItem key={assignment.subject} className="pl-0 basis-full">
-              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] gap-4 md:gap-5">
-                <a
-                  href={assignment.previewImage}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block rounded-xl overflow-hidden"
-                  style={{ border: `1px solid ${color}28`, background: `${color}08` }}
-                >
-                  <img
-                    src={assignment.previewImage}
-                    alt={`${assignment.subject}作业预览`}
-                    className="w-full h-[300px] md:h-[440px] object-cover"
-                    loading="lazy"
-                  />
-                </a>
-                <div className="flex flex-col justify-between gap-4">
-                  <div>
-                    <div
-                      className="text-xs tracking-[0.16em] uppercase mb-2"
-                      style={{ color: `${color}B8`, fontFamily: "var(--font-label)" }}
-                    >
-                      数学基础模块
-                    </div>
-                    <h4 className="text-lg md:text-xl font-semibold text-white/92 mb-2" style={{ fontFamily: "var(--font-display)" }}>
-                      {assignment.subject}
-                    </h4>
-                    {assignment.note && <p className="text-sm text-white/62 leading-relaxed">{assignment.note}</p>}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <a
-                      href={assignment.pdfFile}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-between rounded-lg px-4 py-2.5 text-sm text-white/85 transition-colors hover:text-white"
-                      style={{ border: `1px solid ${color}36`, background: `${color}12` }}
-                    >
-                      查看 PDF 原件
-                      <ExternalLink size={14} />
-                    </a>
-                    <a
-                      href={assignment.previewImage}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-between rounded-lg px-4 py-2.5 text-sm text-white/70 transition-colors hover:text-white/90"
-                      style={{ border: `1px solid ${color}24`, background: `${color}08` }}
-                    >
-                      查看高清预览
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {assignments.map((assignment, index) => (
-            <button
-              key={assignment.subject}
-              type="button"
-              onClick={() => api?.scrollTo(index)}
-              className="h-2.5 rounded-full transition-all duration-200"
-              style={{
-                width: activeIndex === index ? "26px" : "10px",
-                background: activeIndex === index ? color : `${color}40`,
-              }}
-              aria-label={`切换到${assignment.subject}`}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => api?.scrollPrev()}
-            className="rounded-lg px-3 py-1.5 text-xs text-white/75 transition-colors hover:text-white"
-            style={{ border: `1px solid ${color}30`, background: `${color}12` }}
-          >
-            上一个
-          </button>
-          <button
-            type="button"
-            onClick={() => api?.scrollNext()}
-            className="rounded-lg px-3 py-1.5 text-xs text-white/75 transition-colors hover:text-white"
-            style={{ border: `1px solid ${color}30`, background: `${color}12` }}
-          >
-            下一个
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1412,29 +1632,36 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     </div>
                   )}
 
-                  {/* ─── 算法分支：知识体系链条 + 技术应用 + 编程语言 ─── */}
+                  {/* ─── 算法分支：知识体系 + 核心课程 + 技术应用 + 实战项目 ─── */}
                   {face.id === 3 && (
                     <>
                       {face.knowledgeChain && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="KNOWLEDGE ARCHITECTURE" color={face.color} />
+                          <SectionTitle title="KNOWLEDGE SYSTEM" color={face.color} />
                           <div className="max-w-2xl mx-auto">
                             <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
                           </div>
                         </div>
                       )}
 
-                      {face.mathAssignments && face.mathAssignments.length > 0 && (
+                      {face.algorithmCourseDetails && face.algorithmCourseDetails.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="MATH FOUNDATIONS" color={face.color} />
-                          <MathAssignmentsPanel assignments={face.mathAssignments} color={face.color} />
+                          <SectionTitle title="CORE COURSES & PRACTICE" color={face.color} />
+                          <AlgorithmCourseDetails courses={face.algorithmCourseDetails} color={face.color} />
                         </div>
                       )}
 
-                      {face.techApplications && (
+                      {face.algorithmApplicationAreas && face.algorithmApplicationAreas.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="TECH APPLICATIONS" color={face.color} />
-                          <TechApplications apps={face.techApplications} color={face.color} />
+                          <SectionTitle title="TECHNICAL APPLICATIONS" color={face.color} />
+                          <AlgorithmApplicationAreas areas={face.algorithmApplicationAreas} color={face.color} />
+                        </div>
+                      )}
+
+                      {face.algorithmProjects && face.algorithmProjects.length > 0 && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="PRACTICAL PROJECTS" color={face.color} />
+                          <AlgorithmProjects projects={face.algorithmProjects} color={face.color} />
                         </div>
                       )}
 
