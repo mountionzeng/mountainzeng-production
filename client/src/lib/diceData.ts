@@ -173,7 +173,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 1,
     title: "视觉",
-    tabLabel: "Visual",
+    tabLabel: "视觉",
     subtitle: "VISUAL",
     color: "#4A7BF7",
     icon: "Palette",
@@ -243,7 +243,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 2,
     title: "产品",
-    tabLabel: "Product",
+    tabLabel: "产品",
     subtitle: "PRODUCT MANAGEMENT",
     color: "#6B6BF7",
     icon: "Target",
@@ -305,7 +305,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 3,
     title: "算法",
-    tabLabel: "Algorithm",
+    tabLabel: "算法",
     subtitle: "ALGORITHM",
     color: "#8B5CF6",
     icon: "Binary",
@@ -803,7 +803,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 4,
     title: "系统",
-    tabLabel: "System",
+    tabLabel: "系统",
     subtitle: "COMPUTER SYSTEM",
     color: "#A855F7",
     icon: "Settings",
@@ -846,7 +846,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 5,
     title: "学术跨界",
-    tabLabel: "Interdisciplinary",
+    tabLabel: "学术跨界",
     subtitle: "INTERDISCIPLINARY",
     color: "#D946A8",
     icon: "Microscope",
@@ -893,7 +893,7 @@ export const DICE_FACES: DiceFace[] = [
   {
     id: 6,
     title: "无限可能",
-    tabLabel: "Future",
+    tabLabel: "无限可能",
     subtitle: "FUTURE",
     color: "#FFD93D",
     icon: "♾️",

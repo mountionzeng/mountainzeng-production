@@ -8,6 +8,12 @@ import ParticleField from "@/components/ParticleField";
 import { DICE_FACES } from "@/lib/diceData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const HOME_TITLE_IMAGE_TUNING = {
+  offsetX: -160,
+  offsetY: -183,
+  scale: 1.24,
+};
+
 function WechatIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -169,7 +175,7 @@ export default function App() {
         className="fixed inset-0 z-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06), transparent 65%)",
+            "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.11) 0%, rgba(96,165,250,0.10) 24%, rgba(244,114,182,0.08) 44%, transparent 70%)",
         }}
       />
 
@@ -178,12 +184,25 @@ export default function App() {
         className="fixed inset-0 z-0 pointer-events-none"
       >
         <div 
-          className="absolute -top-28 left-1/4 w-[28rem] h-[28rem] rounded-full opacity-10 blur-3xl"
-          style={{ background: "radial-gradient(circle, #4A7BF7, transparent)" }}
+          className="absolute -top-28 left-1/4 w-[30rem] h-[30rem] rounded-full opacity-20 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(74,123,247,0.95) 0%, rgba(78,205,196,0.62) 42%, transparent 76%)",
+          }}
         />
         <div 
-          className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl"
-          style={{ background: "radial-gradient(circle, #F472B6, transparent)" }}
+          className="absolute top-[28%] right-[18%] w-[25rem] h-[25rem] rounded-full opacity-16 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(168,85,247,0.84) 0%, rgba(96,165,250,0.48) 48%, transparent 78%)",
+          }}
+        />
+        <div 
+          className="absolute bottom-0 right-1/4 w-[28rem] h-[28rem] rounded-full opacity-18 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(244,114,182,0.94) 0%, rgba(255,217,61,0.56) 46%, transparent 78%)",
+          }}
         />
       </div>
 
@@ -210,10 +229,10 @@ export default function App() {
         >
           <div style={{ transform: "translate(7px, 0px)" }}>
             <span
-              className="text-xs tracking-[0.6em] text-white/15 uppercase font-bold"
+              className="text-xs tracking-[0.32em] text-white/15 font-bold"
               style={{ fontFamily: "var(--font-label)" }}
             >
-              SUPER INDIVIDUAL
+              超级个体
             </span>
           </div>
         </motion.div>
@@ -228,20 +247,20 @@ export default function App() {
           <div
             className="absolute left-1/2 top-2/3 w-fit"
             style={{
-              transform: "translate(-50%, -50%) translate(-105px, -212px)",
+              transform: `translate(-50%, -50%) translate(${HOME_TITLE_IMAGE_TUNING.offsetX}px, ${HOME_TITLE_IMAGE_TUNING.offsetY}px)`,
             }}
           >
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-full blur-[44px] mix-blend-screen transform-gpu"
               style={{
                 background:
-                  "conic-gradient(from 0deg, rgba(78,205,196,0.23), rgba(74,123,247,0.27), rgba(168,85,247,0.22), rgba(244,114,182,0.24), rgba(255,217,61,0.22), rgba(78,205,196,0.23))",
+                  "conic-gradient(from 0deg, rgba(78,205,196,0.38), rgba(74,123,247,0.45), rgba(168,85,247,0.36), rgba(244,114,182,0.40), rgba(255,217,61,0.34), rgba(78,205,196,0.38))",
                 willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [0, 360],
-                scale: [1, 1.08, 1],
-                opacity: [0.31, 0.46, 0.31],
+                scale: [1, 1.1, 1],
+                opacity: [0.42, 0.62, 0.42],
               }}
               transition={{
                 duration: 14,
@@ -253,13 +272,13 @@ export default function App() {
               className="pointer-events-none absolute -inset-[14%] rounded-full blur-[60px] mix-blend-screen transform-gpu"
               style={{
                 background:
-                  "radial-gradient(circle at 30% 30%, rgba(74,123,247,0.27), transparent 48%), radial-gradient(circle at 75% 35%, rgba(78,205,196,0.24), transparent 50%), radial-gradient(circle at 50% 75%, rgba(244,114,182,0.27), transparent 52%)",
+                  "radial-gradient(circle at 30% 30%, rgba(74,123,247,0.38), transparent 48%), radial-gradient(circle at 75% 35%, rgba(78,205,196,0.32), transparent 50%), radial-gradient(circle at 50% 75%, rgba(244,114,182,0.38), transparent 52%)",
                 willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [360, 0],
-                scale: [1.02, 1.12, 1.02],
-                opacity: [0.255, 0.37, 0.255],
+                scale: [1.02, 1.14, 1.02],
+                opacity: [0.34, 0.5, 0.34],
               }}
               transition={{
                 duration: 10,
@@ -271,13 +290,13 @@ export default function App() {
               className="pointer-events-none absolute -inset-[20%] rounded-full blur-[74px] mix-blend-screen transform-gpu"
               style={{
                 background:
-                  "radial-gradient(circle at 20% 50%, rgba(78,205,196,0.24), transparent 46%), radial-gradient(circle at 80% 45%, rgba(168,85,247,0.24), transparent 48%), radial-gradient(circle at 50% 80%, rgba(255,217,61,0.20), transparent 52%)",
+                  "radial-gradient(circle at 20% 50%, rgba(78,205,196,0.32), transparent 46%), radial-gradient(circle at 80% 45%, rgba(168,85,247,0.34), transparent 48%), radial-gradient(circle at 50% 80%, rgba(255,217,61,0.28), transparent 52%)",
                 willChange: "transform, opacity",
               }}
               animate={{
                 rotate: [0, 180, 360],
-                scale: [1, 1.06, 1],
-                opacity: [0.18, 0.30, 0.18],
+                scale: [1, 1.08, 1],
+                opacity: [0.24, 0.4, 0.24],
               }}
               transition={{
                 duration: 18,
@@ -289,12 +308,15 @@ export default function App() {
               src="/Mountion.png"
               alt="Mountion"
               className="relative block h-auto w-[min(67.5vw,882px)]"
-              style={{ transform: "scale(1.13)", transformOrigin: "center" }}
+              style={{
+                transform: `scale(${HOME_TITLE_IMAGE_TUNING.scale})`,
+                transformOrigin: "center",
+              }}
             />
             <div className="absolute left-full ml-3 md:ml-4 top-1/2 -translate-y-1/2 pointer-events-auto z-30">
               <div
                 className="flex items-center gap-2"
-                style={{ transform: "translate(162px, -38px)" }}
+                style={{ transform: "translate(162px, -68px)" }}
               >
                 <button
                   type="button"
@@ -409,7 +431,7 @@ export default function App() {
                             : "brightness(1.2) saturate(1.1)",
                       }}
                     >
-                      <span className="lowercase first-letter:uppercase leading-tight">
+                      <span className="leading-tight">
                         {face.tabLabel}
                       </span>
                     </TabsTrigger>

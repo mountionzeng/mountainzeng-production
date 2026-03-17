@@ -14,7 +14,16 @@ interface Particle {
   opacity: number;
   targetOpacity: number;
   pulseSpeed: number;
+  glowColor: string;
+  accentColor: string;
 }
+
+const PARTICLE_PALETTE = [
+  { glowColor: "74, 123, 247", accentColor: "78, 205, 196" },
+  { glowColor: "244, 114, 182", accentColor: "255, 217, 61" },
+  { glowColor: "168, 85, 247", accentColor: "96, 165, 250" },
+  { glowColor: "56, 189, 248", accentColor: "129, 140, 248" },
+];
 
 export default function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -48,16 +57,21 @@ export default function ParticleField() {
     window.addEventListener("resize", resize);
 
     const count = Math.min(24, Math.floor(metrics.width / 80));
-    const particles: Particle[] = Array.from({ length: count }, () => ({
-      x: Math.random() * metrics.width,
-      y: Math.random() * metrics.height,
-      vx: (Math.random() - 0.5) * 0.2,
-      vy: (Math.random() - 0.5) * 0.2,
-      size: Math.random() * 2 + 0.5,
-      opacity: Math.random() * 0.35 + 0.45,
-      targetOpacity: Math.random() * 0.35 + 0.55,
-      pulseSpeed: Math.random() * 0.018 + 0.004,
-    }));
+    const particles: Particle[] = Array.from({ length: count }, () => {
+      const paletteEntry = PARTICLE_PALETTE[Math.floor(Math.random() * PARTICLE_PALETTE.length)];
+      return {
+        x: Math.random() * metrics.width,
+        y: Math.random() * metrics.height,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        size: Math.random() * 2.4 + 0.7,
+        opacity: Math.random() * 0.34 + 0.46,
+        targetOpacity: Math.random() * 0.34 + 0.58,
+        pulseSpeed: Math.random() * 0.018 + 0.004,
+        glowColor: paletteEntry.glowColor,
+        accentColor: paletteEntry.accentColor,
+      };
+    });
 
     const animate = () => {
       ctx.clearRect(0, 0, metrics.width, metrics.height);
@@ -84,9 +98,10 @@ export default function ParticleField() {
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         
         // 添加渐变效果
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
-        gradient.addColorStop(0.5, `rgba(139, 92, 246, ${p.opacity})`);
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3.4);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.95, p.opacity + 0.14)})`);
+        gradient.addColorStop(0.34, `rgba(${p.glowColor}, ${Math.min(0.88, p.opacity)})`);
+        gradient.addColorStop(0.72, `rgba(${p.accentColor}, ${Math.min(0.62, p.opacity * 0.74)})`);
         gradient.addColorStop(1, "transparent");
         
         ctx.fillStyle = gradient;
