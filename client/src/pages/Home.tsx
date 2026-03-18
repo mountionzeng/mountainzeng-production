@@ -370,7 +370,8 @@ export default function App() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: showDimension ? 0 : 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-7xl mt-1 md:mt-2 translate-y-[98px] md:translate-y-[104px] relative origin-top"
+          // 中文注释：按需求将首页面板整体沿 Y 轴上移 20px（移动端/桌面端分别下调）
+          className="w-full max-w-7xl mt-1 md:mt-2 translate-y-[78px] md:translate-y-[84px] relative origin-top"
         >
           <div style={{ transform: "translate(6px, 0px)" }}>
             <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">

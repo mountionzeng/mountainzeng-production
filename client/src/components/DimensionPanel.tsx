@@ -646,12 +646,7 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
 
             {level.papers && level.papers.length > 0 && (
               <div className="mt-5 space-y-3">
-                <div
-                  className="text-[11px] tracking-[0.2em] uppercase font-semibold"
-                  style={{ color: `${color}B8`, fontFamily: "var(--font-label)" }}
-                >
-                  Long Papers
-                </div>
+                {/* 中文注释：按需求去掉算法分支里的 “Long Papers” 标题，仅保留下方论文内容 */}
 
                 <div className="space-y-3">
                   {level.papers.map((paper) => (
@@ -1037,6 +1032,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
   if (!face) return null;
   const isVisualFace = face.id === 1;
+  // 中文注释：按需求隐藏非视觉分支的大标题（产品/算法/系统/学术跨界/无限可能）
+  const shouldHideBranchTitle = !isVisualFace;
   const isEaster = face.id === 6;
   const hasVisualCdn = Boolean(visualCdnBaseUrl);
   const visibleVisualImages = VISUAL_IMAGE_ITEMS.slice(0, visualImageVisibleCount).filter((_, index) => {
@@ -1527,16 +1524,18 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                           {face.subtitle}
                         </div>
 
-                        {/* 标题 */}
-                        <h1
-                          className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[0.95] tracking-tight"
-                          style={{ 
-                            fontFamily: "var(--font-display)",
-                            textShadow: `0 0 60px ${face.color}30`,
-                          }}
-                        >
-                          {face.title}
-                        </h1>
+                        {/* 标题（非视觉分支按需求隐藏） */}
+                        {!shouldHideBranchTitle && (
+                          <h1
+                            className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[0.95] tracking-tight"
+                            style={{ 
+                              fontFamily: "var(--font-display)",
+                              textShadow: `0 0 60px ${face.color}30`,
+                            }}
+                          >
+                            {face.title}
+                          </h1>
+                        )}
 
                         {/* 核心观点 */}
                         {face.coreStatement && (

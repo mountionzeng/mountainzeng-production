@@ -192,29 +192,37 @@ export const DICE_FACES: DiceFace[] = [
       { label: "参与电影级项目", value: "10+" },
     ],
     works: [
+      // 中文注释：按需求将视觉分支三张项目卡片改为“公司|职位 + 时间 + 关键成果”模块
       {
-        title: "《长安三万里》",
+        title: "追光动画 | 数字绘景师",
         placeholder: false,
-        description: "全流程场景美术，营造盛唐诗意氛围",
-        role: "追光动画",
-        highlights: ["应用投射拼接技术，提升画面一致性"],
-        tags: ["追光动画", "动画电影"],
+        description: "2022.10 - 2025.5",
+        highlights: [
+          "全流程参与《长安三万里》《白蛇-浮生》《聊斋》场景美术绘制",
+          "自主开发 Matte Painting 专用插件，重构图像处理流程",
+          "在《长安三万里》中应用投射拼接技术，提升画面一致性与制作效率",
+        ],
       },
       {
-        title: "《深海》",
+        title: "原力动画 | 数字绘景组长",
         placeholder: false,
-        description: "美术标杆镜头制作",
-        role: "原力动画",
-        highlights: ["压抑与希望并存的视觉表达"],
-        tags: ["原力动画", "动画电影"],
+        description: "2020.10 - 2022.5",
+        highlights: [
+          "主导《深海》《巨怪猎人：泰坦猎人》（梦工厂）场景制作，输出美术标杆镜头",
+          "定义《英雄联盟》《王者荣耀》等手游过场动画的美术风格及质量标准",
+          "完成《哈利·波特》（网易游戏）首曝美宣海报制作",
+          "负责《凡人修仙传》前期视觉探索，优化流程缩短 2/3 制作周期",
+        ],
       },
       {
-        title: "《Kingdom》（李尸王朝）",
+        title: "宝琳创展 | Generalist",
         placeholder: false,
-        description: "国际影视项目经验",
-        role: "宝琳创展",
-        highlights: ["手绘技法实现 3D 难以达成的效果"],
-        tags: ["宝琳创展", "Netflix"],
+        description: "2019.3 - 2020.10",
+        highlights: [
+          "参与《侍神令》《Kingdom 2》(Netflix 韩剧）《The Righteous Gemstones》(HBO 美剧）等国际影视项目的 Matte Painting 工作",
+          "提前介入 CCTV《澳门人家》前期特效分镜制作，降低跨国沟通成本",
+          "运用手绘技法实现 3D 难以达成的视觉效果，填补技术空白",
+        ],
       },
     ],
     timeline: [
@@ -320,7 +328,8 @@ export const DICE_FACES: DiceFace[] = [
     knowledgeChain: [
       {
         level: "数学基础",
-        items: ["线性代数", "微积分与优化", "概率论", "回归分析", "分类方法"],
+        // 中文注释：按需求移除算法分支这 5 个首页标签，仅保留后续论文内容
+        items: [],
         papers: [
           {
             title: "第2章：线性代数 (Linear Algebra) - 详解",
