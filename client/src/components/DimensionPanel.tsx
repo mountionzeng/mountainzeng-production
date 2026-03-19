@@ -4,9 +4,11 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import type { SVGProps } from "react";
-import { motion } from "framer-motion";
+import type { ReactNode, SVGProps } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import { DICE_FACES } from "@/lib/diceData";
 import type { DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
@@ -43,6 +45,272 @@ const VISUAL_IMAGE_GRID_COLUMN_COUNT = 3;
 // 将网格区的第 2 行单独抽出来作为独立层展示
 const VISUAL_IMAGE_ISOLATED_GRID_ROW_INDEX = 1;
 const MOTION_EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+type PaperSpotlightItem = {
+  title: string;
+  noteDate: string;
+  note: string;
+};
+
+// 中文注释：算法分支的 Paper Spotlight 卡片默认数据（后续可直接替换）
+const ALGORITHM_PAPER_SPOTLIGHT_ITEMS: PaperSpotlightItem[] = [
+  {
+    // 中文注释：按需求替换为 Attention Residuals 的完整长文笔记
+    title: "《深度解读：Attention Residuals（注意力残差）》",
+    noteDate: "2026-03-19",
+    note: `# 深度解读：Attention Residuals（注意力残差）
+
+## 前置
+
+要真正读懂《Attention Residuals》这篇论文，你需要对以下几个核心概念有扎实的理解。
+
+### 1. Transformer 架构与残差连接
+
+Transformer 是现代大语言模型的基础架构。在 Transformer 中，每一层都包含两个主要组件：自注意力机制（Self-Attention）和前馈神经网络（FFN）。而**残差连接**（Residual Connection）是让这个深层网络能够成功训练的关键技术。
+
+残差连接的基本思想非常简单：不是让网络直接学习从输入到输出的映射，而是学习一个“残差”——也就是输出与输入之间的差异。数学上表示为：
+
+$\\text{output} = \\text{input} + \\text{Layer}(\\text{input})$
+
+这个简单的设计解决了深度神经网络训练中的梯度消失问题，让我们能够堆叠几十甚至上百层网络。
+
+### 2. PreNorm vs PostNorm
+
+在 Transformer 中，Layer Normalization（层归一化）的位置有两种主流方案：
+
+- **PostNorm**（原始 Transformer 设计）：先做子层计算，再做归一化，最后加残差
+
+  - 公式：$x_{l+1} = \\text{LN}(x_l + \\text{Layer}(x_l))$
+
+  - 问题：深层网络梯度容易消失，训练不稳定
+
+- **PreNorm**（现代 LLM 标配）：先归一化，再做子层计算，最后加残差
+
+  - 公式：$x_{l+1} = x_l + \\text{Layer}(\\text{LN}(x_l))$
+
+  - 优势：训练更稳定，梯度流动更顺畅
+
+  - 问题：这正是 Attention Residuals 要解决的核心痛点
+
+### 3. PreNorm 的“稀释问题”
+
+PreNorm 虽然让训练变得稳定，但引入了一个微妙而严重的问题：**层贡献的逐层稀释**。
+
+想象一下，你有一个 100 层的网络。在 PreNorm 架构下，每一层的输出都以**固定权重 1** 累加到下一层：
+
+$x_L = x_0 + \\sum_{l=1}^{L} \\text{Layer}_l(\\text{LN}(x_l))$
+
+这意味着什么？随着网络加深：
+
+- 隐藏状态的幅度不断增长（从 $x_0$ 一直加到 $x_L$）
+
+- 每一层的贡献被“平均”稀释——第 1 层的输出要和后面 99 层的输出“平分秋色”
+
+- 越深的层，想要对最终输出产生显著影响就越困难
+
+这就像一个会议，前面的发言者说了一句话，后面 99 个人每人也说一句话，最后所有话等权重混在一起——前面的声音自然就被淹没了。
+
+### 4. 注意力机制的本质
+
+注意力机制（Attention）的核心思想是：**不是所有信息都同等重要，模型应该学会动态地“关注”最相关的部分**。
+
+在 Transformer 的序列维度上，注意力机制通过 Query-Key-Value 机制，让模型能够：
+
+- 根据当前 token（Query）
+
+- 在所有历史 token（Key）中检索
+
+- 用学习到的权重（通过 softmax 归一化）聚合信息（Value）
+
+这个机制的威力在于：权重是**输入相关的**（input-dependent）和**可学习的**（learned），而不是固定的。
+
+---
+
+## Attention Residuals：核心创新到底是什么？
+
+理解了上述前置知识后，Attention Residuals 的核心思想就呼之欲出了：**既然注意力机制在序列维度（横向）上如此成功，为什么不在深度维度（纵向）上也用注意力机制来替代固定的残差累加？**
+
+### 问题的本质
+
+传统残差连接的问题在于：
+
+- 所有层的输出以**固定权重 1** 累加
+
+- 无论输入是什么，累加方式都是机械的、均匀的
+
+- 模型无法根据当前任务动态调整“应该更多地依赖哪一层的信息”
+
+这就像你在写一篇文章时，必须把所有草稿的每一版都等权重地混合在一起——显然不合理。有时候你需要第 3 版的开头，有时候需要第 7 版的结论，而不是把所有版本平均混合。
+
+### Attention Residuals 的解决方案
+
+Kimi 团队提出的方案极其优雅：**用 softmax 注意力替代固定累加**。
+
+**Full Attention Residuals** 的公式是：
+
+$x_{l+1} = \\sum_{i=0}^{l} \\alpha_{l,i} \\cdot x_i$
+
+其中权重 $\\alpha_{l,i}$ 通过注意力机制计算：
+
+$\\alpha_{l,i} = \\frac{\\exp(q_l^T k_i)}{\\sum_{j=0}^{l} \\exp(q_l^T k_j)}$
+
+这里：
+
+- $q_l$ 是当前层的 query（从当前隐藏状态生成）
+
+- $k_i$ 是第 $i$ 层的 key（从该层的输出生成）
+
+- 权重通过 softmax 归一化，确保和为 1
+
+**这意味着什么？** 每一层现在可以：
+
+1. **动态选择**：根据当前输入，决定应该更多地依赖哪些前面的层
+
+2. **学习权重**：这些选择不是人为设定的，而是在训练中学习出来的
+
+3. **输入相关**：不同的输入会导致不同的层选择策略
+
+### 一个直观的类比
+
+想象你在解一道数学题：
+
+- **传统残差连接**：你必须把草稿纸上的每一步计算都等权重地“平均”起来作为答案
+
+- **Attention Residuals**：你可以智能地选择——“这道题的关键在第 3 步和第 7 步，我主要用这两步的结果，其他步骤权重降低”
+
+这就是从“机械累加”到“智能检索”的范式转变。
+
+---
+
+## 工程化挑战与 Block AttnRes
+
+理论上，Full Attention Residuals 很完美。但在实际的大规模模型训练中，它面临一个致命问题：**内存和通信开销**。
+
+### 问题分析
+
+假设你有一个 100 层的网络，每层的隐藏状态维度是 $d$：
+
+- Full AttnRes 需要在每一层存储**所有前面层的输出**
+
+- 内存复杂度：$O(L \\times d)$，其中 $L$ 是层数
+
+- 对于 48B 参数的模型，这个开销是不可接受的
+
+在分布式训练（尤其是流水线并行）中，这还会导致大量的跨设备通信开销。
+
+### Block Attention Residuals：务实的折中
+
+Kimi 团队提出了 **Block AttnRes**，这是一个工程化的解决方案：
+
+1. **分块策略**：将 $L$ 层网络划分为 $N$ 个块（Block）
+
+2. **块内标准残差**：在每个块内部，仍然使用传统的固定权重残差连接
+
+3. **块间注意力**：只在块的边界上，对这 $N$ 个块级表征执行注意力聚合
+
+这样：
+
+- 内存复杂度从 $O(L \\times d)$ 降低到 $O(N \\times d)$
+
+- 如果 $N = 10$，$L = 100$，内存开销直接降低 10 倍
+
+- 同时保留了大部分 Full AttnRes 的性能增益
+
+### 关键的工程优化
+
+论文还提出了两个重要的系统优化：
+
+1. **缓存式流水线通信**：在流水线并行中，通过缓存机制减少跨设备的块级表征传输
+
+2. **两阶段计算策略**：将注意力计算和残差聚合分离，优化计算效率
+
+这些优化让 Block AttnRes 成为一个**可以直接替换标准残差连接的即插即用方案**，训练开销几乎可以忽略不计。
+
+---
+
+## 实验验证：真的有用吗？
+
+Kimi 团队在真实的大规模预训练中验证了这个方案，这是最有说服力的部分。
+
+### 训练配置
+
+- **模型**：Kimi Linear 48B（总参数 48B，激活参数 3B 的 MoE 架构）
+
+- **数据**：1.4 万亿 tokens 的预训练语料
+
+- **对比**：标准残差连接 vs Block AttnRes
+
+### 核心结果
+
+1. **训练效率提升 25%**：在相同的计算预算下，AttnRes 模型的性能显著更好
+
+2. **推理延迟仅增 2%**：几乎没有额外的推理开销
+
+3. **Scaling Law 一致性**：在不同模型规模下，改进都是一致的
+
+### 深层次的改进
+
+更重要的是，AttnRes 从根本上改善了网络的内部动力学：
+
+- **隐藏状态幅度更均匀**：不再出现 PreNorm 的无控制增长
+
+- **梯度分布更平衡**：各层的梯度不再随深度剧烈衰减
+
+- **层贡献更合理**：每一层都能对最终输出产生有意义的影响
+
+这些改进不仅体现在最终的性能指标上，更体现在模型的**可训练性**和**可扩展性**上。
+
+---
+
+## Why is this job so important
+
+### 1. 理论上的优雅统一
+
+Attention Residuals 提供了一个**统一的视角**：
+
+- Transformer 用注意力替代了 RNN 的序列递归（横向维度）
+
+- AttnRes 用注意力替代了残差的固定累加（纵向维度）
+
+这是一个完整的、对称的设计哲学。
+
+### 2. 工程上的可落地性
+
+与许多“纸面上很美”的研究不同，AttnRes：
+
+- 真正在 48B 规模的模型上验证了
+
+- 解决了内存、通信、计算的所有工程问题
+
+- 提供了即插即用的实现方案
+
+### 3. 对未来的启示
+
+这个工作打开了一个新的研究方向：**深度维度的动态架构**。
+
+未来可能的探索包括：
+
+- 更复杂的深度注意力模式（不只是简单的 QKV）
+
+- 自适应的块划分策略（根据任务动态调整块大小）
+
+- 与其他架构创新（如 MoE、长上下文）的结合
+
+---
+
+## 总结：
+
+《Attention Residuals》的核心贡献可以用一句话概括：
+
+**把 Transformer 在序列维度上“用注意力替代递归”的成功经验，迁移到了深度维度上，用可学习的、输入相关的注意力聚合，替代了固定权重的残差累加。**
+
+这不是一个小修小补的改进，而是对 Transformer 架构底层设计的重新思考。它解决了 PreNorm 架构中长期存在但被忽视的“层贡献稀释”问题，并且通过精巧的工程设计（Block AttnRes），让这个理论上优雅的方案在实际的大规模训练中真正可行。
+
+对于深度学习研究者来说，这篇论文的价值在于：它提醒我们，即使是看似“已经定型”的架构组件（如残差连接），仍然有重新审视和改进的空间。而对于工程实践者来说，Block AttnRes 提供了一个可以立即尝试的、经过验证的方案，来提升模型的训练效率和最终性能。
+
+这就是为什么这篇论文能够同时获得 Elon Musk 和 Andrej Karpathy 的盛赞——它既有理论深度，又有工程实用性，是真正推动领域前进的工作。`,
+  },
+];
 
 function getVisualImageDisplayRow(displayIndex: number): number {
   if (displayIndex <= VISUAL_IMAGE_SOLO_ROW_COUNT) {
@@ -604,54 +872,125 @@ function AlgorithmProjects({
 
 /* ─── 知识体系链条组件（算法页专用）─── */
 function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowledgeChain"]>; color: string }) {
+  // 中文注释：左侧目录当前选中项（默认第一个：数学基础）
+  const [activeLevelIndex, setActiveLevelIndex] = useState(0);
+  // 中文注释：右侧内容整体展开/收起
+  const [isRightExpanded, setIsRightExpanded] = useState(true);
+
+  useEffect(() => {
+    if (activeLevelIndex >= chain.length) {
+      setActiveLevelIndex(0);
+    }
+  }, [activeLevelIndex, chain.length]);
+
+  const activeLevel = chain[activeLevelIndex] ?? chain[0];
+  if (!activeLevel) return null;
+
   return (
-    <div className="space-y-0">
-      {chain.map((level, i) => (
-        <motion.div
-          key={level.level}
-          custom={i}
-          variants={fadeInUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="relative"
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-4 lg:gap-6">
+      {/* 中文注释：左侧知识结构目录 */}
+      <div
+        className="rounded-2xl p-3 md:p-4 h-fit"
+        style={{
+          background: `linear-gradient(145deg, ${color}10, ${color}04)`,
+          border: `1px solid ${color}22`,
+        }}
+      >
+        <div
+          className="text-[11px] tracking-[0.24em] uppercase font-semibold mb-3 px-2"
+          style={{ color: `${color}C8`, fontFamily: "var(--font-label)" }}
         >
-          <div
-            className="rounded-xl p-5 relative overflow-hidden"
-            style={{
-              background: `linear-gradient(145deg, ${color}${String(8 + i * 3).padStart(2, "0")}, ${color}04)`,
-              border: `1px solid ${color}${String(15 + i * 5).padStart(2, "0")}`,
-            }}
-          >
-            <div
-              className="text-xs tracking-[0.25em] uppercase font-semibold mb-3"
-              style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
+          Structure
+        </div>
+        <div className="space-y-2">
+          {chain.map((level, index) => {
+            const isActive = index === activeLevelIndex;
+            return (
+              <button
+                key={level.level}
+                type="button"
+                onClick={() => {
+                  setActiveLevelIndex(index);
+                  setIsRightExpanded(true);
+                }}
+                className="w-full text-left rounded-xl px-3 py-2.5 transition-all duration-200"
+                style={{
+                  color: isActive ? `${color}F0` : "rgba(255,255,255,0.66)",
+                  background: isActive ? `${color}1E` : "transparent",
+                  border: `1px solid ${isActive ? `${color}3A` : "rgba(255,255,255,0.08)"}`,
+                }}
+              >
+                <div className="text-sm font-semibold">{level.level}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 中文注释：右侧内容区，支持整体收放 */}
+      <motion.div
+        key={activeLevel.level}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+        className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
+        style={{
+          // 中文注释：Knowledge System 右侧容器改成和 Paper Spotlight 一致的左亮右黑渐变风格
+          background: `linear-gradient(90deg, ${color}34 0%, ${color}1c 26%, rgba(10,10,14,0.94) 62%, rgba(0,0,0,0.98) 100%)`,
+        }}
+      >
+        {/* 中文注释：复用 Paper Spotlight 的动态光效层，保持视觉一致 */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 12% 52%, ${color}3a 0%, ${color}1e 24%, transparent 62%)`,
+          }}
+          animate={{ opacity: [0.42, 0.58, 0.42], scale: [1, 1.03, 1] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(90deg, ${color}1e 0%, transparent 34%, rgba(0,0,0,0.14) 100%)`,
+          }}
+          animate={{ opacity: [0.3, 0.18, 0.3] }}
+          transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* 中文注释：按需求移除右侧顶部“数学基础 / 收起内容”这一行 */}
+
+        <AnimatePresence initial={false}>
+          {isRightExpanded && (
+            <motion.div
+              key={`${activeLevel.level}-expanded`}
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 0 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+              className="relative z-10 overflow-hidden"
             >
-              {level.level}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {level.items.map((item) => (
-                <span
-                  key={item}
-                  className="px-3 py-1.5 text-xs rounded-full text-white/65"
-                  style={{
-                    background: `${color}12`,
-                    border: `1px solid ${color}20`,
-                  }}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+              {activeLevel.items.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {activeLevel.items.map((item) => (
+                    <span
+                      key={item}
+                      className="px-3 py-1.5 text-xs rounded-full text-white/70"
+                      style={{
+                        background: `${color}14`,
+                        border: `1px solid ${color}24`,
+                      }}
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-            {level.papers && level.papers.length > 0 && (
-              <div className="mt-5 space-y-3">
-                {/* 中文注释：按需求去掉算法分支里的 “Long Papers” 标题，仅保留下方论文内容 */}
-
-                <div className="space-y-3">
-                  {level.papers.map((paper) => (
+              {activeLevel.papers && activeLevel.papers.length > 0 && (
+                <div className="mt-5 space-y-3">
+                  {activeLevel.papers.map((paper) => (
                     <details
-                      key={`${level.level}-${paper.title}`}
+                      key={`${activeLevel.level}-${paper.title}`}
                       className="group rounded-xl"
                       style={{ border: `1px solid ${color}18`, background: `${color}08` }}
                     >
@@ -769,17 +1108,11 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
                     </details>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-          {/* 连接箭头 */}
-          {i < chain.length - 1 && (
-            <div className="flex justify-center py-2">
-              <ChevronDown size={20} style={{ color: `${color}50` }} />
-            </div>
+              )}
+            </motion.div>
           )}
-        </motion.div>
-      ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
@@ -1014,6 +1347,410 @@ function SectionTitle({ title, color }: { title: string; color: string }) {
   );
 }
 
+type SpotlightNoteBlock =
+  | { type: "h1" | "h2" | "h3" | "p"; text: string }
+  | { type: "ul" | "ol"; items: string[] }
+  | { type: "math"; expression: string }
+  | { type: "hr" };
+
+const SPOTLIGHT_BULLET_RE = /^[-*]\s+(.+)/;
+const SPOTLIGHT_ORDERED_RE = /^\d+\.\s+(.+)/;
+const SPOTLIGHT_INLINE_MATH_RE = /\$([^$\n]+)\$/;
+
+function extractSpotlightBlockMath(line: string): string | null {
+  const trimmed = line.trim();
+  const blockMathDouble = trimmed.match(/^\$\$(.+)\$\$$/);
+  if (blockMathDouble) return blockMathDouble[1].trim();
+  const blockMathSingle = trimmed.match(/^\$(.+)\$$/);
+  if (blockMathSingle) return blockMathSingle[1].trim();
+  return null;
+}
+
+function isSpotlightStructuralLine(line: string): boolean {
+  const trimmed = line.trim();
+  return (
+    trimmed === "---" ||
+    /^#{1,3}\s+/.test(trimmed) ||
+    SPOTLIGHT_BULLET_RE.test(trimmed) ||
+    SPOTLIGHT_ORDERED_RE.test(trimmed) ||
+    extractSpotlightBlockMath(trimmed) !== null
+  );
+}
+
+function escapeSpotlightHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+// 中文注释：公式渲染失败时优雅降级为原文，避免页面报错
+function renderSpotlightKatex(expression: string, displayMode: boolean): string {
+  try {
+    return katex.renderToString(expression, {
+      displayMode,
+      throwOnError: false,
+      strict: "ignore",
+      trust: false,
+    });
+  } catch {
+    return `<code>${escapeSpotlightHtml(expression)}</code>`;
+  }
+}
+
+// 中文注释：把 Paper Spotlight 的 Markdown 风格长文转换成结构化块，视觉上对齐 Knowledge System 的阅读体验
+function parseSpotlightNote(note: string): SpotlightNoteBlock[] {
+  const lines = note.split(/\r?\n/);
+  const blocks: SpotlightNoteBlock[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const trimmed = lines[index].trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    if (trimmed === "---") {
+      blocks.push({ type: "hr" });
+      index += 1;
+      continue;
+    }
+
+    const blockMathExpression = extractSpotlightBlockMath(trimmed);
+    if (blockMathExpression) {
+      blocks.push({ type: "math", expression: blockMathExpression });
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("### ")) {
+      blocks.push({ type: "h3", text: trimmed.slice(4) });
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("## ")) {
+      blocks.push({ type: "h2", text: trimmed.slice(3) });
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("# ")) {
+      blocks.push({ type: "h1", text: trimmed.slice(2) });
+      index += 1;
+      continue;
+    }
+
+    if (SPOTLIGHT_BULLET_RE.test(trimmed)) {
+      const items: string[] = [];
+      let cursor = index;
+      while (cursor < lines.length) {
+        const current = lines[cursor].trim();
+        if (!current) {
+          const next = lines[cursor + 1]?.trim() ?? "";
+          if (SPOTLIGHT_BULLET_RE.test(next)) {
+            cursor += 1;
+            continue;
+          }
+          break;
+        }
+        const match = current.match(SPOTLIGHT_BULLET_RE);
+        if (!match) break;
+        items.push(match[1]);
+        cursor += 1;
+      }
+      blocks.push({ type: "ul", items });
+      index = cursor;
+      continue;
+    }
+
+    if (SPOTLIGHT_ORDERED_RE.test(trimmed)) {
+      const items: string[] = [];
+      let cursor = index;
+      while (cursor < lines.length) {
+        const current = lines[cursor].trim();
+        if (!current) {
+          const next = lines[cursor + 1]?.trim() ?? "";
+          if (SPOTLIGHT_ORDERED_RE.test(next)) {
+            cursor += 1;
+            continue;
+          }
+          break;
+        }
+        const match = current.match(SPOTLIGHT_ORDERED_RE);
+        if (!match) break;
+        items.push(match[1]);
+        cursor += 1;
+      }
+      blocks.push({ type: "ol", items });
+      index = cursor;
+      continue;
+    }
+
+    const paragraphLines = [trimmed];
+    let cursor = index + 1;
+    while (cursor < lines.length) {
+      const current = lines[cursor].trim();
+      if (!current || isSpotlightStructuralLine(current)) break;
+      paragraphLines.push(current);
+      cursor += 1;
+    }
+    blocks.push({ type: "p", text: paragraphLines.join(" ") });
+    index = cursor;
+  }
+
+  return blocks;
+}
+
+function renderSpotlightInlineText(text: string): ReactNode[] {
+  // 中文注释：支持同一段中的加粗与行内数学公式混排
+  const parts = text.split(/(\*\*[^*]+\*\*|\$[^$\n]+\$)/g).filter(Boolean);
+  return parts.map((part, idx) => {
+    const strongMatch = part.match(/^\*\*(.+)\*\*$/);
+    if (strongMatch) {
+      return (
+        <strong key={`spotlight-strong-${idx}`} className="font-semibold text-white/88">
+          {strongMatch[1]}
+        </strong>
+      );
+    }
+
+    const mathMatch = part.match(SPOTLIGHT_INLINE_MATH_RE);
+    if (mathMatch) {
+      return (
+        <span
+          key={`spotlight-math-${idx}`}
+          className="inline-block align-middle text-white/84"
+          dangerouslySetInnerHTML={{
+            __html: renderSpotlightKatex(mathMatch[1], false),
+          }}
+        />
+      );
+    }
+
+    return <span key={`spotlight-text-${idx}`}>{part}</span>;
+  });
+}
+
+function SpotlightNoteDocument({ note, color }: { note: string; color: string }) {
+  const blocks = parseSpotlightNote(note);
+
+  return (
+    <div className="rounded-xl p-4 md:p-5" style={{ background: `${color}0C` }}>
+      <div className="space-y-3.5">
+        {blocks.map((block, blockIndex) => {
+          if (block.type === "h1") {
+            return (
+              <h4
+                key={`spotlight-h1-${blockIndex}`}
+                className="text-lg md:text-xl font-semibold text-white/92 leading-relaxed"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {renderSpotlightInlineText(block.text)}
+              </h4>
+            );
+          }
+
+          if (block.type === "h2") {
+            return (
+              <div
+                key={`spotlight-h2-${blockIndex}`}
+                className="text-[11px] tracking-[0.18em] uppercase font-semibold pt-1"
+                style={{ color: `${color}C6`, fontFamily: "var(--font-label)" }}
+              >
+                {renderSpotlightInlineText(block.text)}
+              </div>
+            );
+          }
+
+          if (block.type === "h3") {
+            return (
+              <div key={`spotlight-h3-${blockIndex}`} className="text-sm font-semibold text-white/84">
+                {renderSpotlightInlineText(block.text)}
+              </div>
+            );
+          }
+
+          if (block.type === "ul") {
+            return (
+              <ul key={`spotlight-ul-${blockIndex}`} className="space-y-2">
+                {block.items.map((item, itemIndex) => (
+                  <li key={`spotlight-ul-item-${blockIndex}-${itemIndex}`} className="flex items-start gap-2 text-sm leading-relaxed text-white/66">
+                    <ChevronRight size={14} className="mt-0.5 shrink-0" style={{ color: `${color}86` }} />
+                    <span>{renderSpotlightInlineText(item)}</span>
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+
+          if (block.type === "ol") {
+            return (
+              <ol key={`spotlight-ol-${blockIndex}`} className="space-y-2">
+                {block.items.map((item, itemIndex) => (
+                  <li key={`spotlight-ol-item-${blockIndex}-${itemIndex}`} className="flex items-start gap-2 text-sm leading-relaxed text-white/66">
+                    <span
+                      className="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                      style={{ color: `${color}E8`, background: `${color}1C` }}
+                    >
+                      {itemIndex + 1}
+                    </span>
+                    <span>{renderSpotlightInlineText(item)}</span>
+                  </li>
+                ))}
+              </ol>
+            );
+          }
+
+          if (block.type === "hr") {
+            return (
+              <div
+                key={`spotlight-hr-${blockIndex}`}
+                className="h-px"
+                style={{ background: `linear-gradient(90deg, transparent, ${color}32, transparent)` }}
+              />
+            );
+          }
+
+          if (block.type === "math") {
+            return (
+              <div key={`spotlight-math-block-${blockIndex}`} className="overflow-x-auto rounded-lg px-2 py-2" style={{ background: `${color}08` }}>
+                <div
+                  className="min-w-fit text-white/84"
+                  dangerouslySetInnerHTML={{
+                    __html: renderSpotlightKatex(block.expression, true),
+                  }}
+                />
+              </div>
+            );
+          }
+
+          if (block.type === "p") {
+            return (
+              <p key={`spotlight-p-${blockIndex}`} className="text-sm leading-relaxed text-white/68">
+                {renderSpotlightInlineText(block.text)}
+              </p>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Paper Spotlight（算法页轻量论文卡）
+   ═══════════════════════════════════════════════════════════════ */
+function PaperSpotlightCards({ items, color }: { items: PaperSpotlightItem[]; color: string }) {
+  // 中文注释：仅展开一张卡片，避免页面过于复杂
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  if (items.length === 0) return null;
+
+  return (
+    // 中文注释：展开任意一张卡片时，切换为单列，让内容占满该页面可用最大宽度
+    <div className={`grid grid-cols-1 ${expandedIndex === null ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-4`}>
+      {items.map((item, index) => {
+        const isExpanded = expandedIndex === index;
+        return (
+          <motion.article
+            key={`${item.title}-${item.noteDate}-${index}`}
+            custom={index}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-40px" }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            // 中文注释：文案区域上下留白减半（仅收缩 y 轴 padding，左右保持不变）
+            className={`rounded-2xl px-5 py-2.5 md:px-6 md:py-3 relative overflow-hidden ${
+              isExpanded ? "w-full" : ""
+            }`}
+            style={{
+              // 中文注释：主底色改为“左亮右近纯黑”的定向渐变
+              background: `linear-gradient(90deg, ${color}34 0%, ${color}1c 26%, rgba(10,10,14,0.94) 62%, rgba(0,0,0,0.98) 100%)`,
+            }}
+          >
+            {/* 中文注释：Paper Spotlight 卡片背景改为动态渐变光效 */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                // 中文注释：动态光效仅保留在左侧区域，避免污染右侧黑色
+                background: `radial-gradient(circle at 12% 52%, ${color}3a 0%, ${color}1e 24%, transparent 62%)`,
+              }}
+              animate={{ opacity: [0.42, 0.58, 0.42], scale: [1, 1.03, 1] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `linear-gradient(90deg, ${color}1e 0%, transparent 34%, rgba(0,0,0,0.14) 100%)`,
+              }}
+              animate={{ opacity: [0.3, 0.18, 0.3] }}
+              transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+            />
+
+            <div className="relative z-10">
+              {/* 中文注释：把论文标题和 👀 UI 按钮并排到同一行，并整体缩小尺寸以节省空间 */}
+              <div className="flex items-center justify-start gap-1 flex-nowrap">
+                <h3
+                  className="min-w-0 max-w-[82%] text-sm md:text-base font-semibold text-white/92 leading-relaxed whitespace-nowrap overflow-hidden text-ellipsis"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {item.title}
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                  // 中文注释：仅按钮增加右下->左上渐变背景，图案保持原有 👀/🙈 不变
+                  className="inline-flex items-center justify-center rounded-full h-11 w-11 text-base transition-all duration-200 hover:scale-110 shrink-0 -ml-1"
+                  style={{
+                    color: `${color}EA`,
+                    background: `linear-gradient(to top left, ${color}2E 0%, rgba(0,0,0,0.72) 100%)`,
+                  }}
+                  aria-label={isExpanded ? "收起笔记" : "查看笔记"}
+                  title={isExpanded ? "收起笔记" : "查看笔记"}
+                >
+                  <span aria-hidden="true">{isExpanded ? "🙈" : "👀"}</span>
+                </button>
+              </div>
+
+              <div
+                // 中文注释：缩小标题文案与 Notes Time 文案之间的间距
+                className="mt-0.5 min-w-0 text-[10px] md:text-[11px] tracking-[0.12em] uppercase text-white/48 whitespace-nowrap overflow-hidden text-ellipsis"
+                style={{ fontFamily: "var(--font-label)" }}
+              >
+                Notes Time · {item.noteDate}
+              </div>
+
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    key="paper-note"
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.28, ease: "easeOut" }}
+                    className="overflow-hidden"
+                  >
+                    <SpotlightNoteDocument note={item.note} color={color} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.article>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════
    主组件
    ═══════════════════════════════════════════════════════════════ */
@@ -1034,6 +1771,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
   const isVisualFace = face.id === 1;
   // 中文注释：按需求隐藏非视觉分支的大标题（产品/算法/系统/学术跨界/无限可能）
   const shouldHideBranchTitle = !isVisualFace;
+  // 中文注释：算法分支单独放大 ALGORITHM 标识，并压缩其上下间距
+  const isAlgorithmFace = face.id === 3;
   const isEaster = face.id === 6;
   const hasVisualCdn = Boolean(visualCdnBaseUrl);
   const visibleVisualImages = VISUAL_IMAGE_ITEMS.slice(0, visualImageVisibleCount).filter((_, index) => {
@@ -1505,20 +2244,26 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
               {/* ═══ 非视觉分支（产品/算法/系统/跨界/未来）═══ */}
               {!isVisualFace && (
-                <div className="pt-4 lg:pt-8">
+                <div className={isAlgorithmFace ? "pt-0" : "pt-4 lg:pt-8"}>
                   {/* Hero 区域 */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="mb-12 lg:mb-16"
+                    // 中文注释：按需求将 ALGORITHM 与 PAPER SPOTLIGHT 之间间距设置为 20px
+                    className={isAlgorithmFace ? "mb-[20px]" : "mb-12 lg:mb-16"}
                   >
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                       {/* 左侧：标题区 */}
-                      <div className="space-y-6">
+                      <div className={isAlgorithmFace ? "space-y-[0.1rem]" : "space-y-6"}>
                         {/* 副标题 */}
                         <div
-                          className="text-xs tracking-[0.4em] uppercase font-semibold"
+                          className={
+                            isAlgorithmFace
+                              // 中文注释：移除负上边距，避免进入顶部 blur 区导致文字发糊
+                              ? "text-2xl tracking-[0.18em] uppercase font-semibold"
+                              : "text-xs tracking-[0.4em] uppercase font-semibold"
+                          }
                           style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
                         >
                           {face.subtitle}
@@ -1610,8 +2355,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     </div>
                   </motion.div>
 
-                  {/* 分隔线 */}
-                  <div className="h-[1px] mb-12 lg:mb-16" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
+                  {/* 中文注释：算法分支按需求移除 ALGORITHM 与 Paper Spotlight 之间的分隔留白 */}
+                  {!isAlgorithmFace && (
+                    <div className="h-[1px] mb-12 lg:mb-16" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
+                  )}
 
                   {/* ─── 产品分支：作品/案例区 ─── */}
                   {face.id === 2 && face.works.length > 0 && (
@@ -1634,10 +2381,17 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                   {/* ─── 算法分支：知识体系 + 核心课程 + 技术应用 + 实战项目 ─── */}
                   {face.id === 3 && (
                     <>
+                      {/* 中文注释：Paper Spotlight 放在 Knowledge System 区块上方 */}
+                      <div className="mb-12 lg:mb-16">
+                        <SectionTitle title="PAPER SPOTLIGHT" color={face.color} />
+                        <PaperSpotlightCards items={ALGORITHM_PAPER_SPOTLIGHT_ITEMS} color={face.color} />
+                      </div>
+
                       {face.knowledgeChain && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title="KNOWLEDGE SYSTEM" color={face.color} />
-                          <div className="max-w-2xl mx-auto">
+                          {/* 中文注释：知识系统改为左右分栏，因此放宽容器宽度 */}
+                          <div className="max-w-6xl mx-auto">
                             <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
                           </div>
                         </div>

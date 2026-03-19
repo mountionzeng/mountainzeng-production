@@ -328,7 +328,7 @@ export const DICE_FACES: DiceFace[] = [
     knowledgeChain: [
       {
         level: "数学基础",
-        // 中文注释：按需求移除算法分支这 5 个首页标签，仅保留后续论文内容
+        // 中文注释：Knowledge System 右侧数学基础内容（可折叠查看）
         items: [],
         papers: [
           {
@@ -592,7 +592,8 @@ export const DICE_FACES: DiceFace[] = [
         ],
       },
       {
-        level: "深度学习架构",
+        // 中文注释：按页面文案要求使用“构架”命名
+        level: "深度学习构架",
         items: ["CNN", "Transformer", "扩散模型"],
         papers: [
           {
