@@ -9,9 +9,39 @@ import { DICE_FACES } from "@/lib/diceData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const HOME_TITLE_IMAGE_TUNING = {
-  offsetX: -160,
-  offsetY: -183,
-  scale: 1.24,
+  offsetX: -204,
+  offsetY: -175,
+  scale: 1.36,
+};
+
+const HOME_DICE_TUNING = {
+  offsetX: 134,
+  offsetY: 57,
+  scale: 1,
+};
+
+const HOME_DICE_LEFT_BUTTON_TUNING = {
+  offsetX: 202,
+  offsetY: 18,
+  scale: 1.05,
+};
+
+const HOME_DICE_HINT_TUNING = {
+  offsetX: 28,
+  offsetY: 0,
+  scale: 1,
+};
+
+const HOME_TITLE_SOCIAL_BUTTONS_TUNING = {
+  wechat: { offsetX: 160, offsetY: -30, scale: 1 },
+  github: { offsetX: 160, offsetY: -30, scale: 1 },
+  mail: { offsetX: 160, offsetY: -30, scale: 1 },
+};
+
+// 中文注释：首页按固定设计稿做等比缩放，避免不同显示器比例漂移
+const HOME_STAGE_SIZE = {
+  width: 1280,
+  height: 780,
 };
 
 function WechatIcon({ className }: { className?: string }) {
@@ -32,6 +62,28 @@ export default function App() {
   const [targetFace, setTargetFace] = useState<number | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
   const [toastPosition, setToastPosition] = useState({ x: 24, y: 24 });
+  const [homeStageScale, setHomeStageScale] = useState(1);
+  const titleOffsetX = HOME_TITLE_IMAGE_TUNING.offsetX;
+  const titleOffsetY = HOME_TITLE_IMAGE_TUNING.offsetY;
+  const titleScale = HOME_TITLE_IMAGE_TUNING.scale;
+  const diceOffsetX = HOME_DICE_TUNING.offsetX;
+  const diceOffsetY = HOME_DICE_TUNING.offsetY;
+  const diceScale = HOME_DICE_TUNING.scale;
+  const diceLeftButtonOffsetX = HOME_DICE_LEFT_BUTTON_TUNING.offsetX;
+  const diceLeftButtonOffsetY = HOME_DICE_LEFT_BUTTON_TUNING.offsetY;
+  const diceLeftButtonScale = HOME_DICE_LEFT_BUTTON_TUNING.scale;
+  const diceHintOffsetX = HOME_DICE_HINT_TUNING.offsetX;
+  const diceHintOffsetY = HOME_DICE_HINT_TUNING.offsetY;
+  const diceHintScale = HOME_DICE_HINT_TUNING.scale;
+  const socialWechatOffsetX = HOME_TITLE_SOCIAL_BUTTONS_TUNING.wechat.offsetX;
+  const socialWechatOffsetY = HOME_TITLE_SOCIAL_BUTTONS_TUNING.wechat.offsetY;
+  const socialWechatScale = HOME_TITLE_SOCIAL_BUTTONS_TUNING.wechat.scale;
+  const socialGithubOffsetX = HOME_TITLE_SOCIAL_BUTTONS_TUNING.github.offsetX;
+  const socialGithubOffsetY = HOME_TITLE_SOCIAL_BUTTONS_TUNING.github.offsetY;
+  const socialGithubScale = HOME_TITLE_SOCIAL_BUTTONS_TUNING.github.scale;
+  const socialMailOffsetX = HOME_TITLE_SOCIAL_BUTTONS_TUNING.mail.offsetX;
+  const socialMailOffsetY = HOME_TITLE_SOCIAL_BUTTONS_TUNING.mail.offsetY;
+  const socialMailScale = HOME_TITLE_SOCIAL_BUTTONS_TUNING.mail.scale;
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const placeToastNearPointer = useCallback((clientX: number, clientY: number) => {
@@ -71,6 +123,21 @@ export default function App() {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [toast, placeToastNearPointer]);
+
+  useEffect(() => {
+    // 中文注释：统一按窗口与设计稿的最小比例缩放，保证跨屏幕视觉比例一致
+    const syncHomeStageScale = () => {
+      if (typeof window === "undefined") return;
+      const widthScale = window.innerWidth / HOME_STAGE_SIZE.width;
+      const heightScale = window.innerHeight / HOME_STAGE_SIZE.height;
+      const nextScale = Math.min(widthScale, heightScale);
+      setHomeStageScale(nextScale);
+    };
+
+    syncHomeStageScale();
+    window.addEventListener("resize", syncHomeStageScale);
+    return () => window.removeEventListener("resize", syncHomeStageScale);
+  }, []);
 
   const copyToClipboard = useCallback(async (text: string, label: string, event?: ReactMouseEvent<HTMLButtonElement>) => {
     if (event) {
@@ -215,10 +282,20 @@ export default function App() {
         }}
       />
 
-      <div
-        className="relative z-10 h-screen flex flex-col items-center justify-center px-4 py-4"
-        style={{ transform: "translate(0px, 44px)" }}
-      >
+      <div className="relative z-10 h-full flex items-center justify-center overflow-hidden">
+        <div
+          className="relative"
+          style={{
+            width: `${HOME_STAGE_SIZE.width}px`,
+            height: `${HOME_STAGE_SIZE.height}px`,
+            transform: `scale(${homeStageScale})`,
+            transformOrigin: "center center",
+          }}
+        >
+          <div
+            className="relative h-full flex flex-col items-center justify-center px-4 py-4"
+            style={{ transform: "translate(0px, 44px)" }}
+          >
         
         {/* 顶部品牌标识 */}
         <motion.div
@@ -242,12 +319,12 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={showDimension ? { opacity: 0 } : { opacity: 1 }}
           transition={{ duration: 0.35 }}
-          className="absolute top-2/3 left-0 right-0 z-20 h-[clamp(200px,32vw,380px)] w-full text-center pointer-events-none -translate-y-1/2"
+          className="absolute top-2/3 left-0 right-0 z-20 h-[360px] w-full text-center pointer-events-none -translate-y-1/2"
         >
           <div
             className="absolute left-1/2 top-2/3 w-fit"
             style={{
-              transform: `translate(-50%, -50%) translate(${HOME_TITLE_IMAGE_TUNING.offsetX}px, ${HOME_TITLE_IMAGE_TUNING.offsetY}px)`,
+              transform: `translate(-50%, -50%) translate(${titleOffsetX}px, ${titleOffsetY}px)`,
             }}
           >
             <motion.div
@@ -307,9 +384,9 @@ export default function App() {
             <img
               src="/Mountion.png"
               alt="Mountion"
-              className="relative block h-auto w-[min(67.5vw,882px)]"
+              className="relative block h-auto w-[882px]"
               style={{
-                transform: `scale(${HOME_TITLE_IMAGE_TUNING.scale})`,
+                transform: `scale(${titleScale})`,
                 transformOrigin: "center",
               }}
             />
@@ -328,6 +405,8 @@ export default function App() {
                   style={{
                     color: "rgba(196, 181, 253, 0.95)",
                     boxShadow: "0 0 14px rgba(168, 85, 247, 0.26)",
+                    transform: `translate(${socialWechatOffsetX}px, ${socialWechatOffsetY}px) scale(${socialWechatScale})`,
+                    transformOrigin: "center",
                   }}
                 >
                   <WechatIcon className="h-[18px] w-[18px]" />
@@ -342,6 +421,8 @@ export default function App() {
                   style={{
                     color: "rgba(180, 164, 255, 0.95)",
                     boxShadow: "0 0 14px rgba(147, 51, 234, 0.28)",
+                    transform: `translate(${socialGithubOffsetX}px, ${socialGithubOffsetY}px) scale(${socialGithubScale})`,
+                    transformOrigin: "center",
                   }}
                 >
                   <Github className="h-[18px] w-[18px]" />
@@ -356,6 +437,8 @@ export default function App() {
                   style={{
                     color: "rgba(216, 180, 254, 0.95)",
                     boxShadow: "0 0 14px rgba(126, 34, 206, 0.28)",
+                    transform: `translate(${socialMailOffsetX}px, ${socialMailOffsetY}px) scale(${socialMailScale})`,
+                    transformOrigin: "center",
                   }}
                 >
                   <Mail className="h-[18px] w-[18px]" />
@@ -450,7 +533,13 @@ export default function App() {
                       {face.homeDescription ?? face.description}
                     </p>
 
-                    <div className="flex items-center gap-4 ml-[24px] mt-[16px]">
+                    <div
+                      className="flex items-center gap-4 ml-[24px] mt-[16px]"
+                      style={{
+                        transform: `translate(${diceLeftButtonOffsetX}px, ${diceLeftButtonOffsetY}px) scale(${diceLeftButtonScale})`,
+                        transformOrigin: "left center",
+                      }}
+                    >
                       <button
                         type="button"
                         onClick={handleOpenCurrentTab}
@@ -477,7 +566,7 @@ export default function App() {
               </div>
 
               {/* 3D 骰子区域 - 放在标签卡片右下角 */}
-              <div style={{ transform: "translate(76px, 29px)" }}>
+              <div style={{ transform: `translate(${diceOffsetX}px, ${diceOffsetY}px) scale(${diceScale})` }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{
@@ -496,8 +585,16 @@ export default function App() {
                     activeColor={activeHomeColor}
                   />
                   <div className="absolute left-full ml-4 md:ml-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs md:text-sm text-white/45 whitespace-nowrap">
-                    <span>←</span>
-                    <span>没兴趣，玩一下骰子</span>
+                    <div
+                      className="flex items-center gap-2"
+                      style={{
+                        transform: `translate(${diceHintOffsetX}px, ${diceHintOffsetY}px) scale(${diceHintScale})`,
+                        transformOrigin: "left center",
+                      }}
+                    >
+                      <span>←</span>
+                      <span>没兴趣，玩一下骰子</span>
+                    </div>
                   </div>
                 </motion.div>
               </div>
@@ -518,6 +615,8 @@ export default function App() {
           <span className="w-12 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </motion.div>
 
+          </div>
+        </div>
       </div>
 
       <AnimatePresence>
