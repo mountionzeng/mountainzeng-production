@@ -297,23 +297,6 @@ export default function App() {
             style={{ transform: "translate(0px, 44px)" }}
           >
         
-        {/* 顶部品牌标识 */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: showDimension ? 0 : 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute -top-[52px] md:-top-[48px] left-1/2 -translate-x-1/2 origin-top"
-        >
-          <div style={{ transform: "translate(7px, 0px)" }}>
-            <span
-              className="text-xs tracking-[0.32em] text-white/15 font-bold"
-              style={{ fontFamily: "var(--font-label)" }}
-            >
-              超级个体
-            </span>
-          </div>
-        </motion.div>
-
         {/* 主标题区域 */}
         <motion.div
           initial={{ opacity: 0 }}

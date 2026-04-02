@@ -171,6 +171,32 @@ html {
   }
 }
 
+/* 分支页可读性增强：统一放大字号并提亮文字 */
+.branch-readable [class~="text-xs"] {
+  font-size: 0.84rem !important;
+  line-height: 1.55 !important;
+}
+
+.branch-readable [class~="text-sm"] {
+  font-size: 0.98rem !important;
+  line-height: 1.62 !important;
+}
+
+.branch-readable [class~="text-base"] {
+  font-size: 1.08rem !important;
+  line-height: 1.66 !important;
+}
+
+/* 提亮分支页中使用 text-white/xx 的文字，减少发灰感 */
+.branch-readable [class*="text-white/"] {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 细微描边提升高分屏上的文字清晰度 */
+.branch-readable :is(p, span, li, h1, h2, h3, h4, h5, h6, button, a, summary) {
+  text-shadow: 0 0 0.35px rgba(255, 255, 255, 0.28);
+}
+
 /* Custom scrollbar — minimal */
 ::-webkit-scrollbar {
   width: 4px;

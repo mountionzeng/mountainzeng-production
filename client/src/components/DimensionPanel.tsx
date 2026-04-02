@@ -10,7 +10,7 @@ import * as LucideIcons from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { DICE_FACES } from "@/lib/diceData";
-import type { DiceFace, WorkItem } from "@/lib/diceData";
+import type { AlgorithmProject, DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
 import {
   buildVisualImageUrl,
@@ -55,260 +55,10 @@ type PaperSpotlightItem = {
 // 中文注释：算法分支的 Paper Spotlight 卡片默认数据（后续可直接替换）
 const ALGORITHM_PAPER_SPOTLIGHT_ITEMS: PaperSpotlightItem[] = [
   {
-    // 中文注释：按需求替换为 Attention Residuals 的完整长文笔记
-    title: "《深度解读：Attention Residuals（注意力残差）》",
-    noteDate: "2026-03-19",
-    note: `# 深度解读：Attention Residuals（注意力残差）
-
-## 前置
-
-要真正读懂《Attention Residuals》这篇论文，你需要对以下几个核心概念有扎实的理解。
-
-### 1. Transformer 架构与残差连接
-
-Transformer 是现代大语言模型的基础架构。在 Transformer 中，每一层都包含两个主要组件：自注意力机制（Self-Attention）和前馈神经网络（FFN）。而**残差连接**（Residual Connection）是让这个深层网络能够成功训练的关键技术。
-
-残差连接的基本思想非常简单：不是让网络直接学习从输入到输出的映射，而是学习一个“残差”——也就是输出与输入之间的差异。数学上表示为：
-
-$\\text{output} = \\text{input} + \\text{Layer}(\\text{input})$
-
-这个简单的设计解决了深度神经网络训练中的梯度消失问题，让我们能够堆叠几十甚至上百层网络。
-
-### 2. PreNorm vs PostNorm
-
-在 Transformer 中，Layer Normalization（层归一化）的位置有两种主流方案：
-
-- **PostNorm**（原始 Transformer 设计）：先做子层计算，再做归一化，最后加残差
-
-  - 公式：$x_{l+1} = \\text{LN}(x_l + \\text{Layer}(x_l))$
-
-  - 问题：深层网络梯度容易消失，训练不稳定
-
-- **PreNorm**（现代 LLM 标配）：先归一化，再做子层计算，最后加残差
-
-  - 公式：$x_{l+1} = x_l + \\text{Layer}(\\text{LN}(x_l))$
-
-  - 优势：训练更稳定，梯度流动更顺畅
-
-  - 问题：这正是 Attention Residuals 要解决的核心痛点
-
-### 3. PreNorm 的“稀释问题”
-
-PreNorm 虽然让训练变得稳定，但引入了一个微妙而严重的问题：**层贡献的逐层稀释**。
-
-想象一下，你有一个 100 层的网络。在 PreNorm 架构下，每一层的输出都以**固定权重 1** 累加到下一层：
-
-$x_L = x_0 + \\sum_{l=1}^{L} \\text{Layer}_l(\\text{LN}(x_l))$
-
-这意味着什么？随着网络加深：
-
-- 隐藏状态的幅度不断增长（从 $x_0$ 一直加到 $x_L$）
-
-- 每一层的贡献被“平均”稀释——第 1 层的输出要和后面 99 层的输出“平分秋色”
-
-- 越深的层，想要对最终输出产生显著影响就越困难
-
-这就像一个会议，前面的发言者说了一句话，后面 99 个人每人也说一句话，最后所有话等权重混在一起——前面的声音自然就被淹没了。
-
-### 4. 注意力机制的本质
-
-注意力机制（Attention）的核心思想是：**不是所有信息都同等重要，模型应该学会动态地“关注”最相关的部分**。
-
-在 Transformer 的序列维度上，注意力机制通过 Query-Key-Value 机制，让模型能够：
-
-- 根据当前 token（Query）
-
-- 在所有历史 token（Key）中检索
-
-- 用学习到的权重（通过 softmax 归一化）聚合信息（Value）
-
-这个机制的威力在于：权重是**输入相关的**（input-dependent）和**可学习的**（learned），而不是固定的。
-
----
-
-## Attention Residuals：核心创新到底是什么？
-
-理解了上述前置知识后，Attention Residuals 的核心思想就呼之欲出了：**既然注意力机制在序列维度（横向）上如此成功，为什么不在深度维度（纵向）上也用注意力机制来替代固定的残差累加？**
-
-### 问题的本质
-
-传统残差连接的问题在于：
-
-- 所有层的输出以**固定权重 1** 累加
-
-- 无论输入是什么，累加方式都是机械的、均匀的
-
-- 模型无法根据当前任务动态调整“应该更多地依赖哪一层的信息”
-
-这就像你在写一篇文章时，必须把所有草稿的每一版都等权重地混合在一起——显然不合理。有时候你需要第 3 版的开头，有时候需要第 7 版的结论，而不是把所有版本平均混合。
-
-### Attention Residuals 的解决方案
-
-Kimi 团队提出的方案极其优雅：**用 softmax 注意力替代固定累加**。
-
-**Full Attention Residuals** 的公式是：
-
-$x_{l+1} = \\sum_{i=0}^{l} \\alpha_{l,i} \\cdot x_i$
-
-其中权重 $\\alpha_{l,i}$ 通过注意力机制计算：
-
-$\\alpha_{l,i} = \\frac{\\exp(q_l^T k_i)}{\\sum_{j=0}^{l} \\exp(q_l^T k_j)}$
-
-这里：
-
-- $q_l$ 是当前层的 query（从当前隐藏状态生成）
-
-- $k_i$ 是第 $i$ 层的 key（从该层的输出生成）
-
-- 权重通过 softmax 归一化，确保和为 1
-
-**这意味着什么？** 每一层现在可以：
-
-1. **动态选择**：根据当前输入，决定应该更多地依赖哪些前面的层
-
-2. **学习权重**：这些选择不是人为设定的，而是在训练中学习出来的
-
-3. **输入相关**：不同的输入会导致不同的层选择策略
-
-### 一个直观的类比
-
-想象你在解一道数学题：
-
-- **传统残差连接**：你必须把草稿纸上的每一步计算都等权重地“平均”起来作为答案
-
-- **Attention Residuals**：你可以智能地选择——“这道题的关键在第 3 步和第 7 步，我主要用这两步的结果，其他步骤权重降低”
-
-这就是从“机械累加”到“智能检索”的范式转变。
-
----
-
-## 工程化挑战与 Block AttnRes
-
-理论上，Full Attention Residuals 很完美。但在实际的大规模模型训练中，它面临一个致命问题：**内存和通信开销**。
-
-### 问题分析
-
-假设你有一个 100 层的网络，每层的隐藏状态维度是 $d$：
-
-- Full AttnRes 需要在每一层存储**所有前面层的输出**
-
-- 内存复杂度：$O(L \\times d)$，其中 $L$ 是层数
-
-- 对于 48B 参数的模型，这个开销是不可接受的
-
-在分布式训练（尤其是流水线并行）中，这还会导致大量的跨设备通信开销。
-
-### Block Attention Residuals：务实的折中
-
-Kimi 团队提出了 **Block AttnRes**，这是一个工程化的解决方案：
-
-1. **分块策略**：将 $L$ 层网络划分为 $N$ 个块（Block）
-
-2. **块内标准残差**：在每个块内部，仍然使用传统的固定权重残差连接
-
-3. **块间注意力**：只在块的边界上，对这 $N$ 个块级表征执行注意力聚合
-
-这样：
-
-- 内存复杂度从 $O(L \\times d)$ 降低到 $O(N \\times d)$
-
-- 如果 $N = 10$，$L = 100$，内存开销直接降低 10 倍
-
-- 同时保留了大部分 Full AttnRes 的性能增益
-
-### 关键的工程优化
-
-论文还提出了两个重要的系统优化：
-
-1. **缓存式流水线通信**：在流水线并行中，通过缓存机制减少跨设备的块级表征传输
-
-2. **两阶段计算策略**：将注意力计算和残差聚合分离，优化计算效率
-
-这些优化让 Block AttnRes 成为一个**可以直接替换标准残差连接的即插即用方案**，训练开销几乎可以忽略不计。
-
----
-
-## 实验验证：真的有用吗？
-
-Kimi 团队在真实的大规模预训练中验证了这个方案，这是最有说服力的部分。
-
-### 训练配置
-
-- **模型**：Kimi Linear 48B（总参数 48B，激活参数 3B 的 MoE 架构）
-
-- **数据**：1.4 万亿 tokens 的预训练语料
-
-- **对比**：标准残差连接 vs Block AttnRes
-
-### 核心结果
-
-1. **训练效率提升 25%**：在相同的计算预算下，AttnRes 模型的性能显著更好
-
-2. **推理延迟仅增 2%**：几乎没有额外的推理开销
-
-3. **Scaling Law 一致性**：在不同模型规模下，改进都是一致的
-
-### 深层次的改进
-
-更重要的是，AttnRes 从根本上改善了网络的内部动力学：
-
-- **隐藏状态幅度更均匀**：不再出现 PreNorm 的无控制增长
-
-- **梯度分布更平衡**：各层的梯度不再随深度剧烈衰减
-
-- **层贡献更合理**：每一层都能对最终输出产生有意义的影响
-
-这些改进不仅体现在最终的性能指标上，更体现在模型的**可训练性**和**可扩展性**上。
-
----
-
-## Why is this job so important
-
-### 1. 理论上的优雅统一
-
-Attention Residuals 提供了一个**统一的视角**：
-
-- Transformer 用注意力替代了 RNN 的序列递归（横向维度）
-
-- AttnRes 用注意力替代了残差的固定累加（纵向维度）
-
-这是一个完整的、对称的设计哲学。
-
-### 2. 工程上的可落地性
-
-与许多“纸面上很美”的研究不同，AttnRes：
-
-- 真正在 48B 规模的模型上验证了
-
-- 解决了内存、通信、计算的所有工程问题
-
-- 提供了即插即用的实现方案
-
-### 3. 对未来的启示
-
-这个工作打开了一个新的研究方向：**深度维度的动态架构**。
-
-未来可能的探索包括：
-
-- 更复杂的深度注意力模式（不只是简单的 QKV）
-
-- 自适应的块划分策略（根据任务动态调整块大小）
-
-- 与其他架构创新（如 MoE、长上下文）的结合
-
----
-
-## 总结：
-
-《Attention Residuals》的核心贡献可以用一句话概括：
-
-**把 Transformer 在序列维度上“用注意力替代递归”的成功经验，迁移到了深度维度上，用可学习的、输入相关的注意力聚合，替代了固定权重的残差累加。**
-
-这不是一个小修小补的改进，而是对 Transformer 架构底层设计的重新思考。它解决了 PreNorm 架构中长期存在但被忽视的“层贡献稀释”问题，并且通过精巧的工程设计（Block AttnRes），让这个理论上优雅的方案在实际的大规模训练中真正可行。
-
-对于深度学习研究者来说，这篇论文的价值在于：它提醒我们，即使是看似“已经定型”的架构组件（如残差连接），仍然有重新审视和改进的空间。而对于工程实践者来说，Block AttnRes 提供了一个可以立即尝试的、经过验证的方案，来提升模型的训练效率和最终性能。
-
-这就是为什么这篇论文能够同时获得 Elon Musk 和 Andrej Karpathy 的盛赞——它既有理论深度，又有工程实用性，是真正推动领域前进的工作。`,
+    // 中文注释：按今日内容更新 Attention Residuals 笔记
+    title: "《Attention Residuals》 的笔记",
+    noteDate: "2026-03-20",
+    note: "# 《Attention Residuals》 的笔记\n\n\n## 前置\n\n需要对以下几个概念有理解\n\n### 1. Transformer 架构与残差连接\n\nTransformer 是现代大语言模型的基础架构。在 Transformer 中，每一层都包含两个主要组件：自注意力机制（Self-Attention）和前馈神经网络（FFN）。而**残差连接**（Residual Connection）是让这个深层网络能够成功训练的关键技术。\n\n残差连接的基本思想非常简单：不是让网络直接学习从输入到输出的映射，而是学习一个“残差”——也就是输出与输入之间的差异。数学上表示为：\n\n$\\text{output} = \\text{input} + \\text{Layer}(\\text{input})$\n\n这个简单的设计解决了深度神经网络训练中的梯度消失问题，让我们能够堆叠几十甚至上百层网络。\n\n### 2. PreNorm vs PostNorm\n\n在 Transformer 中，Layer Normalization（层归一化）的位置有两种主流方案：\n\n- **PostNorm**（原始 Transformer 设计）：先做子层计算，再做归一化，最后加残差\n\n  - 公式：$x_{l+1} = \\text{LN}(x_l + \\text{Layer}(x_l))$\n\n  - 归一化在“外面”，可以控制最终输出的幅度\n\n  - 问题：深层网络梯度容易消失，训练不稳定\n\n- **PreNorm**（现代 LLM 标配）：先归一化，再做子层计算，最后加残差\n\n  - 公式：$x_{l+1} = x_l + \\text{Layer}(\\text{LN}(x_l))$\n\n  - 归一化在“里面”，只约束输入到子层的数据\n\n  - 优势：训练更稳定，梯度流动更顺畅\n\n  - 问题：这正是 Attention Residuals 要解决的\n\n  - 虽然 `LN(x)` 被归一化了，但残差连接 `x + Layer(LN(x))` 的输出**没有被归一化**\n\n  - 随着层数增加，`x` 不断累加，幅度越来越大（这就是“稀释问题”的来源）\n\n### 3. 重点 shuo yi xiaPreNorm 的“稀释问题”\n\nPreNorm 虽然让训练变得稳定，但引入了一个微妙而严重的问题：**层贡献的逐层稀释**。\n\n想象一下，你有一个 100 层的网络。在 PreNorm 架构下，每一层的输出都以**固定权重 1** 累加到下一层：\n\n$x_L = x_0 + \\sum_{l=1}^{L} \\text{Layer}_l(\\text{LN}(x_l))$\n\n这意味着什么？随着网络加深：\n\n- 隐藏状态的幅度不断增长（从 $x_0$ 一直加到 $x_L$）\n\n- 每一层的贡献被“平均”稀释——第 1 层的输出要和后面 99 层的输出“平分秋色”\n\n- 越深的层，想要对最终输出产生显著影响就越困难\n\n这就像一个会议，前面的发言者说了一句话，后面 99 个人每人也说一句话，最后所有话等权重混在一起——前面的声音自然就被淹没了。\n\n### 4. 注意力机制的本质\n\n注意力机制（Attention）的核心思想是：**不是所有信息都同等重要，模型应该学会动态地“关注”最相关的部分**。\n\n在 Transformer 的序列维度上，注意力机制通过 Query-Key-Value 机制，让模型能够：\n\n- 根据当前 token（Query）\n\n- 在所有历史 token（Key）中检索\n\n- 用学习到的权重（通过 softmax 归一化）聚合信息（Value）\n\n这个机制的威力在于：权重是**输入相关的**（input-dependent）和**可学习的**（learned），而不是固定的。\n\n---\n\n## Attention Residuals：核心创新\n\n### 问题的本质\n\n传统残差连接的问题在于：\n\n- 所有层的输出以**固定权重 1** 累加\n\n- 无论输入是什么，累加方式都是机械的、均匀的\n\n- 模型无法根据当前任务动态调整“应该更多地依赖哪一层的信息”\n\n这就像你在写一篇文章时，必须把所有草稿的每一版都等权重地混合在一起——显然不合理。有时候你需要第 3 版的开头，有时候需要第 7 版的结论，而不是把所有版本平均混合。\n\n### Attention Residuals 的解决方案\n\nKimi 团队提出的方案极其优雅：**用 softmax 注意力替代固定累加**。\n\n**Full Attention Residuals** 的公式是：\n\n$x_{l+1} = \\sum_{i=0}^{l} \\alpha_{l,i} \\cdot x_i$\n\n其中权重 $\\alpha_{l,i}$ 通过注意力机制计算：\n\n$\\alpha_{l,i} = \\frac{\\exp(q_l^T k_i)}{\\sum_{j=0}^{l} \\exp(q_l^T k_j)}$\n\n这里：\n\n- $q_l$ 是当前层的 query（从当前隐藏状态生成）\n\n- $k_i$ 是第 $i$ 层的 key（从该层的输出生成）\n\n- 权重通过 softmax 归一化，确保和为 1\n\n#### 这个公式在做什么？\n\n**第一步：生成 Query 和 Key**\n\n对于第 $l$ 层，我们需要：\n\n- 从当前层的隐藏状态生成一个 **query 向量** $q_l$\n\n- 从之前每一层（第 0 到第 $l$ 层）的输出生成对应的 **key 向量** $k_0, k_1, ..., k_l$\n\n这个过程通常通过简单的线性变换实现：\n\n- $q_l = W_q \\cdot h_l$（$h_l$ 是当前层的某个表征）\n\n- $k_i = W_k \\cdot x_i$（$x_i$ 是第 $i$ 层的输出）\n\n**第二步：计算注意力分数**\n\n对于每一个前面的层 $i$，计算当前层的 query 与该层 key 的**相似度**：\\\n$\\text{score}_{l,i} = q_l^T k_i$\n\n这个点积操作衡量的是：“当前层需要的信息”与“第 $i$ 层提供的信息“之间的匹配程度。\n\n- 如果 $q_l$ 和 $k_i$ 方向相似，点积值大 → 说明第 $i$ 层的信息对当前层很重要\n\n- 如果方向差异大，点积值小 → 说明第 $i$ 层的信息不太相关\n\n**第三步：Softmax 归一化**\n\n将所有的相似度分数通过 softmax 转换为权重：\\\n$\\alpha_{l,i} = \\frac{\\exp(q_l^T k_i)}{\\sum_{j=0}^{l} \\exp(q_l^T k_j)}$\n\nSoftmax 的作用是：\n\n1. **归一化**：确保所有权重加起来等于 1（$\\sum_{i=0}^{l} \\alpha_{l,i} = 1$）\n\n2. **放大差异**：通过指数函数，让相似度高的层权重更高，相似度低的层权重更低\n\n3. **可微分**：整个过程可微，可以通过反向传播训练\n\n**第四步：加权聚合**\n\n最后，用这些权重对所有前面层的输出进行加权求和：\\\n$x_{l+1} = \\sum_{i=0}^{l} \\alpha_{l,i} \\cdot x_i$\n\n这就是新的“残差连接”——不再是简单的 $x_l + \\text{Layer}(x_l)$，而是智能地从所有历史层中选择性地聚合信息。\n\n#### 与传统残差连接的对比\n\n让我们用一个具体的例子来对比：\n\n**传统 PreNorm 残差连接**（假设有 3 层）：\n\n```plaintext\nx_0 = 输入\nx_1 = x_0 + Layer_1(LN(x_0))\nx_2 = x_1 + Layer_2(LN(x_1)) = x_0 + Layer_1(...) + Layer_2(...)\nx_3 = x_2 + Layer_3(LN(x_2)) = x_0 + Layer_1(...) + Layer_2(...) + Layer_3(...)\n```\n\n每一层的贡献都是**固定权重 1**，机械累加。\n\n**Attention Residuals**（同样 3 层）：\n\n```plaintext\nx_0 = 输入\nx_1 = α_{1,0}·x_0 + α_{1,1}·(x_0 + Layer_1(...))\nx_2 = α_{2,0}·x_0 + α_{2,1}·x_1 + α_{2,2}·(x_1 + Layer_2(...))\nx_3 = α_{3,0}·x_0 + α_{3,1}·x_1 + α_{3,2}·x_2 + α_{3,3}·(x_2 + Layer_3(...))\n```\n\n每一层的贡献权重 $\\alpha$ 是**动态学习的**，根据输入而变化。\n\n#### 一个具体的场景\n\n假设你在处理一个翻译任务，输入是 “The cat sat on the mat”：\n\n**第 10 层**可能学到：\n\n- 需要关注**第 2 层**（词法信息）：权重 $\\alpha_{10,2} = 0.6$\n\n- 需要关注**第 5 层**（句法结构）：权重 $\\alpha_{10,5} = 0.3$\n\n- 其他层权重较低：$\\alpha_{10,0} = 0.05, \\alpha_{10,1} = 0.02, ...$\n\n**第 50 层**可能学到：\n\n- 需要关注**第 30 层**（语义理解）：权重 $\\alpha_{50,30} = 0.5$\n\n- 需要关注**第 45 层**（上下文整合）：权重 $\\alpha_{50,45} = 0.4$\n\n- 早期层权重很低：$\\alpha_{50,0} \\approx 0, \\alpha_{50,2} \\approx 0$\n\n这种动态选择让模型能够：\n\n- **跳过不相关的层**：如果某些中间层对当前任务没用，权重可以接近 0\n\n- **强化关键层**：把注意力集中在真正重要的几层上\n\n- **适应不同输入**：同一层在处理不同句子时，可能依赖不同的历史层\n\n#### 为什么这比固定权重好？\n\n传统残差连接的问题：\n\n1. **无差别累加**：第 1 层和第 99 层的贡献被平等对待，即使第 1 层可能已经不相关\n\n2. **幅度失控**：$x_{100} = x_0 + \\sum_{i=1}^{100} \\text{Layer}_i(...)$，幅度越来越大\n\n3. **稀释效应**：每一层的贡献被“平均”到所有层中，单层影响力下降\n\nAttention Residuals 的优势：\n\n1. **选择性聚合**：模型自己决定哪些层重要，权重可以差异巨大\n\n2. **幅度可控**：因为 $\\sum \\alpha_{l,i} = 1$，输出幅度不会无限增长\n\n3. **信息保留**：重要层的贡献不会被稀释，权重可以集中在少数关键层上\n\n**这意味着什么？** 每一层现在可以：\n\n1. **动态选择**：根据当前输入，决定应该更多地依赖哪些前面的层\n\n2. **学习权重**：这些选择不是人为设定的，而是在训练中学习出来的\n\n3. **输入相关**：不同的输入会导致不同的层选择策略\n\n### 一个直观的类比\n\n想象你在解一道数学题：\n\n- **传统残差连接**：你必须把草稿纸上的每一步计算都等权重地“平均”起来作为答案\n\n- **Attention Residuals**：你可以智能地选择——“这道题的关键在第 3 步和第 7 步，我主要用这两步的结果，其他步骤权重降低”\n\n这就是从“机械累加”到“智能检索”的范式转变。\n\n---\n\n## 工程化挑战与 Block AttnRes\n\n理论上，Full Attention Residuals 很完美。但在实际的大规模模型训练中，它面临一个致命问题：**内存和通信开销**。\n\n### 问题分析\n\n假设你有一个 100 层的网络，每层的隐藏状态维度是 $d$：\n\n- Full AttnRes 需要在每一层存储**所有前面层的输出**\n\n- 内存复杂度：$O(L \\times d)$，其中 $L$ 是层数\n\n- 对于 48B 参数的模型，这个开销是不可接受的\n\n在分布式训练（尤其是流水线并行）中，这还会导致大量的跨设备通信开销。\n\n### Block Attention Residuals：务实的折中\n\nKimi 团队提出了 **Block AttnRes**，这是一个工程化的解决方案：\n\n1. **分块策略**：将 $L$ 层网络划分为 $N$ 个块（Block）\n\n2. **块内标准残差**：在每个块内部，仍然使用传统的固定权重残差连接\n\n3. **块间注意力**：只在块的边界上，对这 $N$ 个块级表征执行注意力聚合\n\n这样：\n\n- 内存复杂度从 $O(L \\times d)$ 降低到 $O(N \\times d)$\n\n- 如果 $N = 10$，$L = 100$，内存开销直接降低 10 倍\n\n- 同时保留了大部分 Full AttnRes 的性能增益\n\n### 关键的工程优化\n\n论文还提出了两个重要的系统优化：\n\n1. **缓存式流水线通信**：在流水线并行中，通过缓存机制减少跨设备的块级表征传输\n\n2. **两阶段计算策略**：将注意力计算和残差聚合分离，优化计算效率\n\n这些优化让 Block AttnRes 成为一个**可以直接替换标准残差连接的即插即用方案**，训练开销几乎可以忽略不计。\n\n---\n\n## 实验验证：真的有用吗？\n\nKimi 团队在真实的大规模预训练中验证了这个方案，这是最有说服力的部分。\n\n### 训练配置\n\n- **模型**：Kimi Linear 48B（总参数 48B，激活参数 3B 的 MoE 架构）\n\n- **数据**：1.4 万亿 tokens 的预训练语料\n\n- **对比**：标准残差连接 vs Block AttnRes\n\n### 核心结果\n\n1. **训练效率提升 25%**：在相同的计算预算下，AttnRes 模型的性能显著更好\n\n2. **推理延迟仅增 2%**：几乎没有额外的推理开销\n\n3. **Scaling Law 一致性**：在不同模型规模下，改进都是一致的\n\n### 深层次的改进\n\n更重要的是，AttnRes 从根本上改善了网络的内部动力学：\n\n- **隐藏状态幅度更均匀**：不再出现 PreNorm 的无控制增长\n\n- **梯度分布更平衡**：各层的梯度不再随深度剧烈衰减\n\n- **层贡献更合理**：每一层都能对最终输出产生有意义的影响\n\n这些改进不仅体现在最终的性能指标上，更体现在模型的**可训练性**和**可扩展性**上。\n\n---\n\n## Why is this job so important\n\n### 1. 理论上的优雅统一\n\nAttention Residuals 提供了一个**统一的视角**：\n\n- Transformer 用注意力替代了 RNN 的序列递归（横向维度）\n\n- AttnRes 用注意力替代了残差的固定累加（纵向维度）\n\n这是一个完整的、对称的设计哲学。\n\n### 2. 工程上的可落地性\n\n与许多“纸面上很美”的研究不同，AttnRes：\n\n- 真正在 48B 规模的模型上验证了\n\n- 解决了内存、通信、计算的所有工程问题\n\n- 提供了即插即用的实现方案\n\n### 3. 对未来的启示\n\n这个工作打开了一个新的研究方向：**深度维度的动态架构**。\n\n未来可能的探索包括：\n\n- 更复杂的深度注意力模式（不只是简单的 QKV）\n\n- 自适应的块划分策略（根据任务动态调整块大小）\n\n- 与其他架构创新（如 MoE、长上下文）的结合\n\n---\n\n## 总结：\n\n《Attention Residuals》的核心贡献可以用一句话概括：\n\n**把 Transformer 在序列维度上“用注意力替代递归”的成功经验，迁移到了深度维度上，用可学习的、输入相关的注意力聚合，替代了固定权重的残差累加。**\n\n这是对 Transformer 架构底层设计的重新思考。它解决了 PreNorm 架构中长期存在但被忽视的“层贡献稀释”问题，并且通过精巧的工程设计（Block AttnRes），让这个理论上优雅的方案在实际的大规模训练中真正可行。\n\n这篇论文的价值在于：它提醒我们，即使是看似“已经定型”的架构组件（如残差连接），仍然有重新审视和改进的空间。而对于工程实践者来说，Block AttnRes 提供了一个可以立即尝试的、经过验证的方案，来提升模型的训练效率和最终性能。\n",
   },
 ];
 
@@ -500,7 +250,13 @@ function Timeline({ timeline, color }: { timeline: DiceFace["timeline"]; color: 
 }
 
 /* ─── 编程语言能力组件（系统页专用）─── */
-function ProgrammingLanguageCapability({ color }: { color: string }) {
+function ProgrammingLanguageCapability({
+  color,
+  capability,
+}: {
+  color: string;
+  capability: NonNullable<DiceFace["systemLanguageCapability"]>;
+}) {
   return (
     <div
       className="rounded-2xl p-6 md:p-8 space-y-6"
@@ -521,33 +277,109 @@ function ProgrammingLanguageCapability({ color }: { color: string }) {
           className="rounded-xl p-4"
           style={{ border: `1px solid ${color}20`, background: `${color}0A` }}
         >
-          <div className="text-sm font-semibold text-white/88 mb-3">【底层系统】</div>
-          <div className="text-sm text-white/75">C / C++</div>
-          <div className="text-sm text-white/45 my-1.5">↓ 实现</div>
-          <div className="text-sm text-white/65 leading-relaxed">操作系统、数据库内核、编程语言解释器</div>
-          <div className="text-sm text-white/45 mt-2">↓ 提供基础设施</div>
+          <div className="text-sm font-semibold text-white/88 mb-3">{capability.lowerLayerTitle}</div>
+          <div className="text-sm text-white/75">{capability.lowerLanguages}</div>
+          <div className="text-sm text-white/45 my-1.5">{capability.lowerAction}</div>
+          <div className="text-sm text-white/65 leading-relaxed">{capability.lowerTargets}</div>
+          <div className="text-sm text-white/45 mt-2">{capability.lowerInfrastructure}</div>
         </div>
 
         <div
           className="rounded-xl p-4"
           style={{ border: `1px solid ${color}20`, background: `${color}0A` }}
         >
-          <div className="text-sm font-semibold text-white/88 mb-3">【应用层】</div>
-          <div className="text-sm text-white/75">Java / Python</div>
-          <div className="text-sm text-white/45 my-1.5">↓ 开发</div>
-          <div className="text-sm text-white/65 leading-relaxed">Web 服务、数据分析、机器学习应用</div>
+          <div className="text-sm font-semibold text-white/88 mb-3">{capability.upperLayerTitle}</div>
+          <div className="text-sm text-white/75">{capability.upperLanguages}</div>
+          <div className="text-sm text-white/45 my-1.5">{capability.upperAction}</div>
+          <div className="text-sm text-white/65 leading-relaxed">{capability.upperTargets}</div>
         </div>
       </div>
 
       <div className="space-y-3 text-sm leading-relaxed">
         <p className="text-white/72">
           <span style={{ color: `${color}D8` }}>核心语言：</span>
-          Java、C、C++、Python
+          {capability.coreLanguages}
         </p>
         <p className="text-white/62">
           <span style={{ color: `${color}D8` }}>补足方式：</span>
-          其他不熟悉的编程语言，通过 Voice Coding 快速补足
+          {capability.supplementMethod}
         </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 个人系统能力体系树（系统页专用）─── */
+function SystemAbilityTree({ treeText, color }: { treeText: string; color: string }) {
+  return (
+    <div
+      className="rounded-2xl p-6 md:p-8"
+      style={{
+        background: `linear-gradient(145deg, ${color}12, ${color}06)`,
+        border: `1px solid ${color}28`,
+      }}
+    >
+      <pre
+        className="whitespace-pre-wrap break-words text-sm md:text-[15px] leading-relaxed text-white/78"
+        style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" }}
+      >
+        {treeText}
+      </pre>
+    </div>
+  );
+}
+
+/* ─── 系统课程训练组件（系统页专用）─── */
+function SystemTrainingBlock({
+  color,
+  training,
+}: {
+  color: string;
+  training: NonNullable<DiceFace["systemTraining"]>;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-6 md:p-8 space-y-5"
+      style={{
+        background: `linear-gradient(145deg, ${color}12, ${color}06)`,
+        border: `1px solid ${color}28`,
+      }}
+    >
+      <div
+        className="text-sm tracking-[0.16em] uppercase font-semibold"
+        style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
+      >
+        {training.title}
+      </div>
+      <div className="space-y-3">
+        {training.items.map((item) => (
+          <div key={item} className="flex items-start gap-2 text-sm text-white/72 leading-relaxed">
+            <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: `${color}85` }} />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── 实际应用列表（系统页专用）─── */
+function SystemApplicationList({ color, items }: { color: string; items: string[] }) {
+  return (
+    <div
+      className="rounded-2xl p-6 md:p-8"
+      style={{
+        background: `linear-gradient(145deg, ${color}12, ${color}06)`,
+        border: `1px solid ${color}28`,
+      }}
+    >
+      <div className="space-y-3">
+        {items.map((item) => (
+          <div key={item} className="flex items-start gap-2 text-sm text-white/72 leading-relaxed">
+            <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: `${color}85` }} />
+            <span>{item}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -723,7 +555,7 @@ function AlgorithmProjects({
   projects,
   color,
 }: {
-  projects: NonNullable<DiceFace["algorithmProjects"]>;
+  projects: AlgorithmProject[];
   color: string;
 }) {
   return (
@@ -1119,52 +951,144 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
 
 /* ─── 教育轨迹组件（跨界页专用）─── */
 function EducationTimeline({ timeline, color }: { timeline: NonNullable<DiceFace["educationTimeline"]>; color: string }) {
-  return (
-    <div className="space-y-0">
-      {timeline.map((item, i) => (
-        <motion.div
-          key={item.period}
-          custom={i}
-          variants={fadeInUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="relative pl-8 pb-10 last:pb-0"
-        >
-          {/* 竖线 */}
-          {i < timeline.length - 1 && (
-            <div
-              className="absolute left-[7px] top-3 bottom-0 w-[1px]"
-              style={{ background: `linear-gradient(180deg, ${color}40, ${color}10)` }}
-            />
-          )}
-          {/* 圆点 */}
-          <div
-            className="absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full border-2"
-            style={{ borderColor: color, background: `${color}20` }}
-          />
+  // 中文注释：当前高亮的时间节点（悬停/点击时更新）
+  const [activeIndex, setActiveIndex] = useState(0);
+  if (!timeline || timeline.length === 0) return null;
 
-          <div className="text-xs tracking-[0.15em] text-white/35 mb-2" style={{ fontFamily: "var(--font-label)" }}>
-            {item.period}
-          </div>
-          <div className="text-lg font-semibold text-white/90 mb-1" style={{ fontFamily: "var(--font-display)" }}>
-            {item.school}
-          </div>
-          <div className="text-sm mb-2" style={{ color: `${color}BB` }}>
-            {item.degree}
-          </div>
-          <div className="space-y-1.5 mt-3">
-            <div className="flex items-start gap-2 text-xs text-white/50">
-              <span className="text-white/30 flex-shrink-0">方向：</span>
-              <span>{item.direction}</span>
-            </div>
-            <div className="flex items-start gap-2 text-xs text-white/50">
-              <span className="text-white/30 flex-shrink-0">培养：</span>
-              <span>{item.cultivation}</span>
-            </div>
-          </div>
-        </motion.div>
-      ))}
+  // 中文注释：时间轴轨道的起止位置与进度百分比（用于主线高亮动画）
+  const timelineCount = timeline.length;
+  const trackEdgePercent = timelineCount > 1 ? 100 / (timelineCount * 2) : 50;
+  const trackSpanPercent = 100 - trackEdgePercent * 2;
+  const progressRatio = timelineCount > 1 ? activeIndex / (timelineCount - 1) : 1;
+  const horizontalProgressWidth = trackSpanPercent * progressRatio;
+
+  return (
+    <div className="relative">
+      {/* 中文注释：桌面端横向底轨道 */}
+      <div
+        className="hidden md:block absolute top-[10px] h-[3px] rounded-full"
+        style={{
+          left: `${trackEdgePercent}%`,
+          right: `${trackEdgePercent}%`,
+          background: `linear-gradient(90deg, ${color}20, ${color}0A)`,
+        }}
+      />
+
+      {/* 中文注释：桌面端横向高亮进度线（会随 activeIndex 变化） */}
+      <motion.div
+        className="hidden md:block absolute top-[10px] h-[3px] rounded-full"
+        style={{
+          left: `${trackEdgePercent}%`,
+          background: `linear-gradient(90deg, ${color}F0, ${color}55)`,
+          boxShadow: `0 0 14px ${color}55`,
+        }}
+        initial={{ scaleX: 0, opacity: 0.5 }}
+        animate={{ width: `${horizontalProgressWidth}%`, opacity: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      />
+
+      {/* 中文注释：移动端保持纵向轨道，避免小屏挤压 */}
+      <div
+        className="md:hidden absolute left-[8px] top-3 bottom-3 w-[2px] rounded-full"
+        style={{ background: `linear-gradient(180deg, ${color}20, ${color}0A)` }}
+      />
+      <motion.div
+        className="md:hidden absolute left-[8px] top-3 bottom-3 w-[2px] origin-top rounded-full"
+        style={{ background: `linear-gradient(180deg, ${color}E8, ${color}3A)` }}
+        animate={{ scaleY: progressRatio || 0.01, opacity: 1 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+        {timeline.map((item, i) => {
+          const isActive = i === activeIndex;
+          return (
+            <motion.button
+              key={item.period}
+              type="button"
+              onMouseEnter={() => setActiveIndex(i)}
+              onFocus={() => setActiveIndex(i)}
+              onClick={() => setActiveIndex(i)}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: i * 0.1, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full text-left pl-10 md:pl-0 pt-0 md:pt-6"
+            >
+              {/* 中文注释：交互节点（双层圆点 + 脉冲环，强调时间轴交互反馈） */}
+              <motion.div
+                className="absolute left-[1px] md:left-1/2 md:-translate-x-1/2 top-[2px] md:top-0 w-[16px] h-[16px] rounded-full border-2 z-10"
+                style={{
+                  borderColor: isActive ? `${color}` : `${color}95`,
+                  background: isActive ? `${color}38` : `${color}1F`,
+                }}
+                animate={
+                  isActive
+                    ? {
+                        scale: [1, 1.15, 1],
+                        boxShadow: [`0 0 0 0 ${color}55`, `0 0 0 12px ${color}00`, `0 0 0 0 ${color}00`],
+                      }
+                    : { scale: 1, boxShadow: `0 0 0 0 ${color}00` }
+                }
+                transition={
+                  isActive
+                    ? { duration: 1.35, repeat: Infinity, ease: "easeInOut" }
+                    : { duration: 0.2, ease: "easeOut" }
+                }
+              />
+              <motion.div
+                className="absolute left-[5px] md:left-1/2 md:-translate-x-1/2 top-[6px] md:top-[4px] w-[8px] h-[8px] rounded-full z-10"
+                style={{ background: isActive ? `${color}F0` : `${color}A8`, boxShadow: isActive ? `0 0 10px ${color}90` : "none" }}
+                animate={isActive ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                transition={{ duration: 1, repeat: isActive ? Infinity : 0, ease: "easeInOut" }}
+              />
+
+              {/* 中文注释：卡片与时间节点联动高亮，强调当前选中时间段 */}
+              <motion.div
+                className="rounded-xl px-3 py-3 md:px-4 md:py-4 md:min-h-[280px]"
+                animate={{
+                  x: isActive ? 0 : -2,
+                  y: isActive ? -4 : 0,
+                  opacity: isActive ? 1 : 0.93,
+                  boxShadow: isActive ? `0 12px 28px ${color}26` : `0 6px 14px ${color}12`,
+                }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                style={{
+                  background: isActive
+                    ? `linear-gradient(135deg, ${color}14, ${color}08)`
+                    : `${color}07`,
+                  border: `1px solid ${isActive ? `${color}3F` : `${color}18`}`,
+                }}
+              >
+                <div className="text-xs tracking-[0.15em] text-white/35 mb-2" style={{ fontFamily: "var(--font-label)" }}>
+                  {item.period}
+                </div>
+                <div className="text-lg font-semibold text-white/90 mb-1" style={{ fontFamily: "var(--font-display)" }}>
+                  {item.school}
+                </div>
+                <div className="text-sm mb-2" style={{ color: `${color}BB` }}>
+                  {item.degree}
+                </div>
+                <div className="space-y-1.5 mt-3">
+                  <div className="flex items-start gap-2 text-xs text-white/50">
+                    <span className="text-white/30 flex-shrink-0">方向：</span>
+                    <span>{item.direction}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-white/50">
+                    <span className="text-white/30 flex-shrink-0">培养：</span>
+                    <span>{item.cultivation}</span>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 hidden md:flex items-center justify-end text-[11px] tracking-[0.12em] text-white/45">
+        悬停或点击节点以查看时间轴高亮
+      </div>
     </div>
   );
 }
@@ -1834,7 +1758,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 bg-[#080808]"
+      className="fixed inset-0 z-50 bg-[#080808] branch-readable"
     >
       <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto">
         {/* 顶部彩色线条 */}
@@ -1848,7 +1772,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
         <div className="min-h-screen flex flex-col">
           {/* 头部导航 */}
-          <header className="flex items-center justify-between px-6 md:px-12 py-6 backdrop-blur-sm">
+          <header className="flex items-center justify-between px-4 md:px-6 lg:px-8 py-6 backdrop-blur-sm">
             <button
               onClick={onClose}
               className="flex items-center gap-4 px-4 py-2.5 text-white/50 hover:text-white transition-colors duration-200 group"
@@ -1912,16 +1836,18 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
           </header>
 
           {/* 主要内容区 */}
-          <main className={isVisualFace ? "flex-1 px-3 md:px-4 lg:px-6 pb-16" : "flex-1 px-6 md:px-12 lg:px-20 pb-16"}>
-            <div className={isVisualFace ? "max-w-none mx-auto" : "max-w-7xl mx-auto"}>
+          {/* 中文注释：统一收窄分支页左右空白（约压到原来的 1/3） */}
+          <main className={isVisualFace ? "flex-1 px-2 md:px-3 lg:px-4 pb-16" : "flex-1 px-2 md:px-4 lg:px-6 pb-16"}>
+            <div className={isVisualFace ? "w-full max-w-[94vw] mx-auto" : "w-full max-w-[94vw] mx-auto"}>
 
               {/* ═══ 视觉分支 ═══ */}
               {isVisualFace && (
-                <div className="grid grid-cols-1 pt-4">
+                <div className="grid grid-cols-1 pt-0">
                   <div className="space-y-8">
 
                     {/* Visual Hero 区域 */}
-                    <div className="px-3 md:px-8 lg:px-16 mb-8">
+                    {/* 中文注释：视觉页与算法页对齐，标题区到首个模块间距统一为 20px */}
+                    <div className="px-2 md:px-4 lg:px-5 mb-[20px]">
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1929,9 +1855,9 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                       >
                         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                           {/* 左侧：标题区 */}
-                          <div className="space-y-6">
+                          <div className="space-y-[0.1rem]">
                             <div
-                              className="text-xs tracking-[0.4em] uppercase font-semibold"
+                              className="text-2xl tracking-[0.18em] uppercase font-semibold"
                               style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
                             >
                               {face.subtitle}
@@ -1954,9 +1880,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                           </div>
                         </div>
                       </motion.div>
-
-                      {/* 分隔线 */}
-                      <div className="h-[1px] mt-12 mb-8" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
 
                       {/* 重点项目 */}
                       {face.works.length > 0 && (
@@ -2244,26 +2167,22 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
               {/* ═══ 非视觉分支（产品/算法/系统/跨界/未来）═══ */}
               {!isVisualFace && (
-                <div className={isAlgorithmFace ? "pt-0" : "pt-4 lg:pt-8"}>
+                <div className="pt-0">
                   {/* Hero 区域 */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    // 中文注释：按需求将 ALGORITHM 与 PAPER SPOTLIGHT 之间间距设置为 20px
-                    className={isAlgorithmFace ? "mb-[20px]" : "mb-12 lg:mb-16"}
+                    // 中文注释：所有非视觉分支统一参考算法页（ALGORITHM -> PAPER SPOTLIGHT）的 20px 间距
+                    className="mb-[20px]"
                   >
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                       {/* 左侧：标题区 */}
-                      <div className={isAlgorithmFace ? "space-y-[0.1rem]" : "space-y-6"}>
+                      <div className="space-y-[0.1rem]">
                         {/* 副标题 */}
                         <div
-                          className={
-                            isAlgorithmFace
-                              // 中文注释：移除负上边距，避免进入顶部 blur 区导致文字发糊
-                              ? "text-2xl tracking-[0.18em] uppercase font-semibold"
-                              : "text-xs tracking-[0.4em] uppercase font-semibold"
-                          }
+                          // 中文注释：统一副标题字号与字距，匹配算法页 ALGORITHM 的视觉权重
+                          className="text-2xl tracking-[0.18em] uppercase font-semibold"
                           style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
                         >
                           {face.subtitle}
@@ -2355,10 +2274,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     </div>
                   </motion.div>
 
-                  {/* 中文注释：算法分支按需求移除 ALGORITHM 与 Paper Spotlight 之间的分隔留白 */}
-                  {!isAlgorithmFace && (
-                    <div className="h-[1px] mb-12 lg:mb-16" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
-                  )}
+                  {/* 中文注释：按需求统一去掉此处分隔线，让所有分支过渡节奏与算法页一致 */}
 
                   {/* ─── 产品分支：作品/案例区 ─── */}
                   {face.id === 2 && face.works.length > 0 && (
@@ -2391,7 +2307,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title="KNOWLEDGE SYSTEM" color={face.color} />
                           {/* 中文注释：知识系统改为左右分栏，因此放宽容器宽度 */}
-                          <div className="max-w-6xl mx-auto">
+                          <div className="max-w-[90vw] mx-auto">
                             <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
                           </div>
                         </div>
@@ -2421,100 +2337,61 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     </>
                   )}
 
-                  {/* ─── 系统分支：课程训练 + 系统能力 + 实际应用 ─── */}
+                  {/* ─── 系统分支：按用户最新文本重建全部内容 ─── */}
                   {face.id === 4 && (
                     <>
-                      {face.systemCourses && (
+                      {face.systemAbilityTree && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="SYSTEM COURSE TRAINING" color={face.color} />
-                          <div
-                            className="rounded-2xl px-6 py-6 md:px-8 md:py-8 relative overflow-hidden"
-                            style={{
-                              background: `linear-gradient(135deg, ${face.color}0A, ${face.color}04)`,
-                              border: `1px solid ${face.color}20`,
-                            }}
-                          >
-                            <div className="relative z-10">
-                              <div
-                                className="text-sm font-semibold mb-5 tracking-[0.15em]"
-                                style={{ color: `${face.color}BB`, fontFamily: "var(--font-label)" }}
-                              >
-                                计算机系统底层
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {face.systemCourses.map((course) => (
-                                  <div
-                                    key={course.code}
-                                    className="flex items-center gap-3 px-4 py-3 rounded-lg"
-                                    style={{ border: `1px solid ${face.color}15`, background: `${face.color}08` }}
-                                  >
-                                    <span className="text-xs font-mono font-semibold tracking-wider" style={{ color: `${face.color}CC` }}>
-                                      {course.code}
-                                    </span>
-                                    <span className="text-sm text-white/60">{course.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                          <SectionTitle title="个人的系统能力体系" color={face.color} />
+                          <SystemAbilityTree treeText={face.systemAbilityTree} color={face.color} />
+                        </div>
+                      )}
+
+                      {face.systemLanguageCapability && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="编程语言能力" color={face.color} />
+                          <ProgrammingLanguageCapability color={face.color} capability={face.systemLanguageCapability} />
+                        </div>
+                      )}
+
+                      {face.systemTraining && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="系统课程训练" color={face.color} />
+                          <SystemTrainingBlock color={face.color} training={face.systemTraining} />
                         </div>
                       )}
 
                       {face.systemCapabilities && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="SYSTEM CAPABILITIES" color={face.color} />
+                          <SectionTitle title="系统能力" color={face.color} />
                           <SystemCapabilityCards capabilities={face.systemCapabilities} color={face.color} />
                         </div>
                       )}
 
-                      <div className="mb-12 lg:mb-16">
-                        <SectionTitle title="PROGRAMMING LANGUAGE CAPABILITY" color={face.color} />
-                        <ProgrammingLanguageCapability color={face.color} />
-                      </div>
-
-                      {/* 系统仓库 */}
-                      <div className="mb-12 lg:mb-16">
-                        <SectionTitle title="SYSTEM REPOSITORY" color={face.color} />
-                        <div
-                          className="rounded-2xl px-6 py-8 md:px-8 md:py-10 relative overflow-hidden"
-                          style={{
-                            background: `linear-gradient(135deg, ${face.color}12, ${face.color}06)`,
-                            border: `1px solid ${face.color}30`,
-                          }}
-                        >
-                          <div
-                            className="absolute inset-0 opacity-20"
-                            style={{ background: `radial-gradient(circle at 80% 20%, ${face.color}30, transparent 60%)` }}
-                          />
-                          <div className="relative z-10">
-                            <div
-                              className="text-lg md:text-xl font-semibold tracking-[0.08em]"
-                              style={{
-                                fontFamily: "var(--font-label)",
-                                color: `${face.color}E6`,
-                              }}
-                            >
-                              岱的系统架构仓库
-                            </div>
-                            <p
-                              className="mt-4 text-sm md:text-base leading-relaxed text-white/80"
-                              style={{ fontFamily: "var(--font-body)" }}
-                            >
-                              复杂项目的系统架构设计 · 数据库设计与管理能力
-                            </p>
-                          </div>
+                      {face.systemApplications && face.systemApplications.length > 0 && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="实际应用" color={face.color} />
+                          <SystemApplicationList color={face.color} items={face.systemApplications} />
                         </div>
-                      </div>
+                      )}
+
+                      {face.systemProjects && face.systemProjects.length > 0 && (
+                        <div className="mb-12 lg:mb-16">
+                          <SectionTitle title="实战项目" color={face.color} />
+                          <AlgorithmProjects projects={face.systemProjects} color={face.color} />
+                        </div>
+                      )}
                     </>
                   )}
 
-                  {/* ─── 跨界分支：教育轨迹 + 优势 ─── */}
+                  {/* ─── 跨界分支：教育轨迹 + 跨界能力 + 独特价值 ─── */}
                   {face.id === 5 && (
                     <>
                       {face.educationTimeline && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="EDUCATION TRAJECTORY" color={face.color} />
-                          <div className="max-w-2xl">
+                          <SectionTitle title="教育轨迹" color={face.color} />
+                          {/* 中文注释：教育轨迹改为横向时间轴后放开宽度，避免右侧留白 */}
+                          <div className="max-w-none">
                             <EducationTimeline timeline={face.educationTimeline} color={face.color} />
                           </div>
                         </div>
@@ -2522,14 +2399,67 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
                       {face.hybridAdvantages && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="UNIQUE ADVANTAGES" color={face.color} />
+                          <SectionTitle title="跨界能力的具体体现" color={face.color} />
+                          <div
+                            className="text-sm md:text-base text-white/78 mb-6"
+                            style={{ fontFamily: "var(--font-body)" }}
+                          >
+                            技术 × 艺术的双向转化
+                          </div>
                           <HybridAdvantages advantages={face.hybridAdvantages} color={face.color} />
+
+                          {face.uniqueValue && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 12 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              className="mt-8 rounded-2xl p-6 md:p-8 relative overflow-hidden"
+                              style={{
+                                background: `linear-gradient(145deg, ${face.color}10, ${face.color}05)`,
+                                border: `1px solid ${face.color}25`,
+                              }}
+                            >
+                              <div
+                                className="absolute inset-0 opacity-18"
+                                style={{ background: `radial-gradient(circle at 30% 25%, ${face.color}35, transparent 64%)` }}
+                              />
+                              <div className="relative z-10">
+                                <div
+                                  className="text-xs tracking-[0.34em] uppercase mb-3 text-white/45 font-semibold"
+                                  style={{ fontFamily: "var(--font-label)" }}
+                                >
+                                  独特价值
+                                </div>
+                                <div
+                                  className="text-lg md:text-xl text-white/88 mb-4"
+                                  style={{ fontFamily: "var(--font-display)" }}
+                                >
+                                  {face.uniqueValue.title}
+                                </div>
+                                <div className="space-y-3">
+                                  {face.uniqueValue.items.map((item) => (
+                                    <div key={item} className="flex items-start gap-2 text-sm text-white/68 leading-relaxed">
+                                      <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: `${face.color}8A` }} />
+                                      <span>{item}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
                           <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
                             className="mt-8 text-center"
                           >
+                            <div
+                              className="text-xs tracking-[0.3em] uppercase mb-3 text-white/45 font-semibold"
+                              style={{ fontFamily: "var(--font-label)" }}
+                            >
+                              核心竞争力
+                            </div>
                             <div
                               className="inline-block px-6 py-3 rounded-full text-sm font-medium"
                               style={{
@@ -2538,7 +2468,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 border: `1px solid ${face.color}25`,
                               }}
                             >
-                              技术艺术化转化能力 · 跨领域创新解决方案
+                              {face.coreCompetence ?? "技术艺术化转化能力 · 跨领域问题解决方案 · 完整产品交付能力"}
                             </div>
                           </motion.div>
                         </div>
@@ -2587,6 +2517,18 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               >
                                 岱和她的朋友们
                               </h3>
+                              {/* 中文注释：按需求把“游戏概念”文案直接放在标题下方，不再做独立信息卡 */}
+                              <div className="mt-4 space-y-3 text-sm md:text-base leading-relaxed text-white/85 max-w-3xl">
+                                <p>
+                                  游戏概念
+                                </p>
+                                <p>
+                                  一个关于“认识自己”的轻量级对话游戏——通过简短的对话，AI 会为你生成独特的“特质碎片”，收集足够的碎片就能组成一颗完整的骰子。
+                                </p>
+                                <p>
+                                  我的发心：我相信人的可能性是无限的，也相信文字有巨大的能量——或许一次文字的流动，能让我的朋友们发现自己的可能性。
+                                </p>
+                              </div>
                             </div>
                             <span
                               className="text-[11px] md:text-xs px-3 py-1.5 rounded-full tracking-[0.2em] uppercase font-semibold"
