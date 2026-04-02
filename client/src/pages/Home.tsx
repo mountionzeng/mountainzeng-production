@@ -44,6 +44,17 @@ const HOME_STAGE_SIZE = {
   height: 780,
 };
 
+type HomeLayoutMetrics = {
+  viewportWidth: number;
+  viewportHeight: number;
+  zoom: number;
+  dpr: number;
+  rootFontSize: number;
+  widthScale: number;
+  heightScale: number;
+  stageScale: number;
+};
+
 function WechatIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -63,6 +74,8 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [toastPosition, setToastPosition] = useState({ x: 24, y: 24 });
   const [homeStageScale, setHomeStageScale] = useState(1);
+  const [homeLayoutMetrics, setHomeLayoutMetrics] = useState<HomeLayoutMetrics | null>(null);
+  const [showLayoutDebug, setShowLayoutDebug] = useState(false);
   const titleOffsetX = HOME_TITLE_IMAGE_TUNING.offsetX;
   const titleOffsetY = HOME_TITLE_IMAGE_TUNING.offsetY;
   const titleScale = HOME_TITLE_IMAGE_TUNING.scale;
@@ -125,19 +138,50 @@ export default function App() {
   }, [toast, placeToastNearPointer]);
 
   useEffect(() => {
-    // 中文注释：统一按窗口与设计稿的最小比例缩放，保证跨屏幕视觉比例一致
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setShowLayoutDebug(params.get("layoutDebug") === "1");
+  }, []);
+
+  useEffect(() => {
+    // 中文注释：用 visualViewport 宽高 * zoom 还原真实布局视口，避免域名级缩放差异影响首页比例
     const syncHomeStageScale = () => {
       if (typeof window === "undefined") return;
-      const widthScale = window.innerWidth / HOME_STAGE_SIZE.width;
-      const heightScale = window.innerHeight / HOME_STAGE_SIZE.height;
+      const viewport = window.visualViewport;
+      const zoom = viewport?.scale ?? 1;
+      const viewportWidth = (viewport?.width ?? window.innerWidth) * zoom;
+      const viewportHeight = (viewport?.height ?? window.innerHeight) * zoom;
+      const widthScale = viewportWidth / HOME_STAGE_SIZE.width;
+      const heightScale = viewportHeight / HOME_STAGE_SIZE.height;
       const nextScale = Math.min(widthScale, heightScale);
       setHomeStageScale(nextScale);
+
+      if (showLayoutDebug) {
+        const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        setHomeLayoutMetrics({
+          viewportWidth,
+          viewportHeight,
+          zoom,
+          dpr: window.devicePixelRatio || 1,
+          rootFontSize,
+          widthScale,
+          heightScale,
+          stageScale: nextScale,
+        });
+      }
     };
 
     syncHomeStageScale();
     window.addEventListener("resize", syncHomeStageScale);
-    return () => window.removeEventListener("resize", syncHomeStageScale);
-  }, []);
+    window.visualViewport?.addEventListener("resize", syncHomeStageScale);
+    window.visualViewport?.addEventListener("scroll", syncHomeStageScale);
+
+    return () => {
+      window.removeEventListener("resize", syncHomeStageScale);
+      window.visualViewport?.removeEventListener("resize", syncHomeStageScale);
+      window.visualViewport?.removeEventListener("scroll", syncHomeStageScale);
+    };
+  }, [showLayoutDebug]);
 
   const copyToClipboard = useCallback(async (text: string, label: string, event?: ReactMouseEvent<HTMLButtonElement>) => {
     if (event) {
@@ -634,6 +678,25 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      {showLayoutDebug && homeLayoutMetrics && (
+        <div
+          className="fixed left-3 bottom-3 z-[60] pointer-events-none text-[11px] leading-[1.35] text-white/90 rounded-md px-3 py-2"
+          style={{
+            background: "rgba(8,10,22,0.82)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            backdropFilter: "blur(8px)",
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          }}
+        >
+          <div>viewport: {homeLayoutMetrics.viewportWidth.toFixed(1)} x {homeLayoutMetrics.viewportHeight.toFixed(1)}</div>
+          <div>zoom: {homeLayoutMetrics.zoom.toFixed(3)} | dpr: {homeLayoutMetrics.dpr.toFixed(3)}</div>
+          <div>rootFont: {homeLayoutMetrics.rootFontSize.toFixed(3)}px</div>
+          <div>widthScale: {homeLayoutMetrics.widthScale.toFixed(4)}</div>
+          <div>heightScale: {homeLayoutMetrics.heightScale.toFixed(4)}</div>
+          <div>stageScale: {homeLayoutMetrics.stageScale.toFixed(4)}</div>
+        </div>
+      )}
     </div>
   );
 }
