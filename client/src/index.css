@@ -2,14 +2,6 @@
 @import "tw-animate-css";
 
 @font-face {
-  font-family: "TW-Sung";
-  src: url("/fonts/TW-Sung.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Voyage";
   src: url("/fonts/Voyage-Regular.otf") format("opentype");
   font-weight: 400;
@@ -56,11 +48,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-display: 'TW-Sung', serif;
-  --font-body: 'TW-Sung', serif;
-  --font-mono: 'TW-Sung', serif;
-  --font-label: 'TW-Sung', serif;
-  --font-heading: 'TW-Sung', serif;
+  --font-display: 'Voyage', 'Songti SC', 'STSong', 'Noto Serif SC', serif;
+  --font-body: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', serif;
+  --font-mono: 'Fira Code', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --font-label: 'Songti SC', 'STSong', 'Noto Serif SC', serif;
+  --font-heading: 'Voyage', 'Songti SC', 'STSong', 'Noto Serif SC', serif;
 }
 
 :root {
