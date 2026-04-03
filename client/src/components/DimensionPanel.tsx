@@ -47,15 +47,6 @@ const VISUAL_IMAGE_ISOLATED_GRID_ROW_INDEX = 1;
 const MOTION_EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const BRANCH_CONTENT_MAX_WIDTH_PX = 1360;
 
-type BranchLayoutMetrics = {
-  viewportWidth: number;
-  viewportHeight: number;
-  zoom: number;
-  dpr: number;
-  rootFontSize: number;
-  contentWidth: number;
-};
-
 type PaperSpotlightItem = {
   title: string;
   noteDate: string;
@@ -1695,11 +1686,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
   const [activeVisualVideoId, setActiveVisualVideoId] = useState<string | null>(null);
   const [visualVideoVisibleCount, setVisualVideoVisibleCount] = useState(VISUAL_VIDEO_PAGE_SIZE);
   const [visualImageVisibleCount, setVisualImageVisibleCount] = useState(VISUAL_IMAGE_PAGE_SIZE);
-  const [showLayoutDebug, setShowLayoutDebug] = useState(false);
-  const [branchLayoutMetrics, setBranchLayoutMetrics] = useState<BranchLayoutMetrics | null>(null);
   const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const contentContainerRef = useRef<HTMLDivElement | null>(null);
   const visualCdnBaseUrl =
     (import.meta.env.VITE_VISUAL_MEDIA_CDN_BASE_URL as string | undefined)?.trim() ||
     DEFAULT_VISUAL_CDN_BASE_URL;
@@ -1731,45 +1719,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
   const visibleVisualVideos = VISUAL_VIDEO_ITEMS.slice(0, visualVideoVisibleCount);
   const hasMoreVisualImages = visualImageVisibleCount < VISUAL_IMAGE_ITEMS.length;
   const hasMoreVisualVideos = visualVideoVisibleCount < VISUAL_VIDEO_ITEMS.length;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setShowLayoutDebug(params.get("layoutDebug") === "1");
-  }, []);
-
-  useEffect(() => {
-    if (!showLayoutDebug || typeof window === "undefined") return;
-
-    const syncBranchLayoutMetrics = () => {
-      const viewport = window.visualViewport;
-      const zoom = viewport?.scale ?? 1;
-      const viewportWidth = (viewport?.width ?? window.innerWidth) * zoom;
-      const viewportHeight = (viewport?.height ?? window.innerHeight) * zoom;
-      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-      const contentWidth = contentContainerRef.current?.getBoundingClientRect().width ?? 0;
-
-      setBranchLayoutMetrics({
-        viewportWidth,
-        viewportHeight,
-        zoom,
-        dpr: window.devicePixelRatio || 1,
-        rootFontSize,
-        contentWidth,
-      });
-    };
-
-    syncBranchLayoutMetrics();
-    window.addEventListener("resize", syncBranchLayoutMetrics);
-    window.visualViewport?.addEventListener("resize", syncBranchLayoutMetrics);
-    window.visualViewport?.addEventListener("scroll", syncBranchLayoutMetrics);
-
-    return () => {
-      window.removeEventListener("resize", syncBranchLayoutMetrics);
-      window.visualViewport?.removeEventListener("resize", syncBranchLayoutMetrics);
-      window.visualViewport?.removeEventListener("scroll", syncBranchLayoutMetrics);
-    };
-  }, [showLayoutDebug, faceId]);
 
   useEffect(() => {
     return () => {
@@ -1892,7 +1841,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
           <main className={isVisualFace ? "flex-1 px-2 md:px-3 lg:px-4 pb-16" : "flex-1 px-2 md:px-4 lg:px-6 pb-16"}>
             {/* 中文注释：分支页主容器采用固定设计上限宽度，避免不同 viewport 下版式拉伸漂移 */}
             <div
-              ref={contentContainerRef}
               className="w-full mx-auto"
               style={{ maxWidth: `${BRANCH_CONTENT_MAX_WIDTH_PX}px` }}
             >
@@ -2701,22 +2649,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
             ))}
           </div>
 
-          {showLayoutDebug && branchLayoutMetrics && (
-            <div
-              className="fixed right-3 bottom-3 z-[60] pointer-events-none text-[11px] leading-[1.35] text-white/90 rounded-md px-3 py-2"
-              style={{
-                background: "rgba(8,10,22,0.82)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                backdropFilter: "blur(8px)",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              }}
-            >
-              <div>viewport: {branchLayoutMetrics.viewportWidth.toFixed(1)} x {branchLayoutMetrics.viewportHeight.toFixed(1)}</div>
-              <div>zoom: {branchLayoutMetrics.zoom.toFixed(3)} | dpr: {branchLayoutMetrics.dpr.toFixed(3)}</div>
-              <div>rootFont: {branchLayoutMetrics.rootFontSize.toFixed(3)}px</div>
-              <div>contentWidth: {branchLayoutMetrics.contentWidth.toFixed(1)}px</div>
-            </div>
-          )}
         </div>
       </div>
     </motion.div>
