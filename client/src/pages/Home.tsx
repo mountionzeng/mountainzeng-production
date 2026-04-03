@@ -679,7 +679,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {showLayoutDebug && homeLayoutMetrics && (
+      {showLayoutDebug && homeLayoutMetrics && !showDimension && (
         <div
           className="fixed left-3 bottom-3 z-[60] pointer-events-none text-[11px] leading-[1.35] text-white/90 rounded-md px-3 py-2"
           style={{
