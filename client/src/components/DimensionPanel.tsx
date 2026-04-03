@@ -311,21 +311,183 @@ function ProgrammingLanguageCapability({
 }
 
 /* ─── 个人系统能力体系树（系统页专用）─── */
+type SystemAbilityLayer = {
+  layerTitle: string;
+  course: string;
+  summary: string;
+};
+
+// 中文注释：把树形文本解析成可视化数据结构，便于做更精致的 UI 展示
+function parseSystemAbilityTree(treeText: string): { title: string; layers: SystemAbilityLayer[] } {
+  const normalize = (line: string) => line.replace(/^[\s│├└─]+/, "").trim();
+  const lines = treeText
+    .split("\n")
+    .map((line) => line.replace(/\r/g, ""))
+    .filter((line) => line.trim().length > 0);
+
+  const title = normalize(lines[0] ?? "个人的系统能力体系");
+  const layers: SystemAbilityLayer[] = [];
+  let current: SystemAbilityLayer | null = null;
+
+  for (const rawLine of lines.slice(1)) {
+    const line = normalize(rawLine);
+    if (!line) continue;
+
+    const layerMatch = line.match(/【(.+?)】/);
+    if (layerMatch) {
+      current = {
+        layerTitle: layerMatch[1],
+        course: "",
+        summary: "",
+      };
+      layers.push(current);
+      continue;
+    }
+
+    if (!current) continue;
+
+    if (line.startsWith("CS")) {
+      current.course = line;
+      continue;
+    }
+
+    if (line.startsWith("↓")) {
+      current.summary = line.replace(/^↓\s*/, "");
+    }
+  }
+
+  return { title, layers };
+}
+
 function SystemAbilityTree({ treeText, color }: { treeText: string; color: string }) {
+  const { title, layers } = parseSystemAbilityTree(treeText);
+
+  if (layers.length === 0) {
+    return (
+      <div
+        className="rounded-2xl p-6 md:p-8"
+        style={{
+          background: `linear-gradient(145deg, ${color}12, ${color}06)`,
+          border: `1px solid ${color}28`,
+        }}
+      >
+        <pre
+          className="whitespace-pre-wrap break-words text-sm md:text-[15px] leading-relaxed text-white/78"
+          style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" }}
+        >
+          {treeText}
+        </pre>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="rounded-2xl p-6 md:p-8"
+      className="relative overflow-hidden rounded-2xl p-6 md:p-8"
       style={{
-        background: `linear-gradient(145deg, ${color}12, ${color}06)`,
-        border: `1px solid ${color}28`,
+        background: `linear-gradient(145deg, ${color}1A, ${color}08 52%, rgba(0,0,0,0.45) 100%)`,
+        border: `1px solid ${color}2F`,
       }}
     >
-      <pre
-        className="whitespace-pre-wrap break-words text-sm md:text-[15px] leading-relaxed text-white/78"
-        style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" }}
-      >
-        {treeText}
-      </pre>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `radial-gradient(circle at 18% 12%, ${color}2C 0%, transparent 52%), radial-gradient(circle at 84% 86%, ${color}1B 0%, transparent 50%)`,
+        }}
+      />
+
+      <div className="relative">
+        <div className="flex items-center justify-between gap-3 mb-5 md:mb-6">
+          <div>
+            <div
+              className="text-[11px] tracking-[0.18em] uppercase font-semibold mb-1"
+              style={{ color: `${color}C9`, fontFamily: "var(--font-label)" }}
+            >
+              system map
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
+              {title}
+            </h3>
+          </div>
+          <div
+            className="px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.08em]"
+            style={{
+              color: `${color}EA`,
+              background: `${color}1F`,
+              border: `1px solid ${color}45`,
+              fontFamily: "var(--font-label)",
+            }}
+          >
+            {layers.length} 层结构
+          </div>
+        </div>
+
+        <div className="relative">
+          <div
+            className="absolute left-[15px] top-3 bottom-3 w-px"
+            style={{ background: `linear-gradient(180deg, ${color}6E 0%, ${color}22 100%)` }}
+          />
+
+          <div className="space-y-3.5">
+            {layers.map((layer, index) => (
+              <motion.div
+                key={`${layer.layerTitle}-${index}`}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.36, delay: index * 0.06, ease: "easeOut" }}
+                className="relative pl-10"
+              >
+                <div
+                  className="absolute left-0 top-2.5 w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-semibold"
+                  style={{
+                    color: `${color}F3`,
+                    background: `linear-gradient(145deg, ${color}45, ${color}1F)`,
+                    border: `1px solid ${color}70`,
+                    boxShadow: `0 0 14px ${color}35`,
+                    fontFamily: "var(--font-label)",
+                  }}
+                >
+                  {index + 1}
+                </div>
+
+                <div
+                  className="rounded-xl p-4 md:p-5"
+                  style={{
+                    background: `linear-gradient(145deg, rgba(255,255,255,0.035), ${color}10)`,
+                    border: `1px solid ${color}2C`,
+                  }}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2.5">
+                    <h4 className="text-base md:text-[1.05rem] font-semibold text-white/90" style={{ fontFamily: "var(--font-display)" }}>
+                      {layer.layerTitle}
+                    </h4>
+                    {layer.course && (
+                      <span
+                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] text-white/85"
+                        style={{
+                          border: `1px solid ${color}35`,
+                          background: `${color}1C`,
+                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace",
+                        }}
+                      >
+                        {layer.course}
+                      </span>
+                    )}
+                  </div>
+
+                  {layer.summary && (
+                    <div className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
+                      <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
+                      <span>{layer.summary}</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
