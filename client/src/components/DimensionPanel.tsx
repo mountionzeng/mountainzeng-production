@@ -1686,6 +1686,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
   const [activeVisualVideoId, setActiveVisualVideoId] = useState<string | null>(null);
   const [visualVideoVisibleCount, setVisualVideoVisibleCount] = useState(VISUAL_VIDEO_PAGE_SIZE);
   const [visualImageVisibleCount, setVisualImageVisibleCount] = useState(VISUAL_IMAGE_PAGE_SIZE);
+  const [browserZoomScale, setBrowserZoomScale] = useState(1);
   const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const visualCdnBaseUrl =
@@ -1737,6 +1738,28 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
     setVisualImageVisibleCount(VISUAL_IMAGE_PAGE_SIZE);
   }, [faceId]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // 中文注释：按 visualViewport.scale 读取浏览器缩放，避免 localhost 与线上域名缩放不一致导致分支页视觉比例不同
+    const syncBrowserZoomScale = () => {
+      const zoom = window.visualViewport?.scale ?? 1;
+      setBrowserZoomScale(zoom > 0 ? zoom : 1);
+    };
+
+    syncBrowserZoomScale();
+    window.addEventListener("resize", syncBrowserZoomScale);
+    window.visualViewport?.addEventListener("resize", syncBrowserZoomScale);
+    window.visualViewport?.addEventListener("scroll", syncBrowserZoomScale);
+
+    return () => {
+      window.removeEventListener("resize", syncBrowserZoomScale);
+      window.visualViewport?.removeEventListener("resize", syncBrowserZoomScale);
+      window.visualViewport?.removeEventListener("scroll", syncBrowserZoomScale);
+    };
+  }, []);
+
+  const zoomCompensation = browserZoomScale > 0 ? 1 / browserZoomScale : 1;
+
   const handleReroll = () => {
     if (isRerolling) return;
     setIsRerolling(true);
@@ -1760,6 +1783,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-50 bg-[#080808] branch-readable"
+      // 中文注释：分支页补偿浏览器缩放（例如 localhost=110%，线上=100%），确保两端视觉尺寸一致
+      style={{ zoom: `${zoomCompensation}` }}
     >
       <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto">
         {/* 顶部彩色线条 */}
