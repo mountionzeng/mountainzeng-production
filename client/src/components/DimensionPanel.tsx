@@ -313,11 +313,19 @@ function ProgrammingLanguageCapability({
 /* ─── 个人系统能力体系树（系统页专用）─── */
 type SystemAbilityLayer = {
   layerTitle: string;
-  course: string;
-  summary: string;
+  entries: SystemAbilityEntry[];
+  notes: string[];
 };
 
-// 中文注释：把树形文本解析成可视化数据结构，便于做更精致的 UI 展示
+type SystemAbilityEntry = {
+  title: string;
+  bullets: string[];
+  summary?: string;
+};
+
+const PRIMARY_LAYER_RE = /^【第.+层[:：].+】/;
+
+// 中文注释：解析系统能力树文本，支持层级标题、课程条目、项目符号细项与总结语
 function parseSystemAbilityTree(treeText: string): { title: string; layers: SystemAbilityLayer[] } {
   const normalize = (line: string) => line.replace(/^[\s│├└─]+/, "").trim();
   const lines = treeText
@@ -327,40 +335,109 @@ function parseSystemAbilityTree(treeText: string): { title: string; layers: Syst
 
   const title = normalize(lines[0] ?? "个人的系统能力体系");
   const layers: SystemAbilityLayer[] = [];
-  let current: SystemAbilityLayer | null = null;
+  let currentLayer: SystemAbilityLayer | null = null;
+  let currentEntry: SystemAbilityEntry | null = null;
+
+  const pushCurrentEntry = () => {
+    if (!currentLayer || !currentEntry) return;
+    const hasContent =
+      currentEntry.title.trim().length > 0 ||
+      currentEntry.bullets.length > 0 ||
+      Boolean(currentEntry.summary);
+    if (hasContent) {
+      currentLayer.entries.push(currentEntry);
+    }
+    currentEntry = null;
+  };
 
   for (const rawLine of lines.slice(1)) {
     const line = normalize(rawLine);
     if (!line) continue;
 
-    const layerMatch = line.match(/【(.+?)】/);
-    if (layerMatch) {
-      current = {
-        layerTitle: layerMatch[1],
-        course: "",
-        summary: "",
+    if (PRIMARY_LAYER_RE.test(line)) {
+      pushCurrentEntry();
+      const layerMatch = line.match(/^【([^】]+)】(.*)$/);
+      const layerTitleBase = layerMatch?.[1]?.trim() ?? line;
+      const layerTitleSuffix = layerMatch?.[2]?.trim() ?? "";
+      const layerTitle = `${layerTitleBase}${layerTitleSuffix ? ` ${layerTitleSuffix}` : ""}`.trim();
+      currentLayer = {
+        layerTitle,
+        entries: [],
+        notes: [],
       };
-      layers.push(current);
+      layers.push(currentLayer);
       continue;
     }
 
-    if (!current) continue;
+    if (!currentLayer) continue;
 
-    if (line.startsWith("CS")) {
-      current.course = line;
+    const inlineSectionMatch = line.match(/^【(.+?)】$/);
+    if (inlineSectionMatch) {
+      pushCurrentEntry();
+      currentEntry = {
+        title: inlineSectionMatch[1],
+        bullets: [],
+      };
+      continue;
+    }
+
+    if (/^CS\d+/i.test(line)) {
+      pushCurrentEntry();
+      currentEntry = {
+        title: line,
+        bullets: [],
+      };
+      continue;
+    }
+
+    if (/^[•·*-]\s*/.test(line)) {
+      if (!currentEntry) {
+        currentEntry = { title: "补充说明", bullets: [] };
+      }
+      const bullet = line.replace(/^[•·*-]\s*/, "").trim();
+      if (bullet) currentEntry.bullets.push(bullet);
       continue;
     }
 
     if (line.startsWith("↓")) {
-      current.summary = line.replace(/^↓\s*/, "");
+      const summary = line.replace(/^↓\s*/, "").trim();
+      if (currentEntry) {
+        currentEntry.summary = summary;
+      } else if (summary) {
+        currentLayer.notes.push(summary);
+      }
+      continue;
+    }
+
+    if (currentEntry) {
+      currentEntry.bullets.push(line);
+    } else {
+      currentLayer.notes.push(line);
     }
   }
 
+  pushCurrentEntry();
   return { title, layers };
+}
+
+function getSystemLayerButtonLabel(layerTitle: string): string {
+  const withoutPrefix = layerTitle.replace(/^第[^：:]+[：:]\s*/, "").trim();
+  const withoutSuffix = withoutPrefix.replace(/（.*?）/g, "").trim();
+  return `[${withoutSuffix || layerTitle}]`;
 }
 
 function SystemAbilityTree({ treeText, color }: { treeText: string; color: string }) {
   const { title, layers } = parseSystemAbilityTree(treeText);
+  const [activeLayerIndex, setActiveLayerIndex] = useState(0);
+  const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    if (layers.length === 0) {
+      setActiveLayerIndex(0);
+      return;
+    }
+    setActiveLayerIndex((prev) => Math.min(prev, layers.length - 1));
+  }, [layers.length]);
 
   if (layers.length === 0) {
     return (
@@ -388,11 +465,11 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
         background: `linear-gradient(145deg, ${color}1A, ${color}08 52%, rgba(0,0,0,0.45) 100%)`,
         border: `1px solid ${color}2F`,
       }}
-    >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 18% 12%, ${color}2C 0%, transparent 52%), radial-gradient(circle at 84% 86%, ${color}1B 0%, transparent 50%)`,
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 18% 12%, ${color}2C 0%, transparent 52%), radial-gradient(circle at 84% 86%, ${color}1B 0%, transparent 50%)`,
         }}
       />
 
@@ -408,6 +485,9 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
             <h3 className="text-lg md:text-xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
               {title}
             </h3>
+            <div className="text-[11px] md:text-xs mt-1 tracking-[0.08em] text-white/55" style={{ fontFamily: "var(--font-label)" }}>
+              COMPUTER SCIENCE CURRICULUM HIERARCHY
+            </div>
           </div>
           <div
             className="px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.08em]"
@@ -422,69 +502,164 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
           </div>
         </div>
 
-        <div className="relative">
-          <div
-            className="absolute left-[15px] top-3 bottom-3 w-px"
-            style={{ background: `linear-gradient(180deg, ${color}6E 0%, ${color}22 100%)` }}
-          />
-
-          <div className="space-y-3.5">
-            {layers.map((layer, index) => (
-              <motion.div
-                key={`${layer.layerTitle}-${index}`}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.36, delay: index * 0.06, ease: "easeOut" }}
-                className="relative pl-10"
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
+          <div className="lg:col-span-3">
+            <div
+              className="rounded-xl p-3 md:p-3.5"
+              style={{
+                border: `1px solid ${color}2A`,
+                background: `linear-gradient(145deg, ${color}14, rgba(0,0,0,0.34))`,
+              }}
+            >
+              <div
+                className="text-[10px] tracking-[0.16em] uppercase font-semibold mb-2.5"
+                style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
               >
-                <div
-                  className="absolute left-0 top-2.5 w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-semibold"
-                  style={{
-                    color: `${color}F3`,
-                    background: `linear-gradient(145deg, ${color}45, ${color}1F)`,
-                    border: `1px solid ${color}70`,
-                    boxShadow: `0 0 14px ${color}35`,
-                    fontFamily: "var(--font-label)",
-                  }}
-                >
-                  {index + 1}
-                </div>
+                layer buttons
+              </div>
 
+              <div className="relative space-y-2.5">
                 <div
-                  className="rounded-xl p-4 md:p-5"
-                  style={{
-                    background: `linear-gradient(145deg, rgba(255,255,255,0.035), ${color}10)`,
-                    border: `1px solid ${color}2C`,
+                  className="absolute left-[13px] top-3 bottom-3 w-px"
+                  style={{ background: `linear-gradient(180deg, ${color}86 0%, ${color}24 100%)` }}
+                />
+                {layers.map((layer, index) => {
+                  const isActive = index === activeLayerIndex;
+                  return (
+                    <button
+                      key={`${layer.layerTitle}-btn-${index}`}
+                      type="button"
+                      onClick={() => {
+                        setActiveLayerIndex(index);
+                        layerRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                      }}
+                      className="relative w-full text-left rounded-lg px-3 py-2.5 transition-all duration-200"
+                      style={{
+                        color: isActive ? `${color}F2` : "rgba(255,255,255,0.82)",
+                        background: isActive ? `${color}2B` : "rgba(0,0,0,0.22)",
+                        border: `1px solid ${isActive ? `${color}6A` : `${color}2D`}`,
+                        boxShadow: isActive ? `0 0 16px ${color}35` : "none",
+                      }}
+                    >
+                      <span
+                        className="absolute left-[10px] top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full"
+                        style={{ background: isActive ? `${color}F0` : `${color}86` }}
+                      />
+                      <span className="ml-4 text-sm md:text-[0.96rem] font-semibold" style={{ fontFamily: "var(--font-display)" }}>
+                        {getSystemLayerButtonLabel(layer.layerTitle)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-9 space-y-3.5">
+            {layers.map((layer, index) => {
+              const isActive = index === activeLayerIndex;
+              return (
+                <motion.div
+                  key={`${layer.layerTitle}-${index}`}
+                  ref={(node) => {
+                    layerRefs.current[index] = node;
                   }}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.36, delay: index * 0.06, ease: "easeOut" }}
+                  className="relative pl-10"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2.5">
-                    <h4 className="text-base md:text-[1.05rem] font-semibold text-white/90" style={{ fontFamily: "var(--font-display)" }}>
-                      {layer.layerTitle}
-                    </h4>
-                    {layer.course && (
+                  <div
+                    className="absolute left-0 top-2.5 w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-semibold"
+                    style={{
+                      color: `${color}F3`,
+                      background: `linear-gradient(145deg, ${isActive ? `${color}56` : `${color}3A`}, ${color}1F)`,
+                      border: `1px solid ${isActive ? `${color}7B` : `${color}52`}`,
+                      boxShadow: isActive ? `0 0 16px ${color}45` : `0 0 10px ${color}2A`,
+                      fontFamily: "var(--font-label)",
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+
+                  <div
+                    className="rounded-xl p-4 md:p-5 transition-all duration-200"
+                    style={{
+                      background: `linear-gradient(145deg, rgba(255,255,255,0.035), ${color}10)`,
+                      border: `1px solid ${isActive ? `${color}52` : `${color}2C`}`,
+                      boxShadow: isActive ? `0 0 22px ${color}22` : "none",
+                    }}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                      <h4 className="text-base md:text-[1.05rem] font-semibold text-white/90" style={{ fontFamily: "var(--font-display)" }}>
+                        {layer.layerTitle}
+                      </h4>
                       <span
                         className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] text-white/85"
                         style={{
                           border: `1px solid ${color}35`,
                           background: `${color}1C`,
-                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace",
+                          fontFamily: "var(--font-label)",
                         }}
                       >
-                        {layer.course}
+                        {layer.entries.length} 个知识点
                       </span>
+                    </div>
+
+                    {layer.entries.length > 0 && (
+                      <div className="space-y-3">
+                        {layer.entries.map((entry, entryIndex) => (
+                          <div
+                            key={`${layer.layerTitle}-${entry.title}-${entryIndex}`}
+                            className="rounded-lg p-3"
+                            style={{
+                              border: `1px solid ${color}26`,
+                              background: `linear-gradient(145deg, rgba(0,0,0,0.25), ${color}08)`,
+                            }}
+                          >
+                            <div className="text-sm md:text-[0.95rem] font-semibold text-white/88 leading-relaxed">
+                              {entry.title}
+                            </div>
+
+                            {entry.bullets.length > 0 && (
+                              <ul className="mt-2 space-y-1.5">
+                                {entry.bullets.map((bullet, bulletIndex) => (
+                                  <li key={`${entry.title}-${bulletIndex}`} className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
+                                    <span
+                                      className="mt-[8px] h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                      style={{ background: `${color}A8` }}
+                                    />
+                                    <span>{bullet}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+
+                            {entry.summary && (
+                              <div className="mt-2.5 flex items-start gap-2 text-sm text-white/76 leading-relaxed">
+                                <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
+                                <span>{entry.summary}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {layer.notes.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {layer.notes.map((note, noteIndex) => (
+                          <div key={`${layer.layerTitle}-note-${noteIndex}`} className="text-sm text-white/70 leading-relaxed">
+                            {note}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-
-                  {layer.summary && (
-                    <div className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
-                      <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
-                      <span>{layer.summary}</span>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
