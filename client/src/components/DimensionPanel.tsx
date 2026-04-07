@@ -430,6 +430,8 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
   const { title, layers } = parseSystemAbilityTree(treeText);
   const [activeLayerIndex, setActiveLayerIndex] = useState(0);
   const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
+  // 中文注释：指定系统能力树中的核心课程把要点渲染成标签，而不是纵向列表
+  const shouldUseTagLayout = (entryTitle: string) => /CS501|CS570|CS590|CS525|CS520|CS561/i.test(entryTitle);
 
   useEffect(() => {
     if (layers.length === 0) {
@@ -558,6 +560,10 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
           <div className="lg:col-span-9 space-y-3.5">
             {layers.map((layer, index) => {
               const isActive = index === activeLayerIndex;
+              const isFirstLayer = index === 0;
+              const isSecondLayer = index === 1;
+              const isThirdLayer = index === 2;
+              const isFourthLayer = index === 3;
               return (
                 <motion.div
                   key={`${layer.layerTitle}-${index}`}
@@ -608,11 +614,22 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
                     </div>
 
                     {layer.entries.length > 0 && (
-                      <div className="space-y-3">
+                      // 中文注释：知识点由纵向列表改为响应式网格，让同层条目可并排展示
+                      <div
+                        className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${
+                          isSecondLayer || isThirdLayer ? "xl:grid-cols-2" : "xl:grid-cols-3"
+                        }`}
+                      >
                         {layer.entries.map((entry, entryIndex) => (
                           <div
                             key={`${layer.layerTitle}-${entry.title}-${entryIndex}`}
-                            className="rounded-lg p-3"
+                            className={`rounded-lg h-full ${
+                              isFirstLayer || isFourthLayer
+                                ? "p-2.5 md:p-3 md:col-span-2 xl:col-span-3"
+                                : isSecondLayer || isThirdLayer
+                                  ? "p-2.5 md:p-3"
+                                  : "p-3"
+                            }`}
                             style={{
                               border: `1px solid ${color}26`,
                               background: `linear-gradient(145deg, rgba(0,0,0,0.25), ${color}08)`,
@@ -622,25 +639,54 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
                               {entry.title}
                             </div>
 
-                            {entry.bullets.length > 0 && (
-                              <ul className="mt-2 space-y-1.5">
-                                {entry.bullets.map((bullet, bulletIndex) => (
-                                  <li key={`${entry.title}-${bulletIndex}`} className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
-                                    <span
-                                      className="mt-[8px] h-1.5 w-1.5 rounded-full flex-shrink-0"
-                                      style={{ background: `${color}A8` }}
-                                    />
-                                    <span>{bullet}</span>
-                                  </li>
+                            {shouldUseTagLayout(entry.title) ? (
+                              // 中文注释：同一组标签改为纵向排布，每个标签单独一行
+                              <div
+                                className={`mt-2.5 ${
+                                  isFirstLayer || isSecondLayer || isThirdLayer || isFourthLayer
+                                    ? "flex flex-wrap items-center gap-1.5"
+                                    : "flex flex-col items-start gap-2"
+                                }`}
+                              >
+                                {[...entry.bullets, ...(entry.summary ? [entry.summary] : [])].map((tag, tagIndex) => (
+                                  <span
+                                    key={`${entry.title}-tag-${tagIndex}`}
+                                    className={`inline-flex items-center rounded-full text-[12px] md:text-[13px] leading-tight max-w-full ${
+                                      isFirstLayer || isSecondLayer || isThirdLayer || isFourthLayer ? "px-2.5 py-1" : "px-3 py-1.5"
+                                    }`}
+                                    style={{
+                                      color: `${color}E6`,
+                                      background: `${color}14`,
+                                      border: `1px solid ${color}36`,
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
                                 ))}
-                              </ul>
-                            )}
-
-                            {entry.summary && (
-                              <div className="mt-2.5 flex items-start gap-2 text-sm text-white/76 leading-relaxed">
-                                <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
-                                <span>{entry.summary}</span>
                               </div>
+                            ) : (
+                              <>
+                                {entry.bullets.length > 0 && (
+                                  <ul className="mt-2 space-y-1.5">
+                                    {entry.bullets.map((bullet, bulletIndex) => (
+                                      <li key={`${entry.title}-${bulletIndex}`} className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
+                                        <span
+                                          className="mt-[8px] h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                          style={{ background: `${color}A8` }}
+                                        />
+                                        <span>{bullet}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+
+                                {entry.summary && (
+                                  <div className="mt-2.5 flex items-start gap-2 text-sm text-white/76 leading-relaxed">
+                                    <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
+                                    <span>{entry.summary}</span>
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         ))}
