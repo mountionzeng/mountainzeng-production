@@ -8,6 +8,52 @@ import ParticleField from "@/components/ParticleField";
 import { DICE_FACES } from "@/lib/diceData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+type HomeLanguage = "zh" | "en";
+type HomeFaceCopy = {
+  tabLabel: string;
+  homeDescription: string;
+  buttonText: string;
+};
+
+const HOME_FACE_COPY_EN: Record<number, HomeFaceCopy> = {
+  1: {
+    tabLabel: "Visual",
+    homeDescription:
+      "Sensitivity and visual intuition are my core strengths. From emotion to image, I translate abstract feelings into cinematic frames.",
+    buttonText: "Explore visual works",
+  },
+  2: {
+    tabLabel: "Product management",
+    homeDescription:
+      "I usually own the full loop from requirement analysis to implementation. For efficiency, I build tools and plugins to automate repetitive work.",
+    buttonText: "See product cases",
+  },
+  3: {
+    tabLabel: "Algorithm",
+    homeDescription:
+      "Math gives me a rigorous way of thinking: abstraction, pattern finding, and balancing complexity with efficiency.",
+    buttonText: "Read algorithm notes",
+  },
+  4: {
+    tabLabel: "Computer system",
+    homeDescription:
+      "I enjoy creating beautiful visuals, but true efficiency and stability come from understanding system fundamentals and computer internals.",
+    buttonText: "Open system map",
+  },
+  5: {
+    tabLabel: "Trans-disciplinarity",
+    homeDescription:
+      "With both art and CS backgrounds, I can bridge aesthetics and engineering directly, without translation loss between teams.",
+    buttonText: "How art meets code",
+  },
+  6: {
+    tabLabel: "Future",
+    homeDescription:
+      "With capabilities across vision, product, algorithms, systems, and cross-disciplinary practice, I keep building forward with open possibilities.",
+    buttonText: "What is next?",
+  },
+};
+
 const HOME_TITLE_IMAGE_TUNING = {
   offsetX: -204,
   offsetY: -175,
@@ -55,6 +101,7 @@ function WechatIcon({ className }: { className?: string }) {
 
 export default function App() {
   const HOME_FUTURE_COLOR = "#F7EFA9";
+  const [language, setLanguage] = useState<HomeLanguage>("zh");
   const [isRolling, setIsRolling] = useState(false);
   const [selectedFace, setSelectedFace] = useState<number | null>(null);
   const [showDimension, setShowDimension] = useState(false);
@@ -85,6 +132,27 @@ export default function App() {
   const socialMailOffsetY = HOME_TITLE_SOCIAL_BUTTONS_TUNING.mail.offsetY;
   const socialMailScale = HOME_TITLE_SOCIAL_BUTTONS_TUNING.mail.scale;
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localizedUi = useMemo(
+    () =>
+      language === "zh"
+        ? {
+            wechatTitle: "微信",
+            githubTitle: "GitHub",
+            emailTitle: "邮箱",
+            copiedPrefix: "已复制到剪贴板",
+            copyFailed: "复制失败，请手动复制",
+            diceHint: "没兴趣，玩一下骰子",
+          }
+        : {
+            wechatTitle: "WeChat",
+            githubTitle: "GitHub",
+            emailTitle: "Email",
+            copiedPrefix: "copied to clipboard",
+            copyFailed: "Copy failed. Please copy manually.",
+            diceHint: "Not interested? Roll the dice",
+          },
+    [language]
+  );
 
   const placeToastNearPointer = useCallback((clientX: number, clientY: number) => {
     if (typeof window === "undefined") return;
@@ -150,33 +218,51 @@ export default function App() {
     };
   }, []);
 
-  const copyToClipboard = useCallback(async (text: string, label: string, event?: ReactMouseEvent<HTMLButtonElement>) => {
-    if (event) {
-      placeToastNearPointer(event.clientX, event.clientY);
-    }
-    try {
-      if (navigator.clipboard?.writeText && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const copied = document.execCommand("copy");
-        document.body.removeChild(textArea);
-        if (!copied) {
-          throw new Error("copy_failed");
-        }
+  const copyToClipboard = useCallback(
+    async (text: string, label: string, event?: ReactMouseEvent<HTMLButtonElement>) => {
+      if (event) {
+        placeToastNearPointer(event.clientX, event.clientY);
       }
-      showToast(`${label} 已复制到剪贴板`);
-    } catch {
-      showToast("复制失败，请手动复制");
-    }
-  }, [placeToastNearPointer, showToast]);
+      try {
+        if (navigator.clipboard?.writeText && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          textArea.style.top = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          const copied = document.execCommand("copy");
+          document.body.removeChild(textArea);
+          if (!copied) {
+            throw new Error("copy_failed");
+          }
+        }
+        showToast(`${label} ${localizedUi.copiedPrefix}`);
+      } catch {
+        showToast(localizedUi.copyFailed);
+      }
+    },
+    [localizedUi, placeToastNearPointer, showToast]
+  );
+
+  // 中文注释：首页语言文本映射（默认中文，切换后只影响首页展示）
+  const getLocalizedFaceText = useCallback(
+    (face: (typeof DICE_FACES)[number]): HomeFaceCopy => {
+      if (language === "en" && HOME_FACE_COPY_EN[face.id]) {
+        return HOME_FACE_COPY_EN[face.id];
+      }
+      return {
+        tabLabel: face.tabLabel,
+        homeDescription: face.homeDescription ?? face.description,
+        buttonText: face.buttonText,
+      };
+    },
+    [language]
+  );
 
   const activeFace = useMemo(
     () => DICE_FACES.find((face) => String(face.id) === activeTab) ?? DICE_FACES[0],
@@ -247,6 +333,34 @@ export default function App() {
   return (
     <div className="h-screen bg-black relative overflow-hidden">
       <ParticleField />
+
+      {/* 中文注释：首页语言切换按钮，默认中文 */}
+      <div className="fixed top-5 right-5 z-40">
+        <div className="inline-flex items-center rounded-full border border-white/20 bg-black/70 p-1 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => setLanguage("zh")}
+            className="px-3 py-1.5 text-xs rounded-full transition-all duration-200"
+            style={{
+              color: language === "zh" ? "white" : "rgba(255,255,255,0.72)",
+              background: language === "zh" ? "rgba(255,255,255,0.18)" : "transparent",
+            }}
+          >
+            中文
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("en")}
+            className="px-3 py-1.5 text-xs rounded-full transition-all duration-200"
+            style={{
+              color: language === "en" ? "white" : "rgba(255,255,255,0.72)",
+              background: language === "en" ? "rgba(255,255,255,0.18)" : "transparent",
+            }}
+          >
+            English
+          </button>
+        </div>
+      </div>
 
       {/* 用轻量叠层提亮，避免整屏 filter 触发昂贵重采样 */}
       <div
@@ -391,9 +505,11 @@ export default function App() {
               >
                 <button
                   type="button"
-                  title="微信"
-                  aria-label="微信"
-                  onClick={(event) => copyToClipboard("JaneZ_0831", "微信号 JaneZ_0831", event)}
+                  title={localizedUi.wechatTitle}
+                  aria-label={localizedUi.wechatTitle}
+                  onClick={(event) =>
+                    copyToClipboard("JaneZ_0831", language === "zh" ? "微信号 JaneZ_0831" : "WeChat ID JaneZ_0831", event)
+                  }
                   className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                              transition-all duration-200 hover:scale-105"
                   style={{
@@ -407,8 +523,8 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  title="GitHub"
-                  aria-label="GitHub"
+                  title={localizedUi.githubTitle}
+                  aria-label={localizedUi.githubTitle}
                   onClick={(event) => copyToClipboard("https://github.com/mountionzeng", "GitHub https://github.com/mountionzeng", event)}
                   className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                              transition-all duration-200 hover:scale-105"
@@ -423,9 +539,11 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  title="邮箱"
-                  aria-label="邮箱"
-                  onClick={(event) => copyToClipboard("13261038583@163.com", "邮箱 13261038583@163.com", event)}
+                  title={localizedUi.emailTitle}
+                  aria-label={localizedUi.emailTitle}
+                  onClick={(event) =>
+                    copyToClipboard("13261038583@163.com", language === "zh" ? "邮箱 13261038583@163.com" : "Email 13261038583@163.com", event)
+                  }
                   className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white
                              transition-all duration-200 hover:scale-105"
                   style={{
@@ -478,6 +596,7 @@ export default function App() {
               />
               <TabsList className="relative z-10 h-auto w-full grid grid-cols-3 md:grid-cols-6 gap-0 rounded-2xl bg-black/[0.78] border border-white/20 p-[2px] mb-0 backdrop-blur-xl shadow-[0_0_36px_rgba(0,0,0,0.45)]">
                 {DICE_FACES.map((face) => {
+                  const localizedFace = getLocalizedFaceText(face);
                   const homeColor = getHomeFaceColor(face.id, face.color);
                   return (
                     <TabsTrigger
@@ -510,7 +629,7 @@ export default function App() {
                       }}
                     >
                       <span className="leading-tight">
-                        {face.tabLabel}
+                        {localizedFace.tabLabel}
                       </span>
                     </TabsTrigger>
                   );
@@ -521,42 +640,45 @@ export default function App() {
             {/* 卡片内容区域 */}
             <div className="rounded-3xl rounded-tl-none bg-white/[0.04] p-5 md:p-6 backdrop-blur-2xl shadow-2xl relative overflow-visible border border-white/5 mt-0">
               <div className="pr-4 pb-2">
-                {DICE_FACES.map((face) => (
-                  <TabsContent key={face.id} value={String(face.id)} className="space-y-4 mt-0">
-                    <p className="text-sm md:text-base text-white/70 leading-relaxed">
-                      {face.homeDescription ?? face.description}
-                    </p>
+                {DICE_FACES.map((face) => {
+                  const localizedFace = getLocalizedFaceText(face);
+                  return (
+                    <TabsContent key={face.id} value={String(face.id)} className="space-y-4 mt-0">
+                      <p className="text-sm md:text-base text-white/70 leading-relaxed">
+                        {localizedFace.homeDescription}
+                      </p>
 
-                    <div
-                      className="flex items-center gap-4 ml-[24px] mt-[16px]"
-                      style={{
-                        transform: `translate(${diceLeftButtonOffsetX}px, ${diceLeftButtonOffsetY}px) scale(${diceLeftButtonScale})`,
-                        transformOrigin: "left center",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={handleOpenCurrentTab}
-                        className="group relative rounded-full px-8 py-[14px] text-[0.8rem] font-semibold text-white 
-                                   transition-all duration-300 hover:scale-105 overflow-hidden"
+                      <div
+                        className="flex items-center gap-4 ml-[24px] mt-[16px]"
                         style={{
-                          background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 13%, transparent)`,
+                          transform: `translate(${diceLeftButtonOffsetX}px, ${diceLeftButtonOffsetY}px) scale(${diceLeftButtonScale})`,
+                          transformOrigin: "left center",
                         }}
                       >
-                        <div 
-                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{ background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 21%, transparent)` }}
-                        />
-                        <span className="relative flex items-center gap-2">
-                          <span style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
-                            {face.buttonText}
+                        <button
+                          type="button"
+                          onClick={handleOpenCurrentTab}
+                          className="group relative rounded-full px-8 py-[14px] text-[0.8rem] font-semibold text-white 
+                                   transition-all duration-300 hover:scale-105 overflow-hidden"
+                          style={{
+                            background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 13%, transparent)`,
+                          }}
+                        >
+                          <div
+                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            style={{ background: `color-mix(in srgb, ${getHomeFaceColor(face.id, face.color)} 21%, transparent)` }}
+                          />
+                          <span className="relative flex items-center gap-2">
+                            <span style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+                              {localizedFace.buttonText}
+                            </span>
+                            <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
                           </span>
-                          <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
-                        </span>
-                      </button>
-                    </div>
-                  </TabsContent>
-                ))}
+                        </button>
+                      </div>
+                    </TabsContent>
+                  );
+                })}
               </div>
 
               {/* 3D 骰子区域 - 放在标签卡片右下角 */}
@@ -587,7 +709,7 @@ export default function App() {
                       }}
                     >
                       <span>←</span>
-                      <span>没兴趣，玩一下骰子</span>
+                      <span>{localizedUi.diceHint}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -642,6 +764,7 @@ export default function App() {
             onClose={handleCloseDimension}
             onReroll={handleRerollFromPanel}
             onNavigate={handleNavigateFromPanel}
+            language={language}
           />
         )}
       </AnimatePresence>

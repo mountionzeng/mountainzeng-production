@@ -32,7 +32,56 @@ interface DimensionPanelProps {
   onClose: () => void;
   onReroll: (nextFaceId: number) => void;
   onNavigate: (nextFaceId: number) => void;
+  language?: PanelLanguage;
 }
+
+type PanelLanguage = "zh" | "en";
+
+const FACE_TITLE_EN: Record<number, string> = {
+  1: "Visual",
+  2: "Product management",
+  3: "Algorithm",
+  4: "Computer system",
+  5: "Trans-disciplinarity",
+  6: "Future",
+};
+
+const PANEL_FACE_META_EN: Record<
+  number,
+  Partial<Pick<DiceFace, "title" | "subtitle" | "coreStatement" | "description" | "quote" | "coreCompetence">> & {
+    skills?: string[];
+  }
+> = {
+  1: {
+    title: "Visual",
+    subtitle: "VISUAL",
+    coreStatement: "Visualizing emotion",
+  },
+  2: {
+    title: "Product management",
+    subtitle: "PRODUCT MANAGEMENT",
+    coreStatement: "From idea to delivery",
+    skills: ["Product execution", "Workflow design", "Tooling", "Cross-functional delivery"],
+  },
+  3: {
+    title: "Algorithm",
+    subtitle: "ALGORITHM",
+  },
+  4: {
+    title: "Computer system",
+    subtitle: "COMPUTER SYSTEM",
+    coreStatement: "Understanding the system from the ground up",
+    skills: ["Plugin engineering", "Performance optimization", "Workflow architecture", "System design"],
+  },
+  5: {
+    title: "Trans-disciplinarity",
+    subtitle: "INTERDISCIPLINARY",
+  },
+  6: {
+    title: "Future",
+    subtitle: "FUTURE",
+  },
+};
 
 const REROLL_ANIM_DURATION_MS = 900;
 const VISUAL_VIDEO_PAGE_SIZE = 9;
@@ -254,10 +303,13 @@ function Timeline({ timeline, color }: { timeline: DiceFace["timeline"]; color: 
 function ProgrammingLanguageCapability({
   color,
   capability,
+  language,
 }: {
   color: string;
   capability: NonNullable<DiceFace["systemLanguageCapability"]>;
+  language: PanelLanguage;
 }) {
+  const isEn = language === "en";
   return (
     <div
       className="rounded-2xl p-6 md:p-8 space-y-6"
@@ -270,7 +322,7 @@ function ProgrammingLanguageCapability({
         className="text-sm tracking-[0.16em] uppercase font-semibold"
         style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
       >
-        编程语言能力
+        {isEn ? "PROGRAMMING LANGUAGES" : "编程语言能力"}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -298,11 +350,11 @@ function ProgrammingLanguageCapability({
 
       <div className="space-y-3 text-sm leading-relaxed">
         <p className="text-white/72">
-          <span style={{ color: `${color}D8` }}>核心语言：</span>
+          <span style={{ color: `${color}D8` }}>{isEn ? "Core languages: " : "核心语言："}</span>
           {capability.coreLanguages}
         </p>
         <p className="text-white/62">
-          <span style={{ color: `${color}D8` }}>补足方式：</span>
+          <span style={{ color: `${color}D8` }}>{isEn ? "Supplement strategy: " : "补足方式："}</span>
           {capability.supplementMethod}
         </p>
       </div>
@@ -426,8 +478,9 @@ function getSystemLayerButtonLabel(layerTitle: string): string {
   return `[${withoutSuffix || layerTitle}]`;
 }
 
-function SystemAbilityTree({ treeText, color }: { treeText: string; color: string }) {
+function SystemAbilityTree({ treeText, color, language }: { treeText: string; color: string; language: PanelLanguage }) {
   const { title, layers } = parseSystemAbilityTree(treeText);
+  const isEn = language === "en";
   const [activeLayerIndex, setActiveLayerIndex] = useState(0);
   const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
   // 中文注释：指定系统能力树中的核心课程把要点渲染成标签，而不是纵向列表
@@ -485,7 +538,7 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
               system map
             </div>
             <h3 className="text-lg md:text-xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
-              {title}
+              {isEn ? "System capability hierarchy" : title}
             </h3>
             <div className="text-[11px] md:text-xs mt-1 tracking-[0.08em] text-white/55" style={{ fontFamily: "var(--font-label)" }}>
               COMPUTER SCIENCE CURRICULUM HIERARCHY
@@ -500,7 +553,7 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
               fontFamily: "var(--font-label)",
             }}
           >
-            {layers.length} 层结构
+            {isEn ? `${layers.length} layers` : `${layers.length} 层结构`}
           </div>
         </div>
 
@@ -517,7 +570,7 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
                 className="text-[10px] tracking-[0.16em] uppercase font-semibold mb-2.5"
                 style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
               >
-                layer buttons
+                {isEn ? "layer buttons" : "层级按钮"}
               </div>
 
               <div className="relative space-y-2.5">
@@ -548,7 +601,7 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
                         style={{ background: isActive ? `${color}F0` : `${color}86` }}
                       />
                       <span className="ml-4 text-sm md:text-[0.96rem] font-semibold" style={{ fontFamily: "var(--font-display)" }}>
-                        {getSystemLayerButtonLabel(layer.layerTitle)}
+                        {isEn ? `Layer ${index + 1}` : getSystemLayerButtonLabel(layer.layerTitle)}
                       </span>
                     </button>
                   );
@@ -609,7 +662,7 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
                           fontFamily: "var(--font-label)",
                         }}
                       >
-                        {layer.entries.length} 个知识点
+                        {isEn ? `${layer.entries.length} knowledge points` : `${layer.entries.length} 个知识点`}
                       </span>
                     </div>
 
@@ -717,10 +770,13 @@ function SystemAbilityTree({ treeText, color }: { treeText: string; color: strin
 function SystemTrainingBlock({
   color,
   training,
+  language,
 }: {
   color: string;
   training: NonNullable<DiceFace["systemTraining"]>;
+  language: PanelLanguage;
 }) {
+  const isEn = language === "en";
   return (
     <div
       className="rounded-2xl p-6 md:p-8 space-y-5"
@@ -733,7 +789,7 @@ function SystemTrainingBlock({
         className="text-sm tracking-[0.16em] uppercase font-semibold"
         style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
       >
-        {training.title}
+        {isEn ? "COMPUTER SYSTEM FUNDAMENTALS" : training.title}
       </div>
       <div className="space-y-3">
         {training.items.map((item) => (
@@ -1613,10 +1669,22 @@ function HybridAdvantages({ advantages, color }: { advantages: NonNullable<DiceF
 }
 
 /* ─── 下一个维度导航 ─── */
-function NextDimensionNav({ currentId, color, onNavigate }: { currentId: number; color: string; onNavigate: (id: number) => void }) {
+function NextDimensionNav({
+  currentId,
+  color,
+  onNavigate,
+  language,
+}: {
+  currentId: number;
+  color: string;
+  onNavigate: (id: number) => void;
+  language: PanelLanguage;
+}) {
   const nextId = currentId < DICE_FACES.length ? currentId + 1 : 1;
   const nextFace = DICE_FACES[nextId - 1];
   if (!nextFace) return null;
+  const isEn = language === "en";
+  const nextFaceTitle = isEn ? FACE_TITLE_EN[nextId] ?? nextFace.title : nextFace.title;
   return (
     <motion.button
       initial={{ opacity: 0 }}
@@ -1630,10 +1698,10 @@ function NextDimensionNav({ currentId, color, onNavigate }: { currentId: number;
       }}
     >
       <span className="text-xs tracking-[0.15em] uppercase text-white/40" style={{ fontFamily: "var(--font-label)" }}>
-        下一个
+        {isEn ? "Next" : "下一个"}
       </span>
       <span className="text-sm font-semibold" style={{ color: `${nextFace.color}CC` }}>
-        {nextFace.title}
+        {nextFaceTitle}
       </span>
       <ChevronRight size={16} className="text-white/30 group-hover:translate-x-1 transition-transform" />
     </motion.button>
@@ -1955,9 +2023,18 @@ function SpotlightNoteDocument({ note, color }: { note: string; color: string })
 /* ═══════════════════════════════════════════════════════════════
    Paper Spotlight（算法页轻量论文卡）
    ═══════════════════════════════════════════════════════════════ */
-function PaperSpotlightCards({ items, color }: { items: PaperSpotlightItem[]; color: string }) {
+function PaperSpotlightCards({
+  items,
+  color,
+  language,
+}: {
+  items: PaperSpotlightItem[];
+  color: string;
+  language: PanelLanguage;
+}) {
   // 中文注释：仅展开一张卡片，避免页面过于复杂
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const isEn = language === "en";
 
   if (items.length === 0) return null;
 
@@ -2022,8 +2099,8 @@ function PaperSpotlightCards({ items, color }: { items: PaperSpotlightItem[]; co
                     color: `${color}EA`,
                     background: `linear-gradient(to top left, ${color}2E 0%, rgba(0,0,0,0.72) 100%)`,
                   }}
-                  aria-label={isExpanded ? "收起笔记" : "查看笔记"}
-                  title={isExpanded ? "收起笔记" : "查看笔记"}
+                  aria-label={isExpanded ? (isEn ? "Hide notes" : "收起笔记") : isEn ? "Open notes" : "查看笔记"}
+                  title={isExpanded ? (isEn ? "Hide notes" : "收起笔记") : isEn ? "Open notes" : "查看笔记"}
                 >
                   <span aria-hidden="true">{isExpanded ? "🙈" : "👀"}</span>
                 </button>
@@ -2034,7 +2111,7 @@ function PaperSpotlightCards({ items, color }: { items: PaperSpotlightItem[]; co
                 className="mt-0.5 min-w-0 text-[10px] md:text-[11px] tracking-[0.12em] uppercase text-white/48 whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{ fontFamily: "var(--font-label)" }}
               >
-                Notes Time · {item.noteDate}
+                {isEn ? "Notes Time" : "笔记时间"} · {item.noteDate}
               </div>
 
               <AnimatePresence initial={false}>
@@ -2063,7 +2140,7 @@ function PaperSpotlightCards({ items, color }: { items: PaperSpotlightItem[]; co
    主组件
    ═══════════════════════════════════════════════════════════════ */
 
-export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }: DimensionPanelProps) {
+export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, language = "zh" }: DimensionPanelProps) {
   const face = DICE_FACES[faceId - 1];
   const [isRerolling, setIsRerolling] = useState(false);
   const [activeVisualVideoId, setActiveVisualVideoId] = useState<string | null>(null);
@@ -2077,6 +2154,92 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
     DEFAULT_VISUAL_CDN_BASE_URL;
 
   if (!face) return null;
+  const isEn = language === "en";
+  const panelText = isEn
+    ? {
+        backHome: "Back to home",
+        rerolling: "rolling",
+        reroll: "reroll",
+        noCdn: "Video CDN is not configured. Please set VITE_VISUAL_MEDIA_CDN_BASE_URL in .env.",
+        loadMoreImages: "Load more images",
+        loadMoreVideos: "Load more videos",
+        closeVideo: "Close video",
+        innovationCases: "INNOVATION CASES",
+        paperSpotlight: "PAPER SPOTLIGHT",
+        knowledgeSystem: "KNOWLEDGE SYSTEM",
+        coreCourses: "CORE COURSES & PRACTICE",
+        technicalApplications: "TECHNICAL APPLICATIONS",
+        practicalProjects: "PRACTICAL PROJECTS",
+        systemAbilityTree: "SYSTEM CAPABILITY MAP",
+        programmingLanguage: "PROGRAMMING LANGUAGES",
+        systemTraining: "SYSTEM TRAINING",
+        systemCapability: "SYSTEM CAPABILITIES",
+        practicalApplications: "PRACTICAL APPLICATIONS",
+        systemProjects: "SYSTEM PROJECTS",
+        educationTrack: "EDUCATION TIMELINE",
+        hybridManifestation: "CROSS-DISCIPLINARY MANIFESTATION",
+        hybridBridgeLine: "Bidirectional transformation between technology and art",
+        uniqueValue: "UNIQUE VALUE",
+        coreCompetence: "CORE COMPETENCE",
+        coreCompetenceFallback: "Tech-art translation · Cross-domain problem solving · End-to-end product delivery",
+        exploringDirections: "EXPLORING DIRECTIONS",
+        miniGameTitle: "Dai and Her Friends",
+        gameConcept: "Game Concept",
+        gameConceptLine1:
+          "A lightweight self-discovery conversation game. Through short dialogues, AI generates unique trait fragments for you.",
+        gameConceptLine2:
+          "Collect enough fragments to assemble a complete dice. I believe human potential is limitless, and words can unlock it.",
+        gamePlaceholderLine1: "Mini game area reserved",
+        gamePlaceholderLine2: "Gameplay in development",
+        startGamePending: "Start game (coming soon)",
+        contact: "CONTACT",
+      }
+    : {
+        backHome: "返回主页",
+        rerolling: "随机跳转中",
+        reroll: "再掷一次",
+        noCdn: "未检测到视频 CDN 地址。请在 `.env` 中配置 `VITE_VISUAL_MEDIA_CDN_BASE_URL`。",
+        loadMoreImages: "加载更多图片",
+        loadMoreVideos: "加载更多视频",
+        closeVideo: "关闭视频",
+        innovationCases: "INNOVATION CASES",
+        paperSpotlight: "PAPER SPOTLIGHT",
+        knowledgeSystem: "KNOWLEDGE SYSTEM",
+        coreCourses: "CORE COURSES & PRACTICE",
+        technicalApplications: "TECHNICAL APPLICATIONS",
+        practicalProjects: "PRACTICAL PROJECTS",
+        systemAbilityTree: "个人的系统能力体系",
+        programmingLanguage: "编程语言能力",
+        systemTraining: "系统课程训练",
+        systemCapability: "系统能力",
+        practicalApplications: "实际应用",
+        systemProjects: "实战项目",
+        educationTrack: "教育轨迹",
+        hybridManifestation: "跨界能力的具体体现",
+        hybridBridgeLine: "技术 × 艺术的双向转化",
+        uniqueValue: "独特价值",
+        coreCompetence: "核心竞争力",
+        coreCompetenceFallback: "技术艺术化转化能力 · 跨领域问题解决方案 · 完整产品交付能力",
+        exploringDirections: "EXPLORING DIRECTIONS",
+        miniGameTitle: "岱和她的朋友们",
+        gameConcept: "游戏概念",
+        gameConceptLine1:
+          "一个关于“认识自己”的轻量级对话游戏——通过简短的对话，AI 会为你生成独特的“特质碎片”。",
+        gameConceptLine2:
+          "收集足够的碎片就能组成一颗完整的骰子。我相信人的可能性是无限的，也相信文字有巨大的能量。",
+        gamePlaceholderLine1: "小游戏主界面预留区",
+        gamePlaceholderLine2: "玩法开发中",
+        startGamePending: "开始游戏（待开放）",
+        contact: "CONTACT",
+      };
+  const faceMetaEn = PANEL_FACE_META_EN[face.id];
+  const localizedTitle = isEn ? faceMetaEn?.title ?? face.title : face.title;
+  const localizedSubtitle = isEn ? faceMetaEn?.subtitle ?? face.subtitle : face.subtitle;
+  const localizedCoreStatement = isEn ? faceMetaEn?.coreStatement ?? face.coreStatement : face.coreStatement;
+  const localizedDescription = isEn ? faceMetaEn?.description ?? face.description : face.description;
+  const localizedQuote = isEn ? faceMetaEn?.quote ?? face.quote : face.quote;
+  const localizedSkills = isEn ? faceMetaEn?.skills ?? face.skills : face.skills;
+  const localizedCoreCompetence = isEn ? faceMetaEn?.coreCompetence ?? face.coreCompetence : face.coreCompetence;
   const isVisualFace = face.id === 1;
   // 中文注释：按需求隐藏非视觉分支的大标题（产品/算法/系统/学术跨界/无限可能）
   const shouldHideBranchTitle = !isVisualFace;
@@ -2191,7 +2354,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                 className="text-base tracking-[0.2em] uppercase font-semibold"
                 style={{ fontFamily: "var(--font-label)" }}
               >
-                返回主页
+                {panelText.backHome}
               </span>
             </button>
 
@@ -2238,7 +2401,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                   className="text-[10px] tracking-[0.24em] uppercase text-white/62"
                   style={{ fontFamily: "var(--font-label)" }}
                 >
-                  {isRerolling ? "随机跳转中" : "再掷一次"}
+                  {isRerolling ? panelText.rerolling : panelText.reroll}
                 </span>
               </div>
             </div>
@@ -2249,7 +2412,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
           <main className={isVisualFace ? "flex-1 px-2 md:px-3 lg:px-4 pb-16" : "flex-1 px-2 md:px-4 lg:px-6 pb-16"}>
             {/* 中文注释：分支页主容器采用固定设计上限宽度，避免不同 viewport 下版式拉伸漂移 */}
             <div
-              className="w-full mx-auto"
+              className="w-full mx-auto [&_h1]:!font-normal [&_h2]:!font-normal [&_h3]:!font-normal [&_h4]:!font-normal [&_h5]:!font-normal [&_h6]:!font-normal [&_p]:!font-normal [&_span]:!font-normal [&_button]:!font-normal [&_li]:!font-normal"
               style={{ maxWidth: `${BRANCH_CONTENT_MAX_WIDTH_PX}px` }}
             >
 
@@ -2273,14 +2436,14 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               className="text-2xl tracking-[0.18em] uppercase font-semibold"
                               style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
                             >
-                              {face.subtitle}
+                              {localizedSubtitle}
                             </div>
-                            {face.coreStatement && (
+                            {localizedCoreStatement && (
                               <div
                                 className="text-lg md:text-xl font-medium leading-relaxed"
                                 style={{ color: `${face.color}DD` }}
                               >
-                                {face.coreStatement}
+                                {localizedCoreStatement}
                               </div>
                             )}
                           </div>
@@ -2326,7 +2489,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                             background: `linear-gradient(135deg, ${face.color}10, rgba(255,255,255,0.03))`,
                           }}
                         >
-                          未检测到视频 CDN 地址。请在 `.env` 中配置 `VITE_VISUAL_MEDIA_CDN_BASE_URL`。
+                          {panelText.noCdn}
                         </div>
                       )}
 
@@ -2472,7 +2635,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 border: `1px solid ${face.color}55`,
                                 background: `linear-gradient(135deg, ${face.color}45, rgba(0,0,0,0.5))`,
                               }}
-                              aria-label="加载更多图片"
+                              aria-label={panelText.loadMoreImages}
                             >
                               +
                             </button>
@@ -2513,7 +2676,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                         setActiveVisualVideoId(null);
                                       }}
                                       className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full text-white/85 bg-black/55 hover:bg-black/70 transition-colors"
-                                      aria-label="关闭视频"
+                                      aria-label={panelText.closeVideo}
                                     >
                                       x
                                     </button>
@@ -2566,7 +2729,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 border: `1px solid ${face.color}55`,
                                 background: `linear-gradient(135deg, ${face.color}45, rgba(0,0,0,0.5))`,
                               }}
-                              aria-label="加载更多视频"
+                              aria-label={panelText.loadMoreVideos}
                             >
                               +
                             </button>
@@ -2598,7 +2761,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                           className="text-2xl tracking-[0.18em] uppercase font-semibold"
                           style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
                         >
-                          {face.subtitle}
+                          {localizedSubtitle}
                         </div>
 
                         {/* 标题（非视觉分支按需求隐藏） */}
@@ -2610,32 +2773,32 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               textShadow: `0 0 60px ${face.color}30`,
                             }}
                           >
-                            {face.title}
+                            {localizedTitle}
                           </h1>
                         )}
 
                         {/* 核心观点 */}
-                        {face.coreStatement && (
+                        {localizedCoreStatement && (
                           <div
                             className="text-lg md:text-xl font-medium leading-relaxed"
                             style={{ color: `${face.color}DD` }}
                           >
-                            {face.coreStatement}
+                            {localizedCoreStatement}
                           </div>
                         )}
 
                         {/* 描述 */}
-                        {face.description && (
+                        {localizedDescription && (
                           <p
                             className="text-white/55 text-base md:text-lg leading-relaxed"
                             style={{ fontFamily: "var(--font-body)" }}
                           >
-                            {face.description}
+                            {localizedDescription}
                           </p>
                         )}
 
                         {/* 引用 */}
-                        {face.quote && (
+                        {localizedQuote && (
                           <div
                             className="pl-4 py-2 text-sm text-white/40 italic leading-relaxed"
                             style={{ 
@@ -2644,7 +2807,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                             }}
                           >
                             <Sparkles size={14} className="inline mb-1 mr-1" style={{ color: face.color }} />
-                            "{face.quote}"
+                            "{localizedQuote}"
                           </div>
                         )}
                       </div>
@@ -2652,7 +2815,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                       {/* 右侧：技能标签 + 统计数据 */}
                       <div className="space-y-8">
                         {/* 技能标签 */}
-                        {face.skills.length > 0 && (
+                        {localizedSkills.length > 0 && (
                           <div>
                             <div
                               className="text-xs tracking-[0.4em] uppercase mb-5 text-white/40 font-semibold flex items-center gap-2"
@@ -2662,7 +2825,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               SKILL SET
                             </div>
                             <div className="flex flex-wrap gap-3">
-                              {face.skills.map((skill) => (
+                              {localizedSkills.map((skill) => (
                                 <span
                                   key={skill}
                                   className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 hover:scale-105 cursor-default"
@@ -2692,7 +2855,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                   {/* ─── 产品分支：作品/案例区 ─── */}
                   {face.id === 2 && face.works.length > 0 && (
                     <div className="mb-12 lg:mb-16">
-                      <SectionTitle title="INNOVATION CASES" color={face.color} />
+                      <SectionTitle title={panelText.innovationCases} color={face.color} />
                       <motion.div
                         variants={staggerContainer}
                         initial="hidden"
@@ -2712,13 +2875,13 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     <>
                       {/* 中文注释：Paper Spotlight 放在 Knowledge System 区块上方 */}
                       <div className="mb-12 lg:mb-16">
-                        <SectionTitle title="PAPER SPOTLIGHT" color={face.color} />
-                        <PaperSpotlightCards items={ALGORITHM_PAPER_SPOTLIGHT_ITEMS} color={face.color} />
+                        <SectionTitle title={panelText.paperSpotlight} color={face.color} />
+                        <PaperSpotlightCards items={ALGORITHM_PAPER_SPOTLIGHT_ITEMS} color={face.color} language={language} />
                       </div>
 
                       {face.knowledgeChain && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="KNOWLEDGE SYSTEM" color={face.color} />
+                          <SectionTitle title={panelText.knowledgeSystem} color={face.color} />
                           {/* 中文注释：继承分支页主容器宽度，不再使用 viewport 比例宽度 */}
                           <div className="w-full">
                             <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
@@ -2728,21 +2891,21 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
                       {face.algorithmCourseDetails && face.algorithmCourseDetails.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="CORE COURSES & PRACTICE" color={face.color} />
+                          <SectionTitle title={panelText.coreCourses} color={face.color} />
                           <AlgorithmCourseDetails courses={face.algorithmCourseDetails} color={face.color} />
                         </div>
                       )}
 
                       {face.algorithmApplicationAreas && face.algorithmApplicationAreas.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="TECHNICAL APPLICATIONS" color={face.color} />
+                          <SectionTitle title={panelText.technicalApplications} color={face.color} />
                           <AlgorithmApplicationAreas areas={face.algorithmApplicationAreas} color={face.color} />
                         </div>
                       )}
 
                       {face.algorithmProjects && face.algorithmProjects.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="PRACTICAL PROJECTS" color={face.color} />
+                          <SectionTitle title={panelText.practicalProjects} color={face.color} />
                           <AlgorithmProjects projects={face.algorithmProjects} color={face.color} />
                         </div>
                       )}
@@ -2755,42 +2918,42 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     <>
                       {face.systemAbilityTree && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="个人的系统能力体系" color={face.color} />
-                          <SystemAbilityTree treeText={face.systemAbilityTree} color={face.color} />
+                          <SectionTitle title={panelText.systemAbilityTree} color={face.color} />
+                          <SystemAbilityTree treeText={face.systemAbilityTree} color={face.color} language={language} />
                         </div>
                       )}
 
                       {face.systemLanguageCapability && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="编程语言能力" color={face.color} />
-                          <ProgrammingLanguageCapability color={face.color} capability={face.systemLanguageCapability} />
+                          <SectionTitle title={panelText.programmingLanguage} color={face.color} />
+                          <ProgrammingLanguageCapability color={face.color} capability={face.systemLanguageCapability} language={language} />
                         </div>
                       )}
 
                       {face.systemTraining && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="系统课程训练" color={face.color} />
-                          <SystemTrainingBlock color={face.color} training={face.systemTraining} />
+                          <SectionTitle title={panelText.systemTraining} color={face.color} />
+                          <SystemTrainingBlock color={face.color} training={face.systemTraining} language={language} />
                         </div>
                       )}
 
                       {face.systemCapabilities && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="系统能力" color={face.color} />
+                          <SectionTitle title={panelText.systemCapability} color={face.color} />
                           <SystemCapabilityCards capabilities={face.systemCapabilities} color={face.color} />
                         </div>
                       )}
 
                       {face.systemApplications && face.systemApplications.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="实际应用" color={face.color} />
+                          <SectionTitle title={panelText.practicalApplications} color={face.color} />
                           <SystemApplicationList color={face.color} items={face.systemApplications} />
                         </div>
                       )}
 
                       {face.systemProjects && face.systemProjects.length > 0 && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="实战项目" color={face.color} />
+                          <SectionTitle title={panelText.systemProjects} color={face.color} />
                           <AlgorithmProjects projects={face.systemProjects} color={face.color} />
                         </div>
                       )}
@@ -2802,7 +2965,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                     <>
                       {face.educationTimeline && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="教育轨迹" color={face.color} />
+                          <SectionTitle title={panelText.educationTrack} color={face.color} />
                           {/* 中文注释：教育轨迹改为横向时间轴后放开宽度，避免右侧留白 */}
                           <div className="max-w-none">
                             <EducationTimeline timeline={face.educationTimeline} color={face.color} />
@@ -2812,12 +2975,12 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
                       {face.hybridAdvantages && (
                         <div className="mb-12 lg:mb-16">
-                          <SectionTitle title="跨界能力的具体体现" color={face.color} />
+                          <SectionTitle title={panelText.hybridManifestation} color={face.color} />
                           <div
                             className="text-sm md:text-base text-white/78 mb-6"
                             style={{ fontFamily: "var(--font-body)" }}
                           >
-                            技术 × 艺术的双向转化
+                            {panelText.hybridBridgeLine}
                           </div>
                           <HybridAdvantages advantages={face.hybridAdvantages} color={face.color} />
 
@@ -2841,7 +3004,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                   className="text-xs tracking-[0.34em] uppercase mb-3 text-white/45 font-semibold"
                                   style={{ fontFamily: "var(--font-label)" }}
                                 >
-                                  独特价值
+                                  {panelText.uniqueValue}
                                 </div>
                                 <div
                                   className="text-lg md:text-xl text-white/88 mb-4"
@@ -2871,7 +3034,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                               className="text-xs tracking-[0.3em] uppercase mb-3 text-white/45 font-semibold"
                               style={{ fontFamily: "var(--font-label)" }}
                             >
-                              核心竞争力
+                              {panelText.coreCompetence}
                             </div>
                             <div
                               className="inline-block px-6 py-3 rounded-full text-sm font-medium"
@@ -2881,7 +3044,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 border: `1px solid ${face.color}25`,
                               }}
                             >
-                              {face.coreCompetence ?? "技术艺术化转化能力 · 跨领域问题解决方案 · 完整产品交付能力"}
+                              {localizedCoreCompetence ?? panelText.coreCompetenceFallback}
                             </div>
                           </motion.div>
                         </div>
@@ -2895,7 +3058,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                       {/* 探索方向 */}
                       {face.futureDirections && (
                         <div className="mb-12">
-                          <SectionTitle title="EXPLORING DIRECTIONS" color={face.color} />
+                          <SectionTitle title={panelText.exploringDirections} color={face.color} />
                           <FutureDirections directions={face.futureDirections} color={face.color} />
                         </div>
                       )}
@@ -2928,18 +3091,18 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                 className="mt-2 text-2xl md:text-3xl font-semibold text-white"
                                 style={{ fontFamily: "var(--font-display)" }}
                               >
-                                岱和她的朋友们
+                                {panelText.miniGameTitle}
                               </h3>
                               {/* 中文注释：按需求把“游戏概念”文案直接放在标题下方，不再做独立信息卡 */}
                               <div className="mt-4 space-y-3 text-sm md:text-base leading-relaxed text-white/85 max-w-3xl">
                                 <p>
-                                  游戏概念
+                                  {panelText.gameConcept}
                                 </p>
                                 <p>
-                                  一个关于“认识自己”的轻量级对话游戏——通过简短的对话，AI 会为你生成独特的“特质碎片”，收集足够的碎片就能组成一颗完整的骰子。
+                                  {panelText.gameConceptLine1}
                                 </p>
                                 <p>
-                                  我的发心：我相信人的可能性是无限的，也相信文字有巨大的能量——或许一次文字的流动，能让我的朋友们发现自己的可能性。
+                                  {panelText.gameConceptLine2}
                                 </p>
                               </div>
                             </div>
@@ -2977,9 +3140,9 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                   className="text-base md:text-lg text-white/85 leading-relaxed"
                                   style={{ fontFamily: "var(--font-body)" }}
                                 >
-                                  小游戏主界面预留区
+                                  {panelText.gamePlaceholderLine1}
                                   <br />
-                                  玩法开发中
+                                  {panelText.gamePlaceholderLine2}
                                 </p>
                               </div>
                             </div>
@@ -3012,7 +3175,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                                   border: `1px solid ${face.color}35`,
                                 }}
                               >
-                                开始游戏（待开放）
+                                {panelText.startGamePending}
                               </button>
                             </div>
                           </div>
@@ -3022,7 +3185,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
                       {/* 联系方式 */}
                       {face.contactInfo && face.contactInfo.length > 0 && (
                         <div className="mt-12">
-                          <SectionTitle title="CONTACT" color={face.color} />
+                          <SectionTitle title={panelText.contact} color={face.color} />
                           <ContactSection contactInfo={face.contactInfo} color={face.color} />
                         </div>
                       )}
@@ -3031,7 +3194,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate }
 
                   {/* 下一个维度导航 */}
                   <div className="flex justify-end pt-4 pb-4">
-                    <NextDimensionNav currentId={face.id} color={face.color} onNavigate={onNavigate} />
+                    <NextDimensionNav currentId={face.id} color={face.color} onNavigate={onNavigate} language={language} />
                   </div>
                 </div>
               )}
