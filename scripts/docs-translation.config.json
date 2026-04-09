@@ -1,0 +1,8 @@
+{
+  "tasks": [
+    {
+      "source": "MB_工程结构说明.md",
+      "target": "MB_工程结构说明.en.md"
+    }
+  ]
+}

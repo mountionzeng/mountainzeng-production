@@ -112,6 +112,75 @@ const ALGORITHM_PAPER_SPOTLIGHT_ITEMS: PaperSpotlightItem[] = [
   },
 ];
 
+const ALGORITHM_PAPER_SPOTLIGHT_ITEMS_EN: PaperSpotlightItem[] = [
+  {
+    title: 'Notes on "Attention Residuals"',
+    noteDate: "2026-03-20",
+    note: `# Notes on "Attention Residuals"
+
+## Why this paper matters
+
+This work targets a long-standing issue in deep PreNorm Transformers: as depth increases, contributions from earlier layers are diluted by fixed residual accumulation.
+
+## Core background
+
+### 1. Residual connections in Transformers
+
+Residual paths make very deep networks trainable:
+
+$\\text{output} = \\text{input} + \\text{Layer}(\\text{input})$
+
+### 2. PreNorm vs PostNorm
+
+- **PostNorm**: $x_{l+1} = \\text{LN}(x_l + \\text{Layer}(x_l))$
+- **PreNorm**: $x_{l+1} = x_l + \\text{Layer}(\\text{LN}(x_l))$
+
+PreNorm is stable in optimization, but hidden-state magnitude can keep growing with depth.
+
+### 3. Dilution problem in PreNorm
+
+With fixed-weight residual accumulation:
+
+$x_L = x_0 + \\sum_{l=1}^{L} \\text{Layer}_l(\\text{LN}(x_l))$
+
+all layers are mixed uniformly, so effective contribution per layer becomes less controllable in very deep stacks.
+
+## Main idea of Attention Residuals
+
+Replace fixed residual summation with attention over layer states:
+
+$x_{l+1} = \\sum_{i=0}^{l} \\alpha_{l,i} \\cdot x_i$
+
+$\\alpha_{l,i} = \\frac{\\exp(q_l^T k_i)}{\\sum_{j=0}^{l} \\exp(q_l^T k_j)}$
+
+This enables:
+
+- input-dependent layer selection
+- learned, non-uniform residual weights
+- better control of layer contribution distribution
+
+## Engineering version: Block AttnRes
+
+Full layer-wise attention is expensive. Block AttnRes is the practical variant:
+
+- split network into blocks
+- keep standard residuals within a block
+- apply attention only across block representations
+
+This reduces memory and communication cost while keeping most gains.
+
+## Reported outcomes
+
+- better training efficiency under equal compute budget
+- small inference-latency overhead
+- more balanced hidden-state and gradient behavior across depth
+
+## My takeaway
+
+Attention Residuals turns residual accumulation from a fixed rule into a learned retrieval mechanism across depth. It is a clean conceptual upgrade with practical large-scale value.`,
+  },
+];
+
 function getVisualImageDisplayRow(displayIndex: number): number {
   if (displayIndex <= VISUAL_IMAGE_SOLO_ROW_COUNT) {
     return displayIndex;
@@ -1390,7 +1459,16 @@ function KnowledgeChain({ chain, color }: { chain: NonNullable<DiceFace["knowled
 }
 
 /* ─── 教育轨迹组件（跨界页专用）─── */
-function EducationTimeline({ timeline, color }: { timeline: NonNullable<DiceFace["educationTimeline"]>; color: string }) {
+function EducationTimeline({
+  timeline,
+  color,
+  language,
+}: {
+  timeline: NonNullable<DiceFace["educationTimeline"]>;
+  color: string;
+  language: PanelLanguage;
+}) {
+  const isEn = language === "en";
   // 中文注释：当前高亮的时间节点（悬停/点击时更新）
   const [activeIndex, setActiveIndex] = useState(0);
   if (!timeline || timeline.length === 0) return null;
@@ -1512,11 +1590,11 @@ function EducationTimeline({ timeline, color }: { timeline: NonNullable<DiceFace
                 </div>
                 <div className="space-y-1.5 mt-3">
                   <div className="flex items-start gap-2 text-xs text-white/50">
-                    <span className="text-white/30 flex-shrink-0">方向：</span>
+                    <span className="text-white/30 flex-shrink-0">{isEn ? "Focus:" : "方向："}</span>
                     <span>{item.direction}</span>
                   </div>
                   <div className="flex items-start gap-2 text-xs text-white/50">
-                    <span className="text-white/30 flex-shrink-0">培养：</span>
+                    <span className="text-white/30 flex-shrink-0">{isEn ? "Training:" : "培养："}</span>
                     <span>{item.cultivation}</span>
                   </div>
                 </div>
@@ -1527,7 +1605,7 @@ function EducationTimeline({ timeline, color }: { timeline: NonNullable<DiceFace
       </div>
 
       <div className="mt-3 hidden md:flex items-center justify-end text-[11px] tracking-[0.12em] text-white/45">
-        悬停或点击节点以查看时间轴高亮
+        {isEn ? "Hover or click nodes to highlight the timeline" : "悬停或点击节点以查看时间轴高亮"}
       </div>
     </div>
   );
@@ -2136,6 +2214,557 @@ function PaperSpotlightCards({
   );
 }
 
+type FaceContentLocalization = Partial<Omit<DiceFace, "id" | "color" | "icon">>;
+
+// 中文注释：分支页面英文内容映射（用于 language=en 时替换数据层文本）
+const PANEL_FACE_CONTENT_EN: Partial<Record<number, FaceContentLocalization>> = {
+  1: {
+    stats: [
+      { label: "Industry project experience", value: "7 years" },
+      { label: "Film-level productions", value: "10+" },
+    ],
+    works: [
+      {
+        title: "Light Chaser Animation | Digital Matte Painter",
+        placeholder: false,
+        description: "2022.10 - 2025.5",
+        highlights: [
+          "Contributed end-to-end scene art for Chang'an, White Snake: Floating Life, and Strange Tales.",
+          "Built dedicated matte-painting plugins to streamline image-processing workflows.",
+          "Applied projection stitching in Chang'an to improve visual consistency and production speed.",
+        ],
+      },
+      {
+        title: "Original Force | Digital Matte Lead",
+        placeholder: false,
+        description: "2020.10 - 2022.5",
+        highlights: [
+          "Led scene production for Deep Sea and Trollhunters: Rise of the Titans (DreamWorks).",
+          "Defined visual standards for cinematic cutscenes in League of Legends and Honor of Kings mobile titles.",
+          "Delivered first-look key art for Harry Potter (NetEase Games).",
+          "Led early visual exploration for A Record of a Mortal's Journey to Immortality and reduced cycle time.",
+        ],
+      },
+      {
+        title: "Baolin Creative | Generalist",
+        placeholder: false,
+        description: "2019.3 - 2020.10",
+        highlights: [
+          "Contributed matte-painting work to The Yin-Yang Master, Kingdom 2 (Netflix), and The Righteous Gemstones (HBO).",
+          "Joined CCTV A Home in Macau pre-production to lower cross-border communication overhead.",
+          "Used painterly techniques to achieve visual outcomes difficult to reach with pure 3D.",
+        ],
+      },
+    ],
+  },
+  2: {
+    quote: "Great products come from deep understanding of people.",
+    works: [
+      {
+        title: "Xidai Studio: from contributor to operator",
+        placeholder: false,
+        description: "Built and operated a personal studio with independent invoicing and tax workflows.",
+        role: "Founder",
+        highlights: [
+          "Delivered projects for national-level clients.",
+          "Collaborated with Oriental DreamWorks on international animation production.",
+          "Validated one-person company capability from execution to operation.",
+        ],
+        tags: ["Business operation", "Client management"],
+      },
+      {
+        title: "Who am I, How are you",
+        placeholder: false,
+        description: "An AI-driven product for self-discovery and social matching.",
+        role: "Product + UI/UX + Frontend + LLM workflow (independent full-stack delivery)",
+        highlights: [
+          "Insight: meaningful connection starts from self-understanding.",
+          "Built a working prototype in a 2-day hackathon sprint.",
+        ],
+        tags: ["AI social", "Full-stack"],
+      },
+      {
+        title: "Tooling: MP production plugins",
+        placeholder: false,
+        description: "Developed NUKE/MP plugins to automate repetitive production steps.",
+        role: "Tooling engineer",
+        highlights: [
+          "Problem: repetitive manual tasks slowed visual production.",
+          "Solution: custom plugin automation in NUKE/MP pipelines.",
+          "Result: major throughput gains and team-level adoption.",
+        ],
+        tags: ["Python/NUKE", "Workflow optimization"],
+      },
+    ],
+  },
+  3: {
+    knowledgeChain: [
+      {
+        level: "Mathematics Foundations",
+        items: ["Linear algebra", "Calculus and optimization", "Probability theory", "Regression analysis", "Classification methods"],
+        papers: [
+          {
+            title: "Linear Algebra Deep Notes",
+            summary:
+              "Linear algebra is the language for data representation, transformations, and model parameterization in modern AI.",
+            keywords: ["Vector space", "Matrix", "Linear mapping", "Basis and rank", "PCA", "Geometry"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Capture the key equations, assumptions, and why they matter in model behavior."],
+                bullets: ["Problem setup", "Core equations", "Empirical insight", "Personal takeaway"],
+              },
+            ],
+          },
+          {
+            title: "Calculus and Optimization Notes",
+            summary: "How derivatives, chain rule, and optimization objectives shape training dynamics.",
+            keywords: ["Derivative", "Gradient", "Chain rule", "Optimization"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Summarize objective design and convergence behavior in practical training loops."],
+                bullets: ["Core concepts", "Derivation path", "Stability", "Trade-offs"],
+              },
+            ],
+          },
+          {
+            title: "Probability Notes",
+            summary: "Probabilistic reasoning for uncertainty, inference, and generation in AI systems.",
+            keywords: ["Distribution", "Conditional probability", "Random variables", "Bayesian view"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Organize probability intuition behind model decisions and uncertainty handling."],
+                bullets: ["Key definitions", "Inference flow", "Applications", "Open questions"],
+              },
+            ],
+          },
+          {
+            title: "Regression Analysis Notes",
+            summary: "From continuous prediction to parameter estimation and trend modeling.",
+            keywords: ["Linear regression", "Residual", "Fitting", "Parameter estimation"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Record assumptions, error analysis, and when regression breaks."],
+                bullets: ["Model assumptions", "Error decomposition", "Evaluation", "Failure cases"],
+              },
+            ],
+          },
+          {
+            title: "Classification Methods Notes",
+            summary: "Decision boundaries, feature space, and classification losses in recognition tasks.",
+            keywords: ["Decision boundary", "Feature space", "Classifier", "Loss"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Track boundary learning behavior and metric-driven model decisions."],
+                bullets: ["Decision logic", "Feature usage", "Metrics", "Edge cases"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        level: "Algorithm Principles",
+        items: ["Gradient descent", "Backpropagation", "Loss functions", "Regularization"],
+        papers: [
+          {
+            title: "Algorithm Principles Reading Note",
+            summary: "Learning objective, optimization path, and generalization under practical constraints.",
+            keywords: ["Objective", "Generalization", "Bias-variance", "Regularization"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Summarize assumptions, algorithm flow, and ablation-level evidence."],
+                bullets: ["Assumptions", "Pipeline", "Ablations", "Limitations"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        level: "Model Architecture",
+        items: ["CNN", "Transformer", "Diffusion model", "RNN/LSTM"],
+        papers: [
+          {
+            title: "Architecture Evolution Reading Note",
+            summary: "How architectural choices affect representation, training stability, and scaling.",
+            keywords: ["Network blocks", "Attention", "Modularity", "Scalability"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Track architecture motives and role of each module in final performance."],
+                bullets: ["Architecture map", "Key modules", "Training strategy", "Performance signals"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        level: "Applied Systems",
+        items: ["Image generation", "Natural language processing", "Computer vision"],
+        papers: [
+          {
+            title: "Application Deployment Reading Note",
+            summary: "How model capability transfers into real production scenarios and product constraints.",
+            keywords: ["Application", "Evaluation", "Engineering", "Deployment"],
+            sections: [
+              {
+                heading: "My notes",
+                paragraphs: ["Capture task framing, metrics, outcome analysis, and next iteration plan."],
+                bullets: ["Task design", "Metrics", "Result analysis", "Next steps"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    algorithmCourseDetails: [
+      {
+        title: "Machine Learning",
+        code: "CS586",
+        depth: "Depth 88%",
+        summary: "Mathematical derivation and implementation of linear and logistic regression.",
+        topics: [
+          "Mathematical derivation and implementation of linear and logistic regression",
+          "Optimization strategies for gradient descent (SGD, Adam, RMSprop)",
+          "Applying L1/L2 regularization to control overfitting",
+        ],
+        practice: "Practice: implemented a full machine-learning pipeline from scratch",
+      },
+      {
+        title: "Deep Learning",
+        code: "CS583",
+        depth: "Depth 76%, completed in August",
+        summary: "Backpropagation derivation and modern neural architecture understanding.",
+        topics: [
+          "Backpropagation derivation in neural networks",
+          "CNN evolution from LeNet to ResNet",
+          "Mathematical principles behind Transformer attention",
+          "Generation principles of diffusion models (Stable Diffusion)",
+        ],
+        practice: "Practice: trained a custom image classification model",
+      },
+      {
+        title: "Natural Language Processing",
+        code: "CS584",
+        depth: "Depth 72%",
+        summary: "Embedding methods and language-model evolution in NLP systems.",
+        topics: [
+          "Embedding techniques (Word2Vec, GloVe)",
+          "Language-model evolution from RNN to GPT",
+          "Transformer applications in NLP",
+        ],
+        practice: "Practice: built an LLM-based dialogue workflow for AI social products",
+      },
+    ],
+    algorithmApplicationAreas: [
+      {
+        title: "Computer Vision (CV) - AI Art",
+        subtitle: "AI Art",
+        description: "Integrating AI capability into film-visual production pipelines.",
+        clusters: [
+          {
+            title: "Image processing algorithms",
+            items: [
+              "Applying segmentation and edge detection in matte painting",
+              "Color-space conversion and color-matching strategies",
+              "Deep-learning-based image super-resolution",
+            ],
+          },
+          {
+            title: "Pipeline reconstruction",
+            items: [
+              "Precise composition control with ControlNet",
+              "Hybrid workflow that combines traditional painting and AI generation",
+              "Algorithm optimization for automated projection stitching",
+            ],
+          },
+          {
+            title: "Plugin-level implementation",
+            items: [
+              "Image-processing algorithm integration in NUKE plugins",
+              "OpenCV and NUKE API integration",
+              "Performance strategy for real-time preview",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Computer Graphics (CG) - Digital Art",
+        subtitle: "Digital Art",
+        description: "Understanding rendering principles to bridge art and engineering.",
+        clusters: [
+          {
+            title: "Graphics fundamentals and practice",
+            items: ["Real-time rendering pipeline", "Shader programming", "3D graphics pipeline and VFX"],
+          },
+        ],
+      },
+      {
+        title: "AI Art Toolchain",
+        subtitle: "Toolchain",
+        description: "",
+        clusters: [
+          {
+            title: "Midjourney advanced usage",
+            items: [
+              "Systematic Prompt Engineering methods",
+              "Parameter tuning (--stylize, --chaos, --quality)",
+              "Multi-image blending and style transfer",
+            ],
+          },
+          {
+            title: "ComfyUI workflow design",
+            items: [
+              "Node-based workflow logic design",
+              "Combining ControlNet, LoRA, and embeddings",
+              "Batch generation and automation scripts",
+              "Practice: reusable AI-art workflow for film projects",
+            ],
+          },
+          {
+            title: "Post-optimization for AI images",
+            items: [
+              "Detecting common AI-image issues (hands, perspective, detail)",
+              "Combining traditional retouching and AI correction",
+              "Targeted inpainting strategies",
+              "Color correction and style harmonization",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Continuous Learning",
+        subtitle: "Research Frontier",
+        description: "",
+        clusters: [
+          {
+            title: "Continuous learning",
+            items: ["Tracking latest AI papers (arXiv)", "Contributing to open-source projects (GitHub)", "Exploring frontier tools (SORA, Runway Gen-3)"],
+          },
+        ],
+      },
+    ],
+  },
+  4: {
+    systemAbilityTree: `Personal system capability hierarchy
+│
+├── 【第1层: Programming Fundamentals】
+│   └── CS501 Java Programming Overview
+│       • Object-oriented programming mindset
+│       • Core syntax and programming paradigms
+│       ↓ Foundation for implementation capability
+│
+├── 【第2层: Data Structures and Algorithms】
+│   ├── CS570 Data Structures (Completed)
+│   │   • Linear structures: array, linked list, stack, queue
+│   │   • Tree structures: binary tree, AVL tree, B-tree
+│   │   • Graph structures: representation and traversal
+│   │   ↓ Data organization foundation for algorithm design
+│   │
+│   └── CS590 Algorithms (Completed)
+│       • Module 1: algorithm analysis and complexity
+│       • Module 2-6: advanced core data structures
+│       • Binary search tree, priority queue, hash table, union-find
+│       • Module 7: sorting and selection algorithms
+│       • Module 8-10: design paradigms
+│       • Greedy, divide-and-conquer, dynamic programming
+│       • Module 11-13: graph algorithms
+│       • Graph traversal, shortest path, minimum spanning tree
+│       ↓ Methodology for efficient system design
+│
+├── 【第3层: System Fundamentals】 (theory + practice)
+│   ├── CS525 Systems Programming (78% - practice)
+│   │   • Module 2-5: C systems programming basics
+│   │   • Arrays, functions, structs, pointers
+│   │   • Search, sorting, recursion, I/O
+│   │   • Module 6-7: file systems and shell
+│   │   • File and directory operations
+│   │   • Shell scripting
+│   │   • Module 8-10: process and thread programming
+│   │   • Process lifecycle and signal handling
+│   │   • Multithreading and daemon workflows
+│   │   • Module 11-12: IPC
+│   │   • Pipes and sockets
+│   │   • Module 13: library usage and creation
+│   │   ↓ Practical use of operating-system APIs
+│   │
+│   └── CS520 Operating Systems (78% - theory)
+│       • Module 1: operating-system overview
+│       • Module 2-3: process management
+│       • Process/thread models and scheduling
+│       • Module 4-5: synchronization and deadlock
+│       • Mutual exclusion, prevention, avoidance, recovery
+│       • Module 6-7: memory management
+│       • Paging, segmentation, and virtual memory
+│       • Module 8-10: storage and file systems
+│       • I/O stack, file-system interface and implementation
+│       • Module 11-12: security and protection
+│       • Access control and system-protection mechanisms
+│       ↓ Design principles behind operating-system internals
+│
+└── 【第4层: Data Management】
+    └── CS561 Database Management Systems (80%)
+        • Relational model and SQL
+        • Normalization theory
+        • Transaction management
+        • Indexing and query optimization
+        • Storage management
+        ↓ Integrated application of all prerequisite layers`,
+    systemLanguageCapability: {
+      lowerLayerTitle: "[System layer]",
+      lowerLanguages: "C / C++",
+      lowerAction: "implements",
+      lowerTargets: "Operating systems, database kernels, language runtimes",
+      lowerInfrastructure: "forms critical infrastructure",
+      upperLayerTitle: "[Application layer]",
+      upperLanguages: "Java / Python",
+      upperAction: "builds",
+      upperTargets: "Web services, data analytics, machine-learning applications",
+      coreLanguages: "Java, C, C++, Python",
+      supplementMethod:
+        "For unfamiliar languages, I ramp quickly with AI-assisted tooling while validating generated code against system and architecture principles.",
+    },
+    systemCapabilities: [
+      {
+        title: "Plugin engineering",
+        items: ["NUKE plugin development experience", "Software architecture and API understanding", "System-level integration"],
+      },
+      {
+        title: "Performance optimization",
+        items: ["Rendering-pipeline profiling", "Memory management and tuning", "Parallel-computing applications"],
+      },
+      {
+        title: "Workflow architecture",
+        items: ["End-to-end process design", "Cross-software collaboration plans", "Automation-system design"],
+      },
+    ],
+    systemApplications: [
+      "NUKE/MP plugins already used in production",
+      "Cross-platform tooling experience",
+      "System architecture design for complex projects",
+      "Database design and management capability",
+    ],
+    systemProjects: [
+      {
+        title: "Project 1: ComfyUI cinematic scene-building workflow",
+        subtitle: "Tech stack: Python, PyTorch, OpenCV, NUKE API, Gaussian Splatting",
+        status: "Used in production",
+        summary:
+          "Features include automatic focal-length parsing, 3D Gaussian Splatting reconstruction, automated projection, smart stitching, and AI-assisted cleanup.",
+        techStack: ["Python", "PyTorch", "OpenCV", "NUKE API", "Gaussian Splatting"],
+        highlights: ["Improved projection precision and render quality through 3D scene reconstruction with Gaussian Splatting."],
+        outcomes: ["Optimized rendering pipeline and validated in production."],
+      },
+      {
+        title: "Project 2: Drinking Time - AI-driven visual development platform",
+        subtitle: "Positioning: a creation platform for film-visual development and AI generation workflows",
+        status: "In progress",
+        summary:
+          "Core value: help creators produce film-grade visuals and transform imagination into industrial, deliverable assets.",
+        techStack: ["LLM API", "Prompt Engineering", "ComfyUI", "Stable Diffusion", "Full-stack"],
+        architecture: [
+          {
+            title: "Analysis Engine",
+            description:
+              "Turns unstructured sources (references, scripts, storyboards, briefs) into reusable visual environment templates and structured prompts.",
+          },
+          {
+            title: "Creation Engine",
+            description:
+              "Generates film-grade images, shots, and clips from analysis outputs with iterative optimization and version control.",
+          },
+        ],
+        highlights: [
+          "Transforms pre-production visual understanding into structured AI production workflows.",
+          "Translates intuition into executable visual parameters.",
+          "Builds reusable visual-template assets across projects.",
+        ],
+        openSourceNote: "Planned as an open-source project on GitHub with community collaboration.",
+        outcomes: ["In development: product architecture and core workflow prototype completed."],
+      },
+    ],
+  },
+  5: {
+    educationTimeline: [
+      {
+        period: "2014 - 2018",
+        school: "Jilin Animation Institute",
+        degree: "Bachelor of Arts · Digital Media Art",
+        direction: "Focus: storyboard design, script creation, digital art",
+        cultivation:
+          "Training: visual storytelling, color theory, composition, cinematic language; foundation in artistic sensitivity and narrative judgment",
+      },
+      {
+        period: "2018 - 2025",
+        school: "7 years in industry",
+        degree: "Professional practice · from projects to methodology",
+        direction:
+          "Technical growth: complete film-art workflow mastery; business growth: founded and operated an independent studio for national and international projects",
+        cultivation: "Outcomes: project depth, technical insight, industry cognition, business mindset",
+      },
+      {
+        period: "2025 - 2026 (ongoing)",
+        school: "Stevens Institute of Technology",
+        degree: "M.S. in Computer Science · expected graduation Aug 2026",
+        direction:
+          "Research focus: algorithms, AI, machine learning, computer graphics; key courses include machine learning, deep learning, NLP, operating systems, and databases",
+        cultivation: "Capability growth: systems thinking, algorithm design, mathematical modeling, engineering execution",
+      },
+    ],
+    hybridAdvantages: [
+      {
+        title: "Algorithmic aesthetics",
+        description:
+          "Brings AI output to film-level art quality instead of stopping at technical demos.",
+      },
+      {
+        title: "Engineering for art",
+        description:
+          "Converts traditional art workflows into reusable, iterative engineering systems.",
+      },
+      {
+        title: "Problem translation",
+        description:
+          "Translates art requirements into technical plans and technical capability into artistic value.",
+      },
+    ],
+    uniqueValue: {
+      title: "What I can do",
+      items: [
+        "Discuss architecture, algorithms, and optimization directly with engineering teams",
+        "Collaborate with art teams on style, rhythm, and emotional expression",
+        "Bridge both sides so technology serves art and art drives technical innovation",
+      ],
+    },
+    coreCompetence: "Tech-to-art translation · Cross-domain problem solving · End-to-end product delivery",
+  },
+  6: {
+    futureDirections: [
+      {
+        title: "Direction 1: interdisciplinary research",
+        items: [
+          "Intersection of computer science and visual art",
+          "Redefining digital-art workflows with algorithms",
+          "Exploring generative AI innovation in film production",
+          "Building tools that connect engineering and aesthetics",
+        ],
+      },
+      {
+        title: "Direction 2: shared human emotion",
+        items: [
+          "Contributing to emotionally resonant film projects",
+          "Exploring public-art domains such as cultural digitization",
+          "Serving cultural memory and emotional continuity",
+        ],
+      },
+    ],
+  },
+};
+
 /* ═══════════════════════════════════════════════════════════════
    主组件
    ═══════════════════════════════════════════════════════════════ */
@@ -2233,13 +2862,16 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
         contact: "CONTACT",
       };
   const faceMetaEn = PANEL_FACE_META_EN[face.id];
-  const localizedTitle = isEn ? faceMetaEn?.title ?? face.title : face.title;
-  const localizedSubtitle = isEn ? faceMetaEn?.subtitle ?? face.subtitle : face.subtitle;
-  const localizedCoreStatement = isEn ? faceMetaEn?.coreStatement ?? face.coreStatement : face.coreStatement;
-  const localizedDescription = isEn ? faceMetaEn?.description ?? face.description : face.description;
-  const localizedQuote = isEn ? faceMetaEn?.quote ?? face.quote : face.quote;
-  const localizedSkills = isEn ? faceMetaEn?.skills ?? face.skills : face.skills;
-  const localizedCoreCompetence = isEn ? faceMetaEn?.coreCompetence ?? face.coreCompetence : face.coreCompetence;
+  const localizedFacePatch = isEn ? PANEL_FACE_CONTENT_EN[face.id] : undefined;
+  const localizedFace = localizedFacePatch ? ({ ...face, ...localizedFacePatch } as DiceFace) : face;
+  const localizedPaperSpotlightItems = isEn ? ALGORITHM_PAPER_SPOTLIGHT_ITEMS_EN : ALGORITHM_PAPER_SPOTLIGHT_ITEMS;
+  const localizedTitle = isEn ? faceMetaEn?.title ?? localizedFace.title : face.title;
+  const localizedSubtitle = isEn ? faceMetaEn?.subtitle ?? localizedFace.subtitle : face.subtitle;
+  const localizedCoreStatement = isEn ? faceMetaEn?.coreStatement ?? localizedFace.coreStatement : face.coreStatement;
+  const localizedDescription = isEn ? faceMetaEn?.description ?? localizedFace.description : face.description;
+  const localizedQuote = isEn ? faceMetaEn?.quote ?? localizedFace.quote : face.quote;
+  const localizedSkills = isEn ? faceMetaEn?.skills ?? localizedFace.skills : face.skills;
+  const localizedCoreCompetence = isEn ? faceMetaEn?.coreCompetence ?? localizedFace.coreCompetence : face.coreCompetence;
   const isVisualFace = face.id === 1;
   // 中文注释：按需求隐藏非视觉分支的大标题（产品/算法/系统/学术跨界/无限可能）
   const shouldHideBranchTitle = !isVisualFace;
@@ -2450,15 +3082,15 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
 
                           {/* 右侧：能力标签 + 数据亮点 */}
                           <div className="space-y-8">
-                            {face.stats && face.stats.length > 0 && (
-                              <StatsGrid stats={face.stats} color={face.color} />
+                            {localizedFace.stats && localizedFace.stats.length > 0 && (
+                              <StatsGrid stats={localizedFace.stats} color={face.color} />
                             )}
                           </div>
                         </div>
                       </motion.div>
 
                       {/* 重点项目 */}
-                      {face.works.length > 0 && (
+                      {localizedFace.works.length > 0 && (
                         <div className="mb-8">
                           <SectionTitle title="FEATURED PROJECTS" color={face.color} />
                           <motion.div
@@ -2468,7 +3100,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                             viewport={{ once: true }}
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                           >
-                            {face.works.map((work, i) => (
+                            {localizedFace.works.map((work, i) => (
                               <WorkCard key={i} work={work} color={face.color} index={i} />
                             ))}
                           </motion.div>
@@ -2843,8 +3475,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         )}
 
                         {/* 统计数据 */}
-                        {face.stats && face.stats.length > 0 && (
-                          <StatsGrid stats={face.stats} color={face.color} />
+                        {localizedFace.stats && localizedFace.stats.length > 0 && (
+                          <StatsGrid stats={localizedFace.stats} color={face.color} />
                         )}
                       </div>
                     </div>
@@ -2853,7 +3485,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   {/* 中文注释：按需求统一去掉此处分隔线，让所有分支过渡节奏与算法页一致 */}
 
                   {/* ─── 产品分支：作品/案例区 ─── */}
-                  {face.id === 2 && face.works.length > 0 && (
+                  {face.id === 2 && localizedFace.works.length > 0 && (
                     <div className="mb-12 lg:mb-16">
                       <SectionTitle title={panelText.innovationCases} color={face.color} />
                       <motion.div
@@ -2863,7 +3495,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         viewport={{ once: true }}
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                       >
-                        {face.works.map((work, i) => (
+                        {localizedFace.works.map((work, i) => (
                           <WorkCard key={i} work={work} color={face.color} index={i} />
                         ))}
                       </motion.div>
@@ -2876,37 +3508,37 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                       {/* 中文注释：Paper Spotlight 放在 Knowledge System 区块上方 */}
                       <div className="mb-12 lg:mb-16">
                         <SectionTitle title={panelText.paperSpotlight} color={face.color} />
-                        <PaperSpotlightCards items={ALGORITHM_PAPER_SPOTLIGHT_ITEMS} color={face.color} language={language} />
+                        <PaperSpotlightCards items={localizedPaperSpotlightItems} color={face.color} language={language} />
                       </div>
 
-                      {face.knowledgeChain && (
+                      {localizedFace.knowledgeChain && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.knowledgeSystem} color={face.color} />
                           {/* 中文注释：继承分支页主容器宽度，不再使用 viewport 比例宽度 */}
                           <div className="w-full">
-                            <KnowledgeChain chain={face.knowledgeChain} color={face.color} />
+                            <KnowledgeChain chain={localizedFace.knowledgeChain} color={face.color} />
                           </div>
                         </div>
                       )}
 
-                      {face.algorithmCourseDetails && face.algorithmCourseDetails.length > 0 && (
+                      {localizedFace.algorithmCourseDetails && localizedFace.algorithmCourseDetails.length > 0 && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.coreCourses} color={face.color} />
-                          <AlgorithmCourseDetails courses={face.algorithmCourseDetails} color={face.color} />
+                          <AlgorithmCourseDetails courses={localizedFace.algorithmCourseDetails} color={face.color} />
                         </div>
                       )}
 
-                      {face.algorithmApplicationAreas && face.algorithmApplicationAreas.length > 0 && (
+                      {localizedFace.algorithmApplicationAreas && localizedFace.algorithmApplicationAreas.length > 0 && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.technicalApplications} color={face.color} />
-                          <AlgorithmApplicationAreas areas={face.algorithmApplicationAreas} color={face.color} />
+                          <AlgorithmApplicationAreas areas={localizedFace.algorithmApplicationAreas} color={face.color} />
                         </div>
                       )}
 
-                      {face.algorithmProjects && face.algorithmProjects.length > 0 && (
+                      {localizedFace.algorithmProjects && localizedFace.algorithmProjects.length > 0 && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.practicalProjects} color={face.color} />
-                          <AlgorithmProjects projects={face.algorithmProjects} color={face.color} />
+                          <AlgorithmProjects projects={localizedFace.algorithmProjects} color={face.color} />
                         </div>
                       )}
 
@@ -2916,45 +3548,45 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   {/* ─── 系统分支：按用户最新文本重建全部内容 ─── */}
                   {face.id === 4 && (
                     <>
-                      {face.systemAbilityTree && (
+                      {localizedFace.systemAbilityTree && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.systemAbilityTree} color={face.color} />
-                          <SystemAbilityTree treeText={face.systemAbilityTree} color={face.color} language={language} />
+                          <SystemAbilityTree treeText={localizedFace.systemAbilityTree} color={face.color} language={language} />
                         </div>
                       )}
 
-                      {face.systemLanguageCapability && (
+                      {localizedFace.systemLanguageCapability && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.programmingLanguage} color={face.color} />
-                          <ProgrammingLanguageCapability color={face.color} capability={face.systemLanguageCapability} language={language} />
+                          <ProgrammingLanguageCapability color={face.color} capability={localizedFace.systemLanguageCapability} language={language} />
                         </div>
                       )}
 
-                      {face.systemTraining && (
+                      {localizedFace.systemTraining && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.systemTraining} color={face.color} />
-                          <SystemTrainingBlock color={face.color} training={face.systemTraining} language={language} />
+                          <SystemTrainingBlock color={face.color} training={localizedFace.systemTraining} language={language} />
                         </div>
                       )}
 
-                      {face.systemCapabilities && (
+                      {localizedFace.systemCapabilities && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.systemCapability} color={face.color} />
-                          <SystemCapabilityCards capabilities={face.systemCapabilities} color={face.color} />
+                          <SystemCapabilityCards capabilities={localizedFace.systemCapabilities} color={face.color} />
                         </div>
                       )}
 
-                      {face.systemApplications && face.systemApplications.length > 0 && (
+                      {localizedFace.systemApplications && localizedFace.systemApplications.length > 0 && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.practicalApplications} color={face.color} />
-                          <SystemApplicationList color={face.color} items={face.systemApplications} />
+                          <SystemApplicationList color={face.color} items={localizedFace.systemApplications} />
                         </div>
                       )}
 
-                      {face.systemProjects && face.systemProjects.length > 0 && (
+                      {localizedFace.systemProjects && localizedFace.systemProjects.length > 0 && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.systemProjects} color={face.color} />
-                          <AlgorithmProjects projects={face.systemProjects} color={face.color} />
+                          <AlgorithmProjects projects={localizedFace.systemProjects} color={face.color} />
                         </div>
                       )}
                     </>
@@ -2963,17 +3595,17 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   {/* ─── 跨界分支：教育轨迹 + 跨界能力 + 独特价值 ─── */}
                   {face.id === 5 && (
                     <>
-                      {face.educationTimeline && (
+                      {localizedFace.educationTimeline && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.educationTrack} color={face.color} />
                           {/* 中文注释：教育轨迹改为横向时间轴后放开宽度，避免右侧留白 */}
                           <div className="max-w-none">
-                            <EducationTimeline timeline={face.educationTimeline} color={face.color} />
+                            <EducationTimeline timeline={localizedFace.educationTimeline} color={face.color} language={language} />
                           </div>
                         </div>
                       )}
 
-                      {face.hybridAdvantages && (
+                      {localizedFace.hybridAdvantages && (
                         <div className="mb-12 lg:mb-16">
                           <SectionTitle title={panelText.hybridManifestation} color={face.color} />
                           <div
@@ -2982,9 +3614,9 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           >
                             {panelText.hybridBridgeLine}
                           </div>
-                          <HybridAdvantages advantages={face.hybridAdvantages} color={face.color} />
+                          <HybridAdvantages advantages={localizedFace.hybridAdvantages} color={face.color} />
 
-                          {face.uniqueValue && (
+                          {localizedFace.uniqueValue && (
                             <motion.div
                               initial={{ opacity: 0, y: 12 }}
                               whileInView={{ opacity: 1, y: 0 }}
@@ -3010,10 +3642,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                   className="text-lg md:text-xl text-white/88 mb-4"
                                   style={{ fontFamily: "var(--font-display)" }}
                                 >
-                                  {face.uniqueValue.title}
+                                  {localizedFace.uniqueValue.title}
                                 </div>
                                 <div className="space-y-3">
-                                  {face.uniqueValue.items.map((item) => (
+                                  {localizedFace.uniqueValue.items.map((item) => (
                                     <div key={item} className="flex items-start gap-2 text-sm text-white/68 leading-relaxed">
                                       <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: `${face.color}8A` }} />
                                       <span>{item}</span>
@@ -3056,10 +3688,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   {isEaster && (
                     <div className="mb-12 lg:mb-16">
                       {/* 探索方向 */}
-                      {face.futureDirections && (
+                      {localizedFace.futureDirections && (
                         <div className="mb-12">
                           <SectionTitle title={panelText.exploringDirections} color={face.color} />
-                          <FutureDirections directions={face.futureDirections} color={face.color} />
+                          <FutureDirections directions={localizedFace.futureDirections} color={face.color} />
                         </div>
                       )}
 
@@ -3183,10 +3815,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                       </div>
 
                       {/* 联系方式 */}
-                      {face.contactInfo && face.contactInfo.length > 0 && (
+                      {localizedFace.contactInfo && localizedFace.contactInfo.length > 0 && (
                         <div className="mt-12">
                           <SectionTitle title={panelText.contact} color={face.color} />
-                          <ContactSection contactInfo={face.contactInfo} color={face.color} />
+                          <ContactSection contactInfo={localizedFace.contactInfo} color={face.color} />
                         </div>
                       )}
                     </div>

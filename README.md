@@ -136,6 +136,56 @@ pnpm railway:redeploy
 
 ---
 
+## 中文改动自动生成英文文档
+
+工程里已经内置了自动翻译脚本，默认任务是：
+
+- 源文件：`MB_工程结构说明.md`
+- 英文输出：`MB_工程结构说明.en.md`
+
+### 1) 配置翻译服务
+
+在 `.env` 里配置（参考 `.env.example`）：
+
+```bash
+DOCS_TRANSLATE_PROVIDER=dashscope
+DASHSCOPE_API_KEY=你的Key
+# 可选
+DOCS_TRANSLATE_MODEL=qwen-plus-latest
+DOCS_TRANSLATE_MAX_CHARS=6000
+```
+
+或者：
+
+```bash
+DOCS_TRANSLATE_PROVIDER=openai
+OPENAI_API_KEY=你的Key
+# 可选
+DOCS_TRANSLATE_MODEL=gpt-4.1-mini
+```
+
+### 2) 先检查任务（不真正翻译）
+
+```bash
+npm run docs:en:dry
+```
+
+### 3) 生成英文文档
+
+```bash
+npm run docs:en
+```
+
+### 4) 临时指定文件（可选）
+
+```bash
+node scripts/generate-english-doc.mjs --source "中文文档.md" --target "EnglishDoc.md"
+```
+
+脚本会保留 Markdown 结构，并在英文文档顶部写入自动生成标记。后续你只改中文文档，再跑一次命令即可。
+
+---
+
 ## 视觉作品集配置
 
 视觉维度的图片和视频托管在阿里云 OSS，配置文件在：

@@ -13,6 +13,8 @@
     "start": "NODE_ENV=production node dist/index.js",
     "railway:redeploy": "bash ./scripts/railway-redeploy.sh",
     "railway:status": "NPM_CONFIG_CACHE=/tmp/.npm-cache npx -y @railway/cli service status -a --json",
+    "docs:en": "node scripts/generate-english-doc.mjs",
+    "docs:en:dry": "node scripts/generate-english-doc.mjs --dry-run",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "format": "prettier --write ."
