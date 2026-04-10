@@ -136,6 +136,22 @@ pnpm railway:redeploy
 
 ---
 
+## 免费部署（替代 Railway）
+
+已支持直接迁移到免费静态托管（Cloudflare Pages / Netlify / Vercel）。
+
+请查看：
+
+- `DEPLOY_FREE_HOSTING.md`
+
+核心构建命令：
+
+```bash
+npm run build:static
+```
+
+---
+
 ## 中文改动自动生成英文文档
 
 工程里已经内置了自动翻译脚本，默认任务是：

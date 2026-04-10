@@ -2772,12 +2772,13 @@ const PANEL_FACE_CONTENT_EN: Partial<Record<number, FaceContentLocalization>> = 
 export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, language = "zh" }: DimensionPanelProps) {
   const face = DICE_FACES[faceId - 1];
   const [isRerolling, setIsRerolling] = useState(false);
-  const [activeVisualVideoId, setActiveVisualVideoId] = useState<string | null>(null);
+  const [hoveredVisualVideoId, setHoveredVisualVideoId] = useState<string | null>(null);
   const [visualVideoVisibleCount, setVisualVideoVisibleCount] = useState(VISUAL_VIDEO_PAGE_SIZE);
   const [visualImageVisibleCount, setVisualImageVisibleCount] = useState(VISUAL_IMAGE_PAGE_SIZE);
   const [browserZoomScale, setBrowserZoomScale] = useState(1);
   const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const visualVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const visualCdnBaseUrl =
     (import.meta.env.VITE_VISUAL_MEDIA_CDN_BASE_URL as string | undefined)?.trim() ||
     DEFAULT_VISUAL_CDN_BASE_URL;
@@ -2792,7 +2793,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
         noCdn: "Video CDN is not configured. Please set VITE_VISUAL_MEDIA_CDN_BASE_URL in .env.",
         loadMoreImages: "Load more images",
         loadMoreVideos: "Load more videos",
-        closeVideo: "Close video",
+        hoverPlayVideo: "Hover to play",
         innovationCases: "INNOVATION CASES",
         paperSpotlight: "PAPER SPOTLIGHT",
         knowledgeSystem: "KNOWLEDGE SYSTEM",
@@ -2830,7 +2831,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
         noCdn: "未检测到视频 CDN 地址。请在 `.env` 中配置 `VITE_VISUAL_MEDIA_CDN_BASE_URL`。",
         loadMoreImages: "加载更多图片",
         loadMoreVideos: "加载更多视频",
-        closeVideo: "关闭视频",
+        hoverPlayVideo: "悬停播放",
         innovationCases: "INNOVATION CASES",
         paperSpotlight: "PAPER SPOTLIGHT",
         knowledgeSystem: "KNOWLEDGE SYSTEM",
@@ -2904,6 +2905,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
       if (rerollTimeoutRef.current) {
         clearTimeout(rerollTimeoutRef.current);
       }
+      Object.values(visualVideoRefs.current).forEach((videoEl) => {
+        if (!videoEl) return;
+        videoEl.pause();
+      });
     };
   }, []);
 
@@ -2911,7 +2916,12 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
-    setActiveVisualVideoId(null);
+    setHoveredVisualVideoId(null);
+    Object.values(visualVideoRefs.current).forEach((videoEl) => {
+      if (!videoEl) return;
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    });
     setVisualVideoVisibleCount(VISUAL_VIDEO_PAGE_SIZE);
     setVisualImageVisibleCount(VISUAL_IMAGE_PAGE_SIZE);
   }, [faceId]);
@@ -2937,6 +2947,27 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   }, []);
 
   const zoomCompensation = browserZoomScale > 0 ? 1 / browserZoomScale : 1;
+
+  const playVisualVideoPreview = (videoId: string) => {
+    const videoEl = visualVideoRefs.current[videoId];
+    if (!videoEl) return;
+    videoEl.muted = true;
+    videoEl.volume = 0;
+    videoEl.currentTime = 0;
+    const playPromise = videoEl.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        // 中文注释：浏览器自动播放策略拦截时静默忽略，避免控制台噪音
+      });
+    }
+  };
+
+  const stopVisualVideoPreview = (videoId: string) => {
+    const videoEl = visualVideoRefs.current[videoId];
+    if (!videoEl) return;
+    videoEl.pause();
+    videoEl.currentTime = 0;
+  };
 
   const handleReroll = () => {
     if (isRerolling) return;
@@ -3278,40 +3309,61 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           {visibleVisualVideos.map((item) => {
                             const videoUrl = buildVisualVideoUrl(visualCdnBaseUrl, item.fileName);
                             const posterUrl = buildVisualPosterUrl(visualCdnBaseUrl, item.fileName);
-                            const isVideoOpen = activeVisualVideoId === item.id;
+                            const isVideoHovered = hoveredVisualVideoId === item.id;
                             return (
                               <div
                                 key={item.id}
-                                className="aspect-[16/9] rounded-xl group transition-all duration-300 relative overflow-hidden hover:scale-[1.02] cursor-pointer"
+                                className="aspect-[16/9] rounded-xl group transition-all duration-300 relative overflow-hidden hover:scale-[1.02]"
                                 style={{
                                   background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
                                 }}
-                                onClick={() => {
-                                  if (!videoUrl || isVideoOpen) return;
-                                  setActiveVisualVideoId(item.id);
+                                onMouseEnter={() => {
+                                  if (!videoUrl) return;
+                                  setHoveredVisualVideoId(item.id);
+                                  playVisualVideoPreview(item.id);
+                                }}
+                                onMouseLeave={() => {
+                                  if (!videoUrl) return;
+                                  setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
+                                  stopVisualVideoPreview(item.id);
                                 }}
                               >
-                                {isVideoOpen && videoUrl ? (
+                                {videoUrl ? (
                                   <>
                                     <video
+                                      ref={(el) => {
+                                        visualVideoRefs.current[item.id] = el;
+                                      }}
                                       className="h-full w-full object-cover"
-                                      controls
-                                      preload="none"
+                                      preload="metadata"
                                       playsInline
+                                      muted
+                                      loop
                                       src={videoUrl}
                                       poster={posterUrl ?? undefined}
                                     />
-                                    <button
-                                      type="button"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setActiveVisualVideoId(null);
+                                    <div
+                                      className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
+                                      style={{
+                                        opacity: isVideoHovered ? 0 : 1,
+                                        background: posterUrl
+                                          ? "linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.58))"
+                                          : `radial-gradient(circle at center, ${face.color}20, transparent)`,
                                       }}
-                                      className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full text-white/85 bg-black/55 hover:bg-black/70 transition-colors"
-                                      aria-label={panelText.closeVideo}
-                                    >
-                                      x
-                                    </button>
+                                    />
+                                    {!isVideoHovered && (
+                                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
+                                        <div
+                                          className="text-5xl transition-transform duration-300 group-hover:scale-110"
+                                          style={{ color: "rgba(255,255,255,0.85)" }}
+                                        >
+                                          ▶
+                                        </div>
+                                        <div className="mt-2 text-[11px] tracking-[0.2em] uppercase text-white/72">
+                                          {panelText.hoverPlayVideo}
+                                        </div>
+                                      </div>
+                                    )}
                                   </>
                                 ) : (
                                   <>
