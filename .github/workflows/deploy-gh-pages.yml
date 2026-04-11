@@ -24,11 +24,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Dependencies
-        # 中文注释：CI 中放宽 peerDependencies 校验，避免 vite 版本冲突导致安装失败
-        run: npm install --legacy-peer-deps
+        # 中文注释：CI 中放宽 peerDependencies 校验，并在偶发安装失败时自动重试一次
+        run: |
+          npm install --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: Build Static Site
         env:
