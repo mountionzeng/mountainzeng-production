@@ -33,8 +33,8 @@ jobs:
 
       - name: Build Static Site
         env:
-          # 中文注释：GitHub Pages 项目页默认挂在 /<repo>/ 子路径
-          VITE_BASE_PATH: /mountainzeng-production/
+          # 中文注释：自定义域名部署走根路径，静态资源从 /assets/... 加载
+          VITE_BASE_PATH: /
         run: npm run build:static
 
       - name: Configure GitHub Pages
@@ -42,6 +42,10 @@ jobs:
         with:
           # 中文注释：首次部署时自动为仓库启用 GitHub Pages（来源为 GitHub Actions）
           enablement: true
+
+      - name: Write CNAME
+        # 中文注释：将自定义域名写入构建产物，避免后续部署丢失域名绑定
+        run: echo 'mountion.cn' > dist/public/CNAME
 
       - name: Add SPA 404 Fallback
         run: cp dist/public/index.html dist/public/404.html
