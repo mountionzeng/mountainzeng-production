@@ -38,6 +38,9 @@ jobs:
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          # 中文注释：首次部署时自动为仓库启用 GitHub Pages（来源为 GitHub Actions）
+          enablement: true
 
       - name: Add SPA 404 Fallback
         run: cp dist/public/index.html dist/public/404.html
