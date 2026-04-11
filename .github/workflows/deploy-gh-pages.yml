@@ -27,7 +27,8 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies
-        run: npm install
+        # 中文注释：CI 中放宽 peerDependencies 校验，避免 vite 版本冲突导致安装失败
+        run: npm install --legacy-peer-deps
 
       - name: Build Static Site
         env:
