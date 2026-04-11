@@ -11,6 +11,27 @@
 - 免费额度够个人作品集长期使用
 - 你的视频和图片已经放在 OSS CDN，站点本体体积小，适合免费方案
 
+## 已直接接入：GitHub Pages 自动发布
+
+仓库已新增工作流：
+
+- `.github/workflows/deploy-gh-pages.yml`
+
+逻辑：
+
+- push 到 `main` 自动构建并部署到 GitHub Pages
+- 构建命令使用 `npm run build:static`
+- 自动设置子路径 `VITE_BASE_PATH=/mountainzeng-production/`
+- 自动生成 `404.html` 以支持 SPA 路由回退
+
+预计访问地址：
+
+- `https://mountionzeng.github.io/mountainzeng-production/`
+
+如果首次未生效，请在 GitHub 仓库设置中确认：
+
+- `Settings -> Pages -> Build and deployment -> Source = GitHub Actions`
+
 ## 已经为你做好的工程配置
 
 - 新增静态构建命令：`npm run build:static`（只构建前端）

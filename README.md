@@ -139,6 +139,7 @@ pnpm railway:redeploy
 ## 免费部署（替代 Railway）
 
 已支持直接迁移到免费静态托管（Cloudflare Pages / Netlify / Vercel）。
+并已内置 GitHub Pages 自动部署工作流（push 到 `main` 自动发布）。
 
 请查看：
 

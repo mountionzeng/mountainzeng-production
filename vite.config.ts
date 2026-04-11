@@ -153,6 +153,11 @@ function vitePluginManusDebugCollector(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, PROJECT_ROOT, "");
   const enableManusDebugCollector = env.ENABLE_MANUS_DEBUG_COLLECTOR === "true";
+  // 中文注释：支持通过 VITE_BASE_PATH 指定子路径部署（例如 GitHub Pages 的 /repo-name/）
+  const rawBasePath = (env.VITE_BASE_PATH || "").trim();
+  const normalizedBasePath = rawBasePath
+    ? `${rawBasePath.startsWith("/") ? rawBasePath : `/${rawBasePath}`}`.replace(/\/?$/, "/")
+    : "/";
 
   const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
 
@@ -162,6 +167,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    base: normalizedBasePath,
     plugins,
     resolve: {
       alias: {
