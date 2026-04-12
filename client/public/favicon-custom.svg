@@ -1,0 +1,43 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="customCoreGradient" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="14%" stop-color="#6366F1" />
+      <stop offset="30%" stop-color="#8B5CF6" />
+      <stop offset="48%" stop-color="#A855F7" />
+      <stop offset="66%" stop-color="#C084FC" />
+      <stop offset="82%" stop-color="#F472B6" />
+      <stop offset="92%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+
+    <filter id="softGlow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="4.6" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(120, 120) scale(1.8)" filter="url(#softGlow)">
+    <g fill="#151515" stroke="none">
+      <path d="M0,-65 C15,-57 55,-35 55,-30 C55,-25 15,-5 0,0 C-15,-5 -55,-25 -55,-30 C-55,-35 -15,-57 0,-65 Z" fill="#1A1A1A" />
+      <path d="M0,0 C15,-5 55,-25 55,-20 V25 C55,30 15,57 0,65 Z" fill="#101010" />
+      <path d="M0,0 C-15,-5 -55,-25 -55,-20 V25 C-55,30 -15,57 0,65 Z" fill="#131313" />
+    </g>
+
+    <g
+      fill="none"
+      stroke="url(#customCoreGradient)"
+      stroke-width="12.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M0,-65 C15,-57 55,-35 55,-30 V25 C55,30 15,57 0,65 C-15,57 -55,30 -55,25 V-20 C-55,-25 -15,-57 0,-65 Z" />
+      <line x1="0" y1="0" x2="0" y2="65" />
+      <line x1="0" y1="0" x2="55" y2="-20" />
+      <line x1="0" y1="0" x2="-55" y2="-20" />
+    </g>
+  </g>
+</svg>
