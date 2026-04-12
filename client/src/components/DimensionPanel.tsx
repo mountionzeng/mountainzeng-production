@@ -13,10 +13,15 @@ import { DICE_FACES } from "@/lib/diceData";
 import type { AlgorithmProject, DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
 import {
+  buildVisualAigcVideoUrl,
+  buildVisualClassicCgImageUrl,
+  buildVisualClassicCgVideoUrl,
   buildVisualImageUrl,
   buildVisualPosterUrl,
   buildVisualVideoUrl,
+  VISUAL_CLASSIC_CG_MEDIA_ITEMS,
   DEFAULT_VISUAL_CDN_BASE_URL,
+  VISUAL_AIGC_VIDEO_ITEMS,
   VISUAL_IMAGE_ITEMS,
   VISUAL_VIDEO_ITEMS,
 } from "@/lib/visualPortfolio";
@@ -36,6 +41,13 @@ interface DimensionPanelProps {
 }
 
 type PanelLanguage = "zh" | "en";
+
+type MediaPreviewState = {
+  kind: "image" | "video";
+  src: string;
+  title: string;
+  posterSrc?: string | null;
+} | null;
 
 const FACE_TITLE_EN: Record<number, string> = {
   1: "Visual",
@@ -186,6 +198,23 @@ function getVisualImageDisplayRow(displayIndex: number): number {
     return displayIndex;
   }
   return VISUAL_IMAGE_SOLO_ROW_COUNT + 1 + Math.floor((displayIndex - VISUAL_IMAGE_SOLO_ROW_COUNT - 1) / VISUAL_IMAGE_GRID_COLUMN_COUNT);
+}
+
+// 中文注释：AIGC 画廊拼贴布局（mosaic），根据序号分配不同跨行跨列组合
+function getAigcGalleryClass(index: number): string {
+  if (index === 0) {
+    return "col-span-2 md:col-span-2 row-span-2 md:row-span-3";
+  }
+  if (index === 1) {
+    return "col-span-2 md:col-span-2 row-span-2";
+  }
+  if (index % 7 === 0) {
+    return "col-span-2 md:col-span-2 row-span-2";
+  }
+  if (index % 3 === 0) {
+    return "row-span-2";
+  }
+  return "row-span-1";
 }
 
 /* ─── 动画变体 ─── */
@@ -541,27 +570,47 @@ function parseSystemAbilityTree(treeText: string): { title: string; layers: Syst
   return { title, layers };
 }
 
-function getSystemLayerButtonLabel(layerTitle: string): string {
+const SYSTEM_LAYER_PRESET_LABELS_ZH = ["编程基础层", "数据与算法层", "系统底层层", "数据管理层"] as const;
+const SYSTEM_LAYER_PRESET_LABELS_EN = [
+  "Programming foundation",
+  "Data and algorithm",
+  "System fundamentals",
+  "Data management",
+] as const;
+
+function getSystemLayerHoverLabel(layerTitle: string, index: number, language: PanelLanguage): string {
+  if (language === "en") {
+    return SYSTEM_LAYER_PRESET_LABELS_EN[index] ?? `Layer ${index + 1}`;
+  }
+
+  const preset = SYSTEM_LAYER_PRESET_LABELS_ZH[index];
+  if (preset) {
+    return `[${preset}]`;
+  }
+
   const withoutPrefix = layerTitle.replace(/^第[^：:]+[：:]\s*/, "").trim();
   const withoutSuffix = withoutPrefix.replace(/（.*?）/g, "").trim();
-  return `[${withoutSuffix || layerTitle}]`;
+  const normalized = withoutSuffix || layerTitle;
+  const withLayerSuffix = /层$/.test(normalized) ? normalized : `${normalized}层`;
+  return `[${withLayerSuffix}]`;
 }
 
 function SystemAbilityTree({ treeText, color, language }: { treeText: string; color: string; language: PanelLanguage }) {
   const { title, layers } = parseSystemAbilityTree(treeText);
   const isEn = language === "en";
   const [activeLayerIndex, setActiveLayerIndex] = useState(0);
-  const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const visibleLayers = layers.slice(0, 4);
+  const activeLayer = visibleLayers[Math.min(activeLayerIndex, Math.max(visibleLayers.length - 1, 0))];
   // 中文注释：指定系统能力树中的核心课程把要点渲染成标签，而不是纵向列表
   const shouldUseTagLayout = (entryTitle: string) => /CS501|CS570|CS590|CS525|CS520|CS561/i.test(entryTitle);
 
   useEffect(() => {
-    if (layers.length === 0) {
+    if (visibleLayers.length === 0) {
       setActiveLayerIndex(0);
       return;
     }
-    setActiveLayerIndex((prev) => Math.min(prev, layers.length - 1));
-  }, [layers.length]);
+    setActiveLayerIndex((prev) => Math.min(prev, visibleLayers.length - 1));
+  }, [visibleLayers.length]);
 
   if (layers.length === 0) {
     return (
@@ -626,209 +675,140 @@ function SystemAbilityTree({ treeText, color, language }: { treeText: string; co
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
-          <div className="lg:col-span-3">
-            <div
-              className="rounded-xl p-3 md:p-3.5"
-              style={{
-                border: `1px solid ${color}2A`,
-                background: `linear-gradient(145deg, ${color}14, rgba(0,0,0,0.34))`,
-              }}
-            >
-              <div
-                className="text-[10px] tracking-[0.16em] uppercase font-semibold mb-2.5"
-                style={{ color: `${color}BC`, fontFamily: "var(--font-label)" }}
-              >
-                {isEn ? "layer buttons" : "层级按钮"}
-              </div>
-
-              <div className="relative space-y-2.5">
-                <div
-                  className="absolute left-[13px] top-3 bottom-3 w-px"
-                  style={{ background: `linear-gradient(180deg, ${color}86 0%, ${color}24 100%)` }}
-                />
-                {layers.map((layer, index) => {
-                  const isActive = index === activeLayerIndex;
-                  return (
-                    <button
-                      key={`${layer.layerTitle}-btn-${index}`}
-                      type="button"
-                      onClick={() => {
-                        setActiveLayerIndex(index);
-                        layerRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                      }}
-                      className="relative w-full text-left rounded-lg px-3 py-2.5 transition-all duration-200"
-                      style={{
-                        color: isActive ? `${color}F2` : "rgba(255,255,255,0.82)",
-                        background: isActive ? `${color}2B` : "rgba(0,0,0,0.22)",
-                        border: `1px solid ${isActive ? `${color}6A` : `${color}2D`}`,
-                        boxShadow: isActive ? `0 0 16px ${color}35` : "none",
-                      }}
-                    >
-                      <span
-                        className="absolute left-[10px] top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full"
-                        style={{ background: isActive ? `${color}F0` : `${color}86` }}
-                      />
-                      <span className="ml-4 text-sm md:text-[0.96rem] font-semibold" style={{ fontFamily: "var(--font-display)" }}>
-                        {isEn ? `Layer ${index + 1}` : getSystemLayerButtonLabel(layer.layerTitle)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-9 space-y-3.5">
-            {layers.map((layer, index) => {
+        <div className="space-y-4 md:space-y-5">
+          {/* 中文注释：按需求改为单列结构，先显示四层按钮，不再左右分栏 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            {visibleLayers.map((layer, index) => {
               const isActive = index === activeLayerIndex;
-              const isFirstLayer = index === 0;
-              const isSecondLayer = index === 1;
-              const isThirdLayer = index === 2;
-              const isFourthLayer = index === 3;
               return (
-                <motion.div
-                  key={`${layer.layerTitle}-${index}`}
-                  ref={(node) => {
-                    layerRefs.current[index] = node;
+                <button
+                  key={`${layer.layerTitle}-hover-tab-${index}`}
+                  type="button"
+                  onMouseEnter={() => setActiveLayerIndex(index)}
+                  onFocus={() => setActiveLayerIndex(index)}
+                  onClick={() => setActiveLayerIndex(index)}
+                  className="rounded-lg px-3 py-2.5 text-sm md:text-[0.96rem] transition-all duration-200"
+                  style={{
+                    color: isActive ? `${color}F2` : "rgba(255,255,255,0.82)",
+                    background: isActive ? `${color}2B` : "rgba(0,0,0,0.22)",
+                    border: `1px solid ${isActive ? `${color}6A` : `${color}2D`}`,
+                    boxShadow: isActive ? `0 0 16px ${color}35` : "none",
+                    fontFamily: "var(--font-display)",
                   }}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.36, delay: index * 0.06, ease: "easeOut" }}
-                  className="relative pl-10"
                 >
-                  <div
-                    className="absolute left-0 top-2.5 w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-semibold"
-                    style={{
-                      color: `${color}F3`,
-                      background: `linear-gradient(145deg, ${isActive ? `${color}56` : `${color}3A`}, ${color}1F)`,
-                      border: `1px solid ${isActive ? `${color}7B` : `${color}52`}`,
-                      boxShadow: isActive ? `0 0 16px ${color}45` : `0 0 10px ${color}2A`,
-                      fontFamily: "var(--font-label)",
-                    }}
-                  >
-                    {index + 1}
-                  </div>
-
-                  <div
-                    className="rounded-xl p-4 md:p-5 transition-all duration-200"
-                    style={{
-                      background: `linear-gradient(145deg, rgba(255,255,255,0.035), ${color}10)`,
-                      border: `1px solid ${isActive ? `${color}52` : `${color}2C`}`,
-                      boxShadow: isActive ? `0 0 22px ${color}22` : "none",
-                    }}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                      <h4 className="text-base md:text-[1.05rem] font-semibold text-white/90" style={{ fontFamily: "var(--font-display)" }}>
-                        {layer.layerTitle}
-                      </h4>
-                      <span
-                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] text-white/85"
-                        style={{
-                          border: `1px solid ${color}35`,
-                          background: `${color}1C`,
-                          fontFamily: "var(--font-label)",
-                        }}
-                      >
-                        {isEn ? `${layer.entries.length} knowledge points` : `${layer.entries.length} 个知识点`}
-                      </span>
-                    </div>
-
-                    {layer.entries.length > 0 && (
-                      // 中文注释：知识点由纵向列表改为响应式网格，让同层条目可并排展示
-                      <div
-                        className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${
-                          isSecondLayer || isThirdLayer ? "xl:grid-cols-2" : "xl:grid-cols-3"
-                        }`}
-                      >
-                        {layer.entries.map((entry, entryIndex) => (
-                          <div
-                            key={`${layer.layerTitle}-${entry.title}-${entryIndex}`}
-                            className={`rounded-lg h-full ${
-                              isFirstLayer || isFourthLayer
-                                ? "p-2.5 md:p-3 md:col-span-2 xl:col-span-3"
-                                : isSecondLayer || isThirdLayer
-                                  ? "p-2.5 md:p-3"
-                                  : "p-3"
-                            }`}
-                            style={{
-                              border: `1px solid ${color}26`,
-                              background: `linear-gradient(145deg, rgba(0,0,0,0.25), ${color}08)`,
-                            }}
-                          >
-                            <div className="text-sm md:text-[0.95rem] font-semibold text-white/88 leading-relaxed">
-                              {entry.title}
-                            </div>
-
-                            {shouldUseTagLayout(entry.title) ? (
-                              // 中文注释：同一组标签改为纵向排布，每个标签单独一行
-                              <div
-                                className={`mt-2.5 ${
-                                  isFirstLayer || isSecondLayer || isThirdLayer || isFourthLayer
-                                    ? "flex flex-wrap items-center gap-1.5"
-                                    : "flex flex-col items-start gap-2"
-                                }`}
-                              >
-                                {[...entry.bullets, ...(entry.summary ? [entry.summary] : [])].map((tag, tagIndex) => (
-                                  <span
-                                    key={`${entry.title}-tag-${tagIndex}`}
-                                    className={`inline-flex items-center rounded-full text-[12px] md:text-[13px] leading-tight max-w-full ${
-                                      isFirstLayer || isSecondLayer || isThirdLayer || isFourthLayer ? "px-2.5 py-1" : "px-3 py-1.5"
-                                    }`}
-                                    style={{
-                                      color: `${color}E6`,
-                                      background: `${color}14`,
-                                      border: `1px solid ${color}36`,
-                                    }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <>
-                                {entry.bullets.length > 0 && (
-                                  <ul className="mt-2 space-y-1.5">
-                                    {entry.bullets.map((bullet, bulletIndex) => (
-                                      <li key={`${entry.title}-${bulletIndex}`} className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
-                                        <span
-                                          className="mt-[8px] h-1.5 w-1.5 rounded-full flex-shrink-0"
-                                          style={{ background: `${color}A8` }}
-                                        />
-                                        <span>{bullet}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-
-                                {entry.summary && (
-                                  <div className="mt-2.5 flex items-start gap-2 text-sm text-white/76 leading-relaxed">
-                                    <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
-                                    <span>{entry.summary}</span>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {layer.notes.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {layer.notes.map((note, noteIndex) => (
-                          <div key={`${layer.layerTitle}-note-${noteIndex}`} className="text-sm text-white/70 leading-relaxed">
-                            {note}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+                  {getSystemLayerHoverLabel(layer.layerTitle, index, language)}
+                </button>
               );
             })}
           </div>
+
+          {activeLayer && (
+            <motion.div
+              key={`${activeLayer.layerTitle}-${activeLayerIndex}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.26, ease: "easeOut" }}
+              className="rounded-xl p-4 md:p-5"
+              style={{
+                background: `linear-gradient(145deg, rgba(255,255,255,0.035), ${color}10)`,
+                border: `1px solid ${color}52`,
+                boxShadow: `0 0 22px ${color}22`,
+              }}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                <h4 className="text-base md:text-[1.05rem] font-semibold text-white/90" style={{ fontFamily: "var(--font-display)" }}>
+                  {activeLayer.layerTitle}
+                </h4>
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] text-white/85"
+                  style={{
+                    border: `1px solid ${color}35`,
+                    background: `${color}1C`,
+                    fontFamily: "var(--font-label)",
+                  }}
+                >
+                  {isEn ? `${activeLayer.entries.length} knowledge points` : `${activeLayer.entries.length} 个知识点`}
+                </span>
+              </div>
+
+              {activeLayer.entries.length > 0 && (
+                // 中文注释：仅展开当前悬停层的内容，鼠标移动到其他层时自动切换
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${
+                    activeLayerIndex === 1 || activeLayerIndex === 2 ? "xl:grid-cols-2" : "xl:grid-cols-3"
+                  }`}
+                >
+                  {activeLayer.entries.map((entry, entryIndex) => (
+                    <div
+                      key={`${activeLayer.layerTitle}-${entry.title}-${entryIndex}`}
+                      className={`rounded-lg h-full ${
+                        activeLayerIndex === 0 || activeLayerIndex === 3
+                          ? "p-2.5 md:p-3 md:col-span-2 xl:col-span-3"
+                          : "p-2.5 md:p-3"
+                      }`}
+                      style={{
+                        border: `1px solid ${color}26`,
+                        background: `linear-gradient(145deg, rgba(0,0,0,0.25), ${color}08)`,
+                      }}
+                    >
+                      <div className="text-sm md:text-[0.95rem] font-semibold text-white/88 leading-relaxed">{entry.title}</div>
+
+                      {shouldUseTagLayout(entry.title) ? (
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                          {[...entry.bullets, ...(entry.summary ? [entry.summary] : [])].map((tag, tagIndex) => (
+                            <span
+                              key={`${entry.title}-tag-${tagIndex}`}
+                              className="inline-flex items-center rounded-full text-[12px] md:text-[13px] leading-tight max-w-full px-2.5 py-1"
+                              style={{
+                                color: `${color}E6`,
+                                background: `${color}14`,
+                                border: `1px solid ${color}36`,
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          {entry.bullets.length > 0 && (
+                            <ul className="mt-2 space-y-1.5">
+                              {entry.bullets.map((bullet, bulletIndex) => (
+                                <li key={`${entry.title}-${bulletIndex}`} className="flex items-start gap-2 text-sm text-white/74 leading-relaxed">
+                                  <span
+                                    className="mt-[8px] h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                    style={{ background: `${color}A8` }}
+                                  />
+                                  <span>{bullet}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {entry.summary && (
+                            <div className="mt-2.5 flex items-start gap-2 text-sm text-white/76 leading-relaxed">
+                              <ChevronRight size={14} className="mt-[2px] flex-shrink-0" style={{ color: `${color}A6` }} />
+                              <span>{entry.summary}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeLayer.notes.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {activeLayer.notes.map((note, noteIndex) => (
+                    <div key={`${activeLayer.layerTitle}-note-${noteIndex}`} className="text-sm text-white/70 leading-relaxed">
+                      {note}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
@@ -876,17 +856,21 @@ function SystemTrainingBlock({
 function SystemApplicationList({ color, items }: { color: string; items: string[] }) {
   return (
     <div
-      className="rounded-2xl p-6 md:p-8"
+      // 中文注释：按需求将“实际应用”模块宽度缩短约 1/3（桌面端显示为 2/3 宽）
+      className="rounded-2xl p-6 md:p-8 w-full md:w-2/3"
       style={{
         background: `linear-gradient(145deg, ${color}12, ${color}06)`,
         border: `1px solid ${color}28`,
       }}
     >
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {items.map((item) => (
-          <div key={item} className="flex items-start gap-2 text-sm text-white/72 leading-relaxed">
-            <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: `${color}85` }} />
-            <span>{item}</span>
+          <div
+            key={item}
+            className="flex items-center gap-2 text-base md:text-[1.05rem] text-white/78 leading-none overflow-x-auto whitespace-nowrap"
+          >
+            <ChevronRight size={14} className="flex-shrink-0" style={{ color: `${color}85` }} />
+            <span className="whitespace-nowrap pr-1">{item}</span>
           </div>
         ))}
       </div>
@@ -1008,6 +992,10 @@ function AlgorithmApplicationAreas({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       {areas.map((area, index) => (
+        (() => {
+          // 中文注释：仅对“工具链/Toolchain”栏目应用特殊排版
+          const isToolchainArea = /工具链|toolchain/i.test(`${area.subtitle} ${area.title}`);
+          return (
         <motion.div
           key={area.title}
           custom={index}
@@ -1015,7 +1003,7 @@ function AlgorithmApplicationAreas({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-40px" }}
-          className="rounded-2xl p-5 md:p-6 space-y-5"
+          className={`rounded-2xl p-5 md:p-6 space-y-5 ${isToolchainArea ? "xl:col-span-2" : ""}`}
           style={{
             background: `linear-gradient(145deg, ${color}10, ${color}05)`,
             border: `1px solid ${color}22`,
@@ -1034,7 +1022,7 @@ function AlgorithmApplicationAreas({
             {area.description && <p className="text-sm text-white/60 leading-relaxed">{area.description}</p>}
           </div>
 
-          <div className="space-y-4">
+          <div className={isToolchainArea ? "grid grid-cols-1 md:grid-cols-3 gap-3" : "space-y-4"}>
             {area.clusters.map((cluster) => (
               <div
                 key={`${area.title}-${cluster.title}`}
@@ -1054,6 +1042,8 @@ function AlgorithmApplicationAreas({
             ))}
           </div>
         </motion.div>
+          );
+        })()
       ))}
     </div>
   );
@@ -2474,22 +2464,6 @@ const PANEL_FACE_CONTENT_EN: Partial<Record<number, FaceContentLocalization>> = 
               "Deep-learning-based image super-resolution",
             ],
           },
-          {
-            title: "Pipeline reconstruction",
-            items: [
-              "Precise composition control with ControlNet",
-              "Hybrid workflow that combines traditional painting and AI generation",
-              "Algorithm optimization for automated projection stitching",
-            ],
-          },
-          {
-            title: "Plugin-level implementation",
-            items: [
-              "Image-processing algorithm integration in NUKE plugins",
-              "OpenCV and NUKE API integration",
-              "Performance strategy for real-time preview",
-            ],
-          },
         ],
       },
       {
@@ -2773,6 +2747,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   const face = DICE_FACES[faceId - 1];
   const [isRerolling, setIsRerolling] = useState(false);
   const [hoveredVisualVideoId, setHoveredVisualVideoId] = useState<string | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<MediaPreviewState>(null);
   const [visualVideoVisibleCount, setVisualVideoVisibleCount] = useState(VISUAL_VIDEO_PAGE_SIZE);
   const [visualImageVisibleCount, setVisualImageVisibleCount] = useState(VISUAL_IMAGE_PAGE_SIZE);
   const [browserZoomScale, setBrowserZoomScale] = useState(1);
@@ -2946,6 +2921,17 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
     };
   }, []);
 
+  useEffect(() => {
+    if (!mediaPreview) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMediaPreview(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mediaPreview]);
+
   const zoomCompensation = browserZoomScale > 0 ? 1 / browserZoomScale : 1;
 
   const playVisualVideoPreview = (videoId: string) => {
@@ -2967,6 +2953,10 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
     if (!videoEl) return;
     videoEl.pause();
     videoEl.currentTime = 0;
+  };
+
+  const openMediaPreview = (preview: Exclude<MediaPreviewState, null>) => {
+    setMediaPreview(preview);
   };
 
   const handleReroll = () => {
@@ -3138,6 +3128,154 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         </div>
                       )}
 
+                      {/* 中文注释：按需求在 FEATURED PROJECTS 下方新增 AIGC 视频栏目 */}
+                      {VISUAL_AIGC_VIDEO_ITEMS.length > 0 && (
+                        <div className="mb-8">
+                          <SectionTitle title="AIGC" color={face.color} />
+                          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-3 md:gap-4">
+                            {VISUAL_AIGC_VIDEO_ITEMS.map((item, index) => {
+                              const videoUrl = buildVisualAigcVideoUrl(visualCdnBaseUrl, item.fileName);
+                              const isVideoHovered = hoveredVisualVideoId === item.id;
+                              const galleryClass = getAigcGalleryClass(index);
+                              return (
+                                <div
+                                  key={item.id}
+                                  className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
+                                  style={{
+                                    background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                  }}
+                                  onMouseEnter={() => {
+                                    setHoveredVisualVideoId(item.id);
+                                    playVisualVideoPreview(item.id);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
+                                    stopVisualVideoPreview(item.id);
+                                  }}
+                                  onClick={() =>
+                                    openMediaPreview({
+                                      kind: "video",
+                                      src: videoUrl,
+                                      title: item.title,
+                                    })
+                                  }
+                                >
+                                  <video
+                                    ref={(el) => {
+                                      visualVideoRefs.current[item.id] = el;
+                                    }}
+                                    className="h-full w-full object-cover"
+                                    preload="metadata"
+                                    playsInline
+                                    muted
+                                    loop
+                                    src={videoUrl}
+                                  />
+                                    <div
+                                      className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
+                                      style={{
+                                        opacity: isVideoHovered ? 0 : 1,
+                                        background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
+                                      }}
+                                    />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 中文注释：按需求在 AIGC 下方新增“古法视效”栏目，复用同款画廊排版 */}
+                      {VISUAL_CLASSIC_CG_MEDIA_ITEMS.length > 0 && (
+                        <div className="mb-8">
+                          <SectionTitle title="古法视效" color={face.color} />
+                          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-3 md:gap-4">
+                            {VISUAL_CLASSIC_CG_MEDIA_ITEMS.map((item, index) => {
+                              const galleryClass = getAigcGalleryClass(index);
+
+                              if (item.kind === "image") {
+                                const imageUrl = buildVisualClassicCgImageUrl(visualCdnBaseUrl, item.fileName);
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
+                                    style={{
+                                      background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                    }}
+                                    onClick={() =>
+                                      openMediaPreview({
+                                        kind: "image",
+                                        src: imageUrl,
+                                        title: item.title,
+                                      })
+                                    }
+                                  >
+                                    <img
+                                      src={imageUrl}
+                                      alt={item.title}
+                                      loading="lazy"
+                                      className="h-full w-full object-contain"
+                                    />
+                                    <div
+                                      className="absolute inset-0 z-10 pointer-events-none"
+                                      style={{
+                                        background: "linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.22))",
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              const videoUrl = buildVisualClassicCgVideoUrl(visualCdnBaseUrl, item.fileName);
+                              const isVideoHovered = hoveredVisualVideoId === item.id;
+                              return (
+                                <div
+                                  key={item.id}
+                                  className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
+                                  style={{
+                                    background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                  }}
+                                  onMouseEnter={() => {
+                                    setHoveredVisualVideoId(item.id);
+                                    playVisualVideoPreview(item.id);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
+                                    stopVisualVideoPreview(item.id);
+                                  }}
+                                  onClick={() =>
+                                    openMediaPreview({
+                                      kind: "video",
+                                      src: videoUrl,
+                                      title: item.title,
+                                    })
+                                  }
+                                >
+                                  <video
+                                    ref={(el) => {
+                                      visualVideoRefs.current[item.id] = el;
+                                    }}
+                                    className="h-full w-full object-cover"
+                                    preload="metadata"
+                                    playsInline
+                                    muted
+                                    loop
+                                    src={videoUrl}
+                                  />
+                                  <div
+                                    className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
+                                    style={{
+                                        opacity: isVideoHovered ? 0 : 1,
+                                        background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
+                                      }}
+                                    />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* 分隔线 */}
                       <div className="h-[1px] mt-8 mb-4" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
                     </div>
@@ -3163,9 +3301,19 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                             return (
                               <div
                                 key={item.id}
-                                className={`${index === 0 ? "aspect-[4/3]" : "aspect-[16/9]"} rounded-none relative overflow-hidden`}
+                                className={`${index === 0 ? "aspect-[4/3]" : "aspect-[16/9]"} rounded-none relative overflow-hidden ${
+                                  imageUrl ? "cursor-zoom-in" : ""
+                                }`}
                                 style={{
                                   background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                }}
+                                onClick={() => {
+                                  if (!imageUrl) return;
+                                  openMediaPreview({
+                                    kind: "image",
+                                    src: imageUrl,
+                                    title: item.title,
+                                  });
                                 }}
                               >
                                 {imageUrl && (
@@ -3193,9 +3341,19 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                 return (
                                   <div
                                     key={item.id}
-                                    className="aspect-[4/3] rounded-none relative overflow-hidden"
+                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                      imageUrl ? "cursor-zoom-in" : ""
+                                    }`}
                                     style={{
                                       background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                    }}
+                                    onClick={() => {
+                                      if (!imageUrl) return;
+                                      openMediaPreview({
+                                        kind: "image",
+                                        src: imageUrl,
+                                        title: item.title,
+                                      });
                                     }}
                                   >
                                     {imageUrl && (
@@ -3225,9 +3383,19 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                 return (
                                   <div
                                     key={item.id}
-                                    className="aspect-[4/3] rounded-none relative overflow-hidden"
+                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                      imageUrl ? "cursor-zoom-in" : ""
+                                    }`}
                                     style={{
                                       background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                    }}
+                                    onClick={() => {
+                                      if (!imageUrl) return;
+                                      openMediaPreview({
+                                        kind: "image",
+                                        src: imageUrl,
+                                        title: item.title,
+                                      });
                                     }}
                                   >
                                     {imageUrl && (
@@ -3257,9 +3425,19 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                 return (
                                   <div
                                     key={item.id}
-                                    className="aspect-[4/3] rounded-none relative overflow-hidden"
+                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                      imageUrl ? "cursor-zoom-in" : ""
+                                    }`}
                                     style={{
                                       background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+                                    }}
+                                    onClick={() => {
+                                      if (!imageUrl) return;
+                                      openMediaPreview({
+                                        kind: "image",
+                                        src: imageUrl,
+                                        title: item.title,
+                                      });
                                     }}
                                   >
                                     {imageUrl && (
@@ -3313,7 +3491,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                             return (
                               <div
                                 key={item.id}
-                                className="aspect-[16/9] rounded-xl group transition-all duration-300 relative overflow-hidden hover:scale-[1.02]"
+                                className="aspect-[16/9] rounded-xl group transition-all duration-300 relative overflow-hidden hover:scale-[1.02] cursor-zoom-in"
                                 style={{
                                   background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
                                 }}
@@ -3326,6 +3504,16 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                   if (!videoUrl) return;
                                   setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
                                   stopVisualVideoPreview(item.id);
+                                }}
+                                onClick={() => {
+                                  const previewSrc = videoUrl ?? posterUrl;
+                                  if (!previewSrc) return;
+                                  openMediaPreview({
+                                    kind: videoUrl ? "video" : "image",
+                                    src: previewSrc,
+                                    title: item.title,
+                                    posterSrc: posterUrl,
+                                  });
                                 }}
                               >
                                 {videoUrl ? (
@@ -3351,19 +3539,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                           : `radial-gradient(circle at center, ${face.color}20, transparent)`,
                                       }}
                                     />
-                                    {!isVideoHovered && (
-                                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
-                                        <div
-                                          className="text-5xl transition-transform duration-300 group-hover:scale-110"
-                                          style={{ color: "rgba(255,255,255,0.85)" }}
-                                        >
-                                          ▶
-                                        </div>
-                                        <div className="mt-2 text-[11px] tracking-[0.2em] uppercase text-white/72">
-                                          {panelText.hoverPlayVideo}
-                                        </div>
-                                      </div>
-                                    )}
                                   </>
                                 ) : (
                                   <>
@@ -3383,14 +3558,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                           : `radial-gradient(circle at center, ${face.color}20, transparent)`,
                                       }}
                                     />
-                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4">
-                                      <div
-                                        className="text-5xl transition-transform duration-300 group-hover:scale-110"
-                                        style={{ color: "rgba(255,255,255,0.85)" }}
-                                      >
-                                        ▶
-                                      </div>
-                                    </div>
                                   </>
                                 )}
                               </div>
@@ -3690,12 +3857,14 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                 >
                                   {panelText.uniqueValue}
                                 </div>
-                                <div
-                                  className="text-lg md:text-xl text-white/88 mb-4"
-                                  style={{ fontFamily: "var(--font-display)" }}
-                                >
-                                  {localizedFace.uniqueValue.title}
-                                </div>
+                                {localizedFace.uniqueValue.title?.trim() && (
+                                  <div
+                                    className="text-lg md:text-xl text-white/88 mb-4"
+                                    style={{ fontFamily: "var(--font-display)" }}
+                                  >
+                                    {localizedFace.uniqueValue.title}
+                                  </div>
+                                )}
                                 <div className="space-y-3">
                                   {localizedFace.uniqueValue.items.map((item) => (
                                     <div key={item} className="flex items-start gap-2 text-sm text-white/68 leading-relaxed">
@@ -3884,6 +4053,62 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
               )}
             </div>
           </main>
+
+          <AnimatePresence>
+            {mediaPreview && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center"
+                onClick={() => setMediaPreview(null)}
+              >
+                <motion.button
+                  type="button"
+                  className="absolute top-4 right-4 md:top-6 md:right-6 h-10 w-10 rounded-full text-white text-xl leading-none"
+                  style={{
+                    border: `1px solid ${face.color}66`,
+                    background: "rgba(0,0,0,0.55)",
+                  }}
+                  onClick={() => setMediaPreview(null)}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label={isEn ? "Close preview" : "关闭预览"}
+                >
+                  ×
+                </motion.button>
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative flex items-center justify-center w-full h-full max-w-[96vw] max-h-[94vh]"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {mediaPreview.kind === "image" ? (
+                    <img
+                      src={mediaPreview.src}
+                      alt={mediaPreview.title}
+                      className="max-w-full max-h-full w-auto h-auto object-contain"
+                    />
+                  ) : (
+                    <video
+                      src={mediaPreview.src}
+                      poster={mediaPreview.posterSrc ?? undefined}
+                      className="max-w-full max-h-full w-auto h-auto object-contain bg-black"
+                      controls
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  )}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 底部指示器 */}
           <div className="flex items-center justify-center gap-3 pb-8">

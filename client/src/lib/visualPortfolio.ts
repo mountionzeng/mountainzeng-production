@@ -10,6 +10,13 @@ export interface VisualImageItem {
   fileName: string;
 }
 
+export interface VisualMixedMediaItem {
+  id: string;
+  title: string;
+  kind: "image" | "video";
+  fileName: string;
+}
+
 export const DEFAULT_VISUAL_CDN_BASE_URL = "https://mountion.oss-cn-beijing.aliyuncs.com/visual";
 
 const TOTAL_VISUAL_CLIPS = 43;
@@ -35,6 +42,90 @@ export const VISUAL_VIDEO_ITEMS: VisualVideoItem[] = Array.from(
     };
   }
 );
+
+// 中文注释：AIGC 栏目视频，顺序与用户本地目录保持一致（按文件名顺序）
+const AIGC_VIDEO_FILE_NAMES = [
+  "01.mp4",
+  "02.mp4",
+  "03.mp4",
+  "04.mp4",
+  "05.mp4",
+  "06.mp4",
+  "07.mp4",
+  "08.mp4",
+  "11.mp4",
+  "12.mp4",
+  "13.mp4",
+  "14.mp4",
+  "15.mp4",
+  "16.mp4",
+  "17.mp4",
+  "18.mp4",
+  "19.mp4",
+  "20.mp4",
+  "23.mp4",
+  "24.mp4",
+] as const;
+
+export const VISUAL_AIGC_VIDEO_ITEMS: VisualVideoItem[] = AIGC_VIDEO_FILE_NAMES.map((fileName, index) => ({
+  id: `visual-aigc-${index + 1}`,
+  title: `AIGC ${String(index + 1).padStart(2, "0")}`,
+  fileName,
+}));
+
+const TOTAL_CLASSIC_CG_IMAGES = 21;
+const TOTAL_CLASSIC_CG_CLIPS = 43;
+
+// 中文注释：古法视效栏目图片，按本地文件顺序（图片1.png ~ 图片21.png）映射为 01.png ~ 21.png
+const CLASSIC_CG_IMAGE_FILE_NAMES = Array.from({ length: TOTAL_CLASSIC_CG_IMAGES }, (_, index) =>
+  `${String(index + 1).padStart(2, "0")}.png`
+);
+
+// 中文注释：古法视效栏目视频，按本地文件顺序（视频1.mov ~ 视频43.mov）映射为 01.mp4 ~ 43.mp4
+const CLASSIC_CG_VIDEO_FILE_NAMES = Array.from({ length: TOTAL_CLASSIC_CG_CLIPS }, (_, index) =>
+  `${String(index + 1).padStart(2, "0")}.mp4`
+);
+
+const VISUAL_CLASSIC_CG_IMAGE_ITEMS: VisualImageItem[] = CLASSIC_CG_IMAGE_FILE_NAMES.map((fileName, index) => ({
+  id: `visual-classic-cg-image-${index + 1}`,
+  title: `古法图片 ${String(index + 1).padStart(2, "0")}`,
+  fileName,
+}));
+
+export const VISUAL_CLASSIC_CG_VIDEO_ITEMS: VisualVideoItem[] = CLASSIC_CG_VIDEO_FILE_NAMES.map(
+  (fileName, index) => ({
+    id: `visual-classic-cg-video-${index + 1}`,
+    title: `古法视效 ${String(index + 1).padStart(2, "0")}`,
+    fileName,
+  })
+);
+
+// 中文注释：古法栏目的展示顺序按“同编号交叉”：图片1→视频1→图片2→视频2 ...，剩余视频继续顺延
+export const VISUAL_CLASSIC_CG_MEDIA_ITEMS: VisualMixedMediaItem[] = (() => {
+  const merged: VisualMixedMediaItem[] = [];
+  // 中文注释：按用户新需求删除最底部尾部素材，只保留“图片+视频”成对交叉内容
+  const total = Math.min(VISUAL_CLASSIC_CG_IMAGE_ITEMS.length, VISUAL_CLASSIC_CG_VIDEO_ITEMS.length);
+
+  for (let index = 0; index < total; index += 1) {
+    const imageItem = VISUAL_CLASSIC_CG_IMAGE_ITEMS[index];
+    merged.push({
+      id: imageItem.id,
+      title: imageItem.title,
+      kind: "image",
+      fileName: imageItem.fileName,
+    });
+
+    const videoItem = VISUAL_CLASSIC_CG_VIDEO_ITEMS[index];
+    merged.push({
+      id: videoItem.id,
+      title: videoItem.title,
+      kind: "video",
+      fileName: videoItem.fileName,
+    });
+  }
+
+  return merged;
+})();
 
 const rawVisualImageItems: VisualImageItem[] = Array.from(
   { length: TOTAL_VISUAL_IMAGES },
@@ -96,6 +187,42 @@ export function buildVisualVideoUrl(
   const normalized = cdnBaseUrl.trim().replace(/\/+$/, "");
   if (!normalized) return null;
   return `${normalized}/${fileName}`;
+}
+
+export function buildVisualAigcVideoUrl(
+  cdnBaseUrl: string | undefined,
+  fileName: string
+): string {
+  const normalized = (cdnBaseUrl ?? "").trim().replace(/\/+$/, "");
+  if (normalized) {
+    return `${normalized}/aigc/${fileName}`;
+  }
+  // 中文注释：未配置 CDN 时本地兜底，方便开发调试
+  return `/visual-local/aigc/${fileName}`;
+}
+
+export function buildVisualClassicCgVideoUrl(
+  cdnBaseUrl: string | undefined,
+  fileName: string
+): string {
+  const normalized = (cdnBaseUrl ?? "").trim().replace(/\/+$/, "");
+  if (normalized) {
+    return `${normalized}/gufa-cg/${fileName}`;
+  }
+  // 中文注释：未配置 CDN 时本地兜底，方便开发调试
+  return `/visual-local/gufa-cg/${fileName}`;
+}
+
+export function buildVisualClassicCgImageUrl(
+  cdnBaseUrl: string | undefined,
+  fileName: string
+): string {
+  const normalized = (cdnBaseUrl ?? "").trim().replace(/\/+$/, "");
+  if (normalized) {
+    return `${normalized}/gufa-cg/images/${fileName}`;
+  }
+  // 中文注释：未配置 CDN 时本地兜底，方便开发调试
+  return `/visual-local/gufa-cg/images/${fileName}`;
 }
 
 export function buildVisualPosterUrl(
