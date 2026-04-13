@@ -19,8 +19,9 @@ export interface VisualMixedMediaItem {
 
 export const DEFAULT_VISUAL_CDN_BASE_URL = "https://mountion.oss-cn-beijing.aliyuncs.com/visual";
 
-const TOTAL_VISUAL_CLIPS = 43;
-const TOTAL_VISUAL_IMAGES = 67;
+// 中文注释：旧版视觉图库/视频区素材已下线，数量置 0，避免页面继续渲染历史数据
+const TOTAL_VISUAL_CLIPS = 0;
+const TOTAL_VISUAL_IMAGES = 0;
 // 直接按原始文件编号剔除的图片
 const EXCLUDED_VISUAL_IMAGE_NUMBERS = new Set([2]);
 // 布局规则：前两张是独占行，其余按 3 列排布
@@ -43,34 +44,39 @@ export const VISUAL_VIDEO_ITEMS: VisualVideoItem[] = Array.from(
   }
 );
 
-// 中文注释：AIGC 栏目视频，顺序与用户本地目录保持一致（按文件名顺序）
-const AIGC_VIDEO_FILE_NAMES = [
-  "01.mp4",
-  "02.mp4",
-  "03.mp4",
-  "04.mp4",
-  "05.mp4",
-  "06.mp4",
-  "07.mp4",
-  "08.mp4",
-  "11.mp4",
-  "12.mp4",
-  "13.mp4",
-  "14.mp4",
-  "15.mp4",
-  "16.mp4",
-  "17.mp4",
-  "18.mp4",
-  "19.mp4",
-  "20.mp4",
-  "23.mp4",
-  "24.mp4",
-] as const;
+// 中文注释：AIGC 栏目混合媒体，顺序按用户文件夹顺序；其中 02.mov 已转换为 02.mp4
+const AIGC_MEDIA_SEQUENCE: Array<{ kind: "video" | "image"; fileName: string }> = [
+  { kind: "video", fileName: "01.mp4" },
+  { kind: "video", fileName: "02.mp4" },
+  { kind: "video", fileName: "03.mp4" },
+  { kind: "video", fileName: "04.mp4" },
+  { kind: "video", fileName: "05.mp4" },
+  { kind: "video", fileName: "06.mp4" },
+  { kind: "video", fileName: "07.mp4" },
+  { kind: "video", fileName: "08.mp4" },
+  { kind: "image", fileName: "09.png" },
+  { kind: "image", fileName: "10.png" },
+  { kind: "video", fileName: "11.mp4" },
+  { kind: "video", fileName: "12.mp4" },
+  { kind: "video", fileName: "13.mp4" },
+  { kind: "video", fileName: "14.mp4" },
+  { kind: "video", fileName: "15.mp4" },
+  { kind: "video", fileName: "16.mp4" },
+  { kind: "video", fileName: "17.mp4" },
+  { kind: "video", fileName: "18.mp4" },
+  { kind: "video", fileName: "19.mp4" },
+  { kind: "video", fileName: "20.mp4" },
+  { kind: "image", fileName: "21.webp" },
+  { kind: "image", fileName: "22.webp" },
+  { kind: "video", fileName: "23.mp4" },
+  { kind: "video", fileName: "24.mp4" },
+];
 
-export const VISUAL_AIGC_VIDEO_ITEMS: VisualVideoItem[] = AIGC_VIDEO_FILE_NAMES.map((fileName, index) => ({
-  id: `visual-aigc-${index + 1}`,
+export const VISUAL_AIGC_MEDIA_ITEMS: VisualMixedMediaItem[] = AIGC_MEDIA_SEQUENCE.map((item, index) => ({
+  id: `visual-aigc-${item.kind}-${index + 1}`,
   title: `AIGC ${String(index + 1).padStart(2, "0")}`,
-  fileName,
+  kind: item.kind,
+  fileName: item.fileName,
 }));
 
 const TOTAL_CLASSIC_CG_IMAGES = 21;
@@ -100,32 +106,75 @@ export const VISUAL_CLASSIC_CG_VIDEO_ITEMS: VisualVideoItem[] = CLASSIC_CG_VIDEO
   })
 );
 
-// 中文注释：古法栏目的展示顺序按“同编号交叉”：图片1→视频1→图片2→视频2 ...，剩余视频继续顺延
-export const VISUAL_CLASSIC_CG_MEDIA_ITEMS: VisualMixedMediaItem[] = (() => {
-  const merged: VisualMixedMediaItem[] = [];
-  // 中文注释：按用户新需求删除最底部尾部素材，只保留“图片+视频”成对交叉内容
-  const total = Math.min(VISUAL_CLASSIC_CG_IMAGE_ITEMS.length, VISUAL_CLASSIC_CG_VIDEO_ITEMS.length);
+// 中文注释：古法原始本地编号（混合图/视频）：
+// 中文注释：1-5 图、6-33 视频、34-36 图、37-51 视频、52-64 图
+const CLASSIC_CG_LOCAL_IMAGE_NUMBERS = [1, 2, 3, 4, 5, 34, 35, 36, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64];
+const CLASSIC_CG_LOCAL_VIDEO_NUMBERS = [
+  ...Array.from({ length: 28 }, (_, index) => index + 6),
+  ...Array.from({ length: 15 }, (_, index) => index + 37),
+];
+const CLASSIC_CG_LOCAL_IMAGE_NUMBER_SET = new Set(CLASSIC_CG_LOCAL_IMAGE_NUMBERS);
+const CLASSIC_CG_LOCAL_VIDEO_NUMBER_SET = new Set(CLASSIC_CG_LOCAL_VIDEO_NUMBERS);
 
-  for (let index = 0; index < total; index += 1) {
-    const imageItem = VISUAL_CLASSIC_CG_IMAGE_ITEMS[index];
-    merged.push({
-      id: imageItem.id,
-      title: imageItem.title,
+// 中文注释：从 PPT（/Users/yuandai/Desktop/作品的迁移/网站需要的东西/简历/曾翔羽 作品.pptx）识别出的“同内容素材”顺序（按首次出现）
+// 中文注释：未识别到的图片不参与重排，保持原位不动
+const CLASSIC_CG_PPT_RECOGNIZED_LOCAL_ORDER = [
+  5, 4, 6, 9, 8, 7, 13, 11, 12, 14, 16, 15, 17, 18, 19, 22, 20, 21, 24, 23, 25, 26, 30, 27, 29, 28, 32, 33, 31, 37,
+  38, 39, 40, 41, 42, 43, 45, 44, 46, 48, 47, 50, 49, 51, 52, 53, 57, 56, 55, 54,
+];
+const CLASSIC_CG_PPT_RECOGNIZED_SET = new Set(CLASSIC_CG_PPT_RECOGNIZED_LOCAL_ORDER);
+
+function mapClassicCgLocalNumberToMedia(localNumber: number): VisualMixedMediaItem | null {
+  if (CLASSIC_CG_LOCAL_IMAGE_NUMBER_SET.has(localNumber)) {
+    const imageIndex = CLASSIC_CG_LOCAL_IMAGE_NUMBERS.indexOf(localNumber) + 1;
+    return {
+      id: `visual-classic-cg-image-local-${localNumber}`,
+      title: `古法图片 ${String(localNumber).padStart(2, "0")}`,
       kind: "image",
-      fileName: imageItem.fileName,
-    });
-
-    const videoItem = VISUAL_CLASSIC_CG_VIDEO_ITEMS[index];
-    merged.push({
-      id: videoItem.id,
-      title: videoItem.title,
-      kind: "video",
-      fileName: videoItem.fileName,
-    });
+      fileName: `${String(imageIndex).padStart(2, "0")}.png`,
+    };
   }
 
-  return merged;
+  if (CLASSIC_CG_LOCAL_VIDEO_NUMBER_SET.has(localNumber)) {
+    const videoIndex = CLASSIC_CG_LOCAL_VIDEO_NUMBERS.indexOf(localNumber) + 1;
+    return {
+      id: `visual-classic-cg-video-local-${localNumber}`,
+      title: `古法视效 ${String(localNumber).padStart(2, "0")}`,
+      kind: "video",
+      fileName: `${String(videoIndex).padStart(2, "0")}.mp4`,
+    };
+  }
+
+  return null;
+}
+
+// 中文注释：先按本地自然顺序生成，再仅重排“识别到的素材槽位”
+// 中文注释：这样未识别图片保持原位，不会被误处理
+const CLASSIC_CG_LOCAL_BASE_ORDER = Array.from({ length: 64 }, (_, index) => index + 1).filter(
+  (localNumber) =>
+    CLASSIC_CG_LOCAL_IMAGE_NUMBER_SET.has(localNumber) || CLASSIC_CG_LOCAL_VIDEO_NUMBER_SET.has(localNumber)
+);
+
+const CLASSIC_CG_LOCAL_REORDERED_ORDER = (() => {
+  const reordered = [...CLASSIC_CG_LOCAL_BASE_ORDER];
+  const recognizedSlots = CLASSIC_CG_LOCAL_BASE_ORDER.reduce<number[]>((slots, localNumber, index) => {
+    if (CLASSIC_CG_PPT_RECOGNIZED_SET.has(localNumber)) slots.push(index);
+    return slots;
+  }, []);
+
+  recognizedSlots.forEach((slotIndex, index) => {
+    const nextLocalNumber = CLASSIC_CG_PPT_RECOGNIZED_LOCAL_ORDER[index];
+    if (typeof nextLocalNumber === "number") {
+      reordered[slotIndex] = nextLocalNumber;
+    }
+  });
+
+  return reordered;
 })();
+
+export const VISUAL_CLASSIC_CG_MEDIA_ITEMS: VisualMixedMediaItem[] = CLASSIC_CG_LOCAL_REORDERED_ORDER.map(
+  (localNumber) => mapClassicCgLocalNumberToMedia(localNumber)
+).filter((item): item is VisualMixedMediaItem => item !== null);
 
 const rawVisualImageItems: VisualImageItem[] = Array.from(
   { length: TOTAL_VISUAL_IMAGES },
@@ -201,6 +250,18 @@ export function buildVisualAigcVideoUrl(
   return `/visual-local/aigc/${fileName}`;
 }
 
+export function buildVisualAigcImageUrl(
+  cdnBaseUrl: string | undefined,
+  fileName: string
+): string {
+  const normalized = (cdnBaseUrl ?? "").trim().replace(/\/+$/, "");
+  if (normalized) {
+    return `${normalized}/aigc/${fileName}`;
+  }
+  // 中文注释：未配置 CDN 时本地兜底，方便开发调试
+  return `/visual-local/aigc/${fileName}`;
+}
+
 export function buildVisualClassicCgVideoUrl(
   cdnBaseUrl: string | undefined,
   fileName: string
@@ -244,4 +305,27 @@ export function buildVisualImageUrl(
   const normalized = cdnBaseUrl.trim().replace(/\/+$/, "");
   if (!normalized) return null;
   return `${normalized}/images/${fileName}`;
+}
+
+function appendOssProcess(url: string, process: string): string {
+  // 中文注释：本地调试资源不走 OSS 处理参数，避免无效请求
+  if (!url || url.startsWith("/")) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}x-oss-process=${process}`;
+}
+
+export function buildVisualGalleryImageUrl(url: string, width: number): string {
+  // 中文注释：画廊仅加载压缩缩略图，点击预览再看原图，降低首屏体积
+  const safeWidth = Math.max(320, Math.floor(width));
+  return appendOssProcess(url, `image/resize,w_${safeWidth},m_lfit/quality,q_75/format,webp`);
+}
+
+export function buildVisualVideoSnapshotPosterUrl(
+  videoUrl: string,
+  width = 960
+): string | null {
+  // 中文注释：本地路径无法做 OSS 快照，直接返回空
+  if (!videoUrl || videoUrl.startsWith("/")) return null;
+  const safeWidth = Math.max(320, Math.floor(width));
+  return appendOssProcess(videoUrl, `video/snapshot,t_0,f_jpg,w_${safeWidth},m_fast`);
 }

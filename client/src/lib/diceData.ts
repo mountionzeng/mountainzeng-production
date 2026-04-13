@@ -373,7 +373,7 @@ export const DICE_FACES: DiceFace[] = [
             ],
           },
           {
-            title: "微积分与优化长论文",
+            title: "微积分与优化",
             summary: "用于梳理导数、偏导、链式法则与优化理论在训练与控制中的意义。",
             keywords: ["导数", "梯度", "链式法则", "优化"],
             sections: [
@@ -385,7 +385,7 @@ export const DICE_FACES: DiceFace[] = [
             ],
           },
           {
-            title: "概率论长论文",
+            title: "概率论",
             summary: "用于解释随机变量、分布、条件概率与贝叶斯直觉在 AI 生成与推断中的作用。",
             keywords: ["概率分布", "条件概率", "随机变量", "贝叶斯"],
             sections: [
@@ -397,7 +397,7 @@ export const DICE_FACES: DiceFace[] = [
             ],
           },
           {
-            title: "回归分析长论文",
+            title: "回归分析",
             summary: "用于讲清回归问题如何从连续值预测延伸到参数估计与趋势建模。",
             keywords: ["线性回归", "残差", "拟合", "参数估计"],
             sections: [
@@ -700,9 +700,8 @@ export const DICE_FACES: DiceFace[] = [
       upperLanguages: "Java / Python",
       upperAction: "↓ 开发",
       upperTargets: "Web 服务、数据分析、机器学习应用",
-      coreLanguages: "Java、C、C++、Python",
-      supplementMethod:
-        "其他不熟悉的编程语言，通过 Claude + Cursor 快速补足。扎实的架构基础让我能判断 AI 生成代码的质量和适用性。",
+      coreLanguages: "",
+      supplementMethod: "",
     },
     systemCapabilities: [
       {

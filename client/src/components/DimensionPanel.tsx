@@ -13,15 +13,18 @@ import { DICE_FACES } from "@/lib/diceData";
 import type { AlgorithmProject, DiceFace, WorkItem } from "@/lib/diceData";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
 import {
+  buildVisualAigcImageUrl,
   buildVisualAigcVideoUrl,
   buildVisualClassicCgImageUrl,
   buildVisualClassicCgVideoUrl,
+  buildVisualGalleryImageUrl,
   buildVisualImageUrl,
   buildVisualPosterUrl,
+  buildVisualVideoSnapshotPosterUrl,
   buildVisualVideoUrl,
+  VISUAL_AIGC_MEDIA_ITEMS,
   VISUAL_CLASSIC_CG_MEDIA_ITEMS,
   DEFAULT_VISUAL_CDN_BASE_URL,
-  VISUAL_AIGC_VIDEO_ITEMS,
   VISUAL_IMAGE_ITEMS,
   VISUAL_VIDEO_ITEMS,
 } from "@/lib/visualPortfolio";
@@ -217,6 +220,34 @@ function getAigcGalleryClass(index: number): string {
   return "row-span-1";
 }
 
+// 中文注释：古法视效中这些本地编号素材按用户要求使用“最大尺寸”卡片
+// 中文注释：14 已移出大卡规则，用于和 12/13 并列同一排
+const CLASSIC_CG_HERO_LOCAL_NUMBERS = new Set([1, 2, 6, 10, 20, 31, 34, 35, 36, 37, 46, 51, 60, 61]);
+// 中文注释：古法视效第 3/4/5 张图片禁用裁切，完整显示
+const CLASSIC_CG_NO_CROP_IMAGE_NUMBERS = new Set([3, 4, 5]);
+// 中文注释：古法视效第 12/13/14 个视频固定并列一排
+const CLASSIC_CG_VIDEO_ROW_12_14_NUMBERS = new Set([12, 13, 14]);
+
+function getClassicCgGalleryClass(localOrderNo: number, index: number): string {
+  // 中文注释：03/04/05 固定为同一行，避免出现大缝隙
+  if (localOrderNo === 3 || localOrderNo === 4) {
+    // 中文注释：按需求将第三行高度放大 3 倍
+    return "col-span-1 md:col-span-1 row-span-3 md:row-span-3";
+  }
+  if (localOrderNo === 5) {
+    // 中文注释：与 03/04 保持同一排且同等高度（3 倍）
+    return "col-span-2 md:col-span-2 row-span-3 md:row-span-3";
+  }
+  if (CLASSIC_CG_VIDEO_ROW_12_14_NUMBERS.has(localOrderNo)) {
+    return "col-span-1 md:col-span-1 row-span-1 md:row-span-1";
+  }
+  if (CLASSIC_CG_HERO_LOCAL_NUMBERS.has(localOrderNo)) {
+    // 中文注释：按用户要求将“最大尺寸”再放大 2 倍
+    return "col-span-2 md:col-span-4 row-span-4 md:row-span-6";
+  }
+  return getAigcGalleryClass(index);
+}
+
 /* ─── 动画变体 ─── */
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -408,6 +439,11 @@ function ProgrammingLanguageCapability({
   language: PanelLanguage;
 }) {
   const isEn = language === "en";
+  const coreLanguagesText = capability.coreLanguages.trim();
+  const supplementMethodText = capability.supplementMethod.trim();
+  const showCoreLanguages = coreLanguagesText.length > 0;
+  const showSupplementMethod = supplementMethodText.length > 0;
+  const showSummaryBlock = showCoreLanguages || showSupplementMethod;
   return (
     <div
       className="rounded-2xl p-6 md:p-8 space-y-6"
@@ -416,13 +452,6 @@ function ProgrammingLanguageCapability({
         border: `1px solid ${color}28`,
       }}
     >
-      <div
-        className="text-sm tracking-[0.16em] uppercase font-semibold"
-        style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
-      >
-        {isEn ? "PROGRAMMING LANGUAGES" : "编程语言能力"}
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div
           className="rounded-xl p-4"
@@ -446,16 +475,22 @@ function ProgrammingLanguageCapability({
         </div>
       </div>
 
-      <div className="space-y-3 text-sm leading-relaxed">
-        <p className="text-white/72">
-          <span style={{ color: `${color}D8` }}>{isEn ? "Core languages: " : "核心语言："}</span>
-          {capability.coreLanguages}
-        </p>
-        <p className="text-white/62">
-          <span style={{ color: `${color}D8` }}>{isEn ? "Supplement strategy: " : "补足方式："}</span>
-          {capability.supplementMethod}
-        </p>
-      </div>
+      {showSummaryBlock && (
+        <div className="space-y-3 text-sm leading-relaxed">
+          {showCoreLanguages && (
+            <p className="text-white/72">
+              <span style={{ color: `${color}D8` }}>{isEn ? "Core languages: " : "核心语言："}</span>
+              {coreLanguagesText}
+            </p>
+          )}
+          {showSupplementMethod && (
+            <p className="text-white/62">
+              <span style={{ color: `${color}D8` }}>{isEn ? "Supplement strategy: " : "补足方式："}</span>
+              {supplementMethodText}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -647,34 +682,6 @@ function SystemAbilityTree({ treeText, color, language }: { treeText: string; co
       />
 
       <div className="relative">
-        <div className="flex items-center justify-between gap-3 mb-5 md:mb-6">
-          <div>
-            <div
-              className="text-[11px] tracking-[0.18em] uppercase font-semibold mb-1"
-              style={{ color: `${color}C9`, fontFamily: "var(--font-label)" }}
-            >
-              system map
-            </div>
-            <h3 className="text-lg md:text-xl font-semibold text-white/92" style={{ fontFamily: "var(--font-display)" }}>
-              {isEn ? "System capability hierarchy" : title}
-            </h3>
-            <div className="text-[11px] md:text-xs mt-1 tracking-[0.08em] text-white/55" style={{ fontFamily: "var(--font-label)" }}>
-              COMPUTER SCIENCE CURRICULUM HIERARCHY
-            </div>
-          </div>
-          <div
-            className="px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.08em]"
-            style={{
-              color: `${color}EA`,
-              background: `${color}1F`,
-              border: `1px solid ${color}45`,
-              fontFamily: "var(--font-label)",
-            }}
-          >
-            {isEn ? `${layers.length} layers` : `${layers.length} 层结构`}
-          </div>
-        </div>
-
         <div className="space-y-4 md:space-y-5">
           {/* 中文注释：按需求改为单列结构，先显示四层按钮，不再左右分栏 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -2874,6 +2881,113 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   const visibleVisualVideos = VISUAL_VIDEO_ITEMS.slice(0, visualVideoVisibleCount);
   const hasMoreVisualImages = visualImageVisibleCount < VISUAL_IMAGE_ITEMS.length;
   const hasMoreVisualVideos = visualVideoVisibleCount < VISUAL_VIDEO_ITEMS.length;
+  // 中文注释：旧版视觉图库/视频区仅在仍有旧数据时展示；现在默认关闭
+  const hasLegacyVisualMedia = VISUAL_IMAGE_ITEMS.length > 0 || VISUAL_VIDEO_ITEMS.length > 0;
+  const getOrderedMediaNo = (fileName: string): number => {
+    const matched = fileName.match(/^(\d+)/);
+    return matched ? Number(matched[1]) : 0;
+  };
+  const aigcMediaMap = new Map(
+    [...VISUAL_AIGC_MEDIA_ITEMS].sort((a, b) => getOrderedMediaNo(a.fileName) - getOrderedMediaNo(b.fileName)).map((item) => [
+      getOrderedMediaNo(item.fileName),
+      item,
+    ])
+  );
+
+  const renderAigcCard = (
+    orderNo: number,
+    columnClassName: string,
+    shape: "rect" | "square" = "rect"
+  ) => {
+    const item = aigcMediaMap.get(orderNo);
+    if (!item) return null;
+
+    const aspectClass = shape === "square" ? "aspect-square" : "aspect-[16/9]";
+    const baseClassName = `${columnClassName} ${aspectClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`;
+
+    if (item.kind === "image") {
+      const imageUrl = buildVisualAigcImageUrl(visualCdnBaseUrl, item.fileName);
+      const imageThumbUrl = buildVisualGalleryImageUrl(imageUrl, shape === "square" ? 720 : 960);
+      return (
+        <div
+          key={item.id}
+          className={baseClassName}
+          style={{
+            background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+          }}
+          onClick={() =>
+            openMediaPreview({
+              kind: "image",
+              src: imageUrl,
+              title: item.title,
+            })
+          }
+        >
+          <img
+            src={imageThumbUrl}
+            alt={item.title}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+          <div
+            className="absolute inset-0 z-10 pointer-events-none"
+            style={{
+              background: "linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.22))",
+            }}
+          />
+        </div>
+      );
+    }
+
+    const videoUrl = buildVisualAigcVideoUrl(visualCdnBaseUrl, item.fileName);
+    const videoPosterUrl = buildVisualVideoSnapshotPosterUrl(videoUrl, 960);
+    const isVideoHovered = hoveredVisualVideoId === item.id;
+    return (
+      <div
+        key={item.id}
+        className={baseClassName}
+        style={{
+          background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
+        }}
+        onMouseEnter={() => {
+          setHoveredVisualVideoId(item.id);
+          playVisualVideoPreview(item.id);
+        }}
+        onMouseLeave={() => {
+          setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
+          stopVisualVideoPreview(item.id);
+        }}
+        onClick={() =>
+          openMediaPreview({
+            kind: "video",
+            src: videoUrl,
+            title: item.title,
+          })
+        }
+      >
+        <video
+          ref={(el) => {
+            visualVideoRefs.current[item.id] = el;
+          }}
+          className="h-full w-full object-cover"
+          preload="none"
+          playsInline
+          muted
+          loop
+          src={videoUrl}
+          poster={videoPosterUrl ?? undefined}
+        />
+        <div
+          className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
+          style={{
+            opacity: isVideoHovered ? 0 : 1,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
+          }}
+        />
+      </div>
+    );
+  };
 
   useEffect(() => {
     return () => {
@@ -3128,59 +3242,58 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         </div>
                       )}
 
-                      {/* 中文注释：按需求在 FEATURED PROJECTS 下方新增 AIGC 视频栏目 */}
-                      {VISUAL_AIGC_VIDEO_ITEMS.length > 0 && (
+                      {/* 中文注释：AIGC 栏目按编号分组排版，满足用户指定的每组行数/面积/正方形规则 */}
+                      {VISUAL_AIGC_MEDIA_ITEMS.length > 0 && (
                         <div className="mb-8">
                           <SectionTitle title="AIGC" color={face.color} />
-                          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-3 md:gap-4">
-                            {VISUAL_AIGC_VIDEO_ITEMS.map((item, index) => {
-                              const videoUrl = buildVisualAigcVideoUrl(visualCdnBaseUrl, item.fileName);
-                              const isVideoHovered = hoveredVisualVideoId === item.id;
-                              const galleryClass = getAigcGalleryClass(index);
-                              return (
-                                <div
-                                  key={item.id}
-                                  className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
-                                  style={{
-                                    background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
-                                  }}
-                                  onMouseEnter={() => {
-                                    setHoveredVisualVideoId(item.id);
-                                    playVisualVideoPreview(item.id);
-                                  }}
-                                  onMouseLeave={() => {
-                                    setHoveredVisualVideoId((prev) => (prev === item.id ? null : prev));
-                                    stopVisualVideoPreview(item.id);
-                                  }}
-                                  onClick={() =>
-                                    openMediaPreview({
-                                      kind: "video",
-                                      src: videoUrl,
-                                      title: item.title,
-                                    })
-                                  }
-                                >
-                                  <video
-                                    ref={(el) => {
-                                      visualVideoRefs.current[item.id] = el;
-                                    }}
-                                    className="h-full w-full object-cover"
-                                    preload="metadata"
-                                    playsInline
-                                    muted
-                                    loop
-                                    src={videoUrl}
-                                  />
-                                    <div
-                                      className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
-                                      style={{
-                                        opacity: isVideoHovered ? 0 : 1,
-                                        background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
-                                      }}
-                                    />
-                                </div>
-                              );
-                            })}
+                          <div className="space-y-4 md:space-y-5">
+                            {/* 01-02 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(1, "md:col-span-6")}
+                              {renderAigcCard(2, "md:col-span-6")}
+                            </div>
+
+                            {/* 03-06：同一行；03更大；05正方形 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(3, "md:col-span-5", "rect")}
+                              {renderAigcCard(4, "md:col-span-3", "rect")}
+                              {renderAigcCard(5, "md:col-span-2", "square")}
+                              {renderAigcCard(6, "md:col-span-2", "rect")}
+                            </div>
+
+                            {/* 07-10：按需求缩小一档，四张同一行展示 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(7, "md:col-span-3", "rect")}
+                              {renderAigcCard(8, "md:col-span-3", "rect")}
+                              {renderAigcCard(9, "md:col-span-3", "rect")}
+                              {renderAigcCard(10, "md:col-span-3", "rect")}
+                            </div>
+
+                            {/* 11-15：同两行；11更大；12正方形 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(11, "md:col-span-6", "rect")}
+                              {renderAigcCard(12, "md:col-span-3", "square")}
+                              {renderAigcCard(13, "md:col-span-3", "rect")}
+                              {renderAigcCard(14, "md:col-span-5 md:col-start-2", "rect")}
+                              {renderAigcCard(15, "md:col-span-5", "rect")}
+                            </div>
+
+                            {/* 16-21：同三行；18正方形；19/20更大 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(16, "md:col-span-7", "rect")}
+                              {renderAigcCard(17, "md:col-span-5", "rect")}
+                              {renderAigcCard(18, "md:col-span-4", "square")}
+                              {renderAigcCard(19, "md:col-span-8", "rect")}
+                              {renderAigcCard(20, "md:col-span-8", "rect")}
+                              {renderAigcCard(21, "md:col-span-4", "rect")}
+                            </div>
+
+                            {/* 22-24：同一行；23正方形 */}
+                            <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-2">
+                              {renderAigcCard(22, "md:col-span-4", "rect")}
+                              {renderAigcCard(23, "md:col-span-4", "square")}
+                              {renderAigcCard(24, "md:col-span-4", "rect")}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -3189,12 +3302,15 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                       {VISUAL_CLASSIC_CG_MEDIA_ITEMS.length > 0 && (
                         <div className="mb-8">
                           <SectionTitle title="古法视效" color={face.color} />
-                          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-3 md:gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-1 md:gap-1">
                             {VISUAL_CLASSIC_CG_MEDIA_ITEMS.map((item, index) => {
-                              const galleryClass = getAigcGalleryClass(index);
+                              const localOrderNo = index + 1;
+                              const galleryClass = getClassicCgGalleryClass(localOrderNo, index);
 
                               if (item.kind === "image") {
                                 const imageUrl = buildVisualClassicCgImageUrl(visualCdnBaseUrl, item.fileName);
+                                const imageThumbUrl = buildVisualGalleryImageUrl(imageUrl, 960);
+                                const shouldNoCrop = CLASSIC_CG_NO_CROP_IMAGE_NUMBERS.has(localOrderNo);
                                 return (
                                   <div
                                     key={item.id}
@@ -3211,10 +3327,11 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                     }
                                   >
                                     <img
-                                      src={imageUrl}
+                                      src={imageThumbUrl}
                                       alt={item.title}
                                       loading="lazy"
-                                      className="h-full w-full object-contain"
+                                      decoding="async"
+                                      className={`h-full w-full ${shouldNoCrop ? "object-contain" : "object-cover"}`}
                                     />
                                     <div
                                       className="absolute inset-0 z-10 pointer-events-none"
@@ -3227,6 +3344,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                               }
 
                               const videoUrl = buildVisualClassicCgVideoUrl(visualCdnBaseUrl, item.fileName);
+                              const videoPosterUrl = buildVisualVideoSnapshotPosterUrl(videoUrl, 960);
                               const isVideoHovered = hoveredVisualVideoId === item.id;
                               return (
                                 <div
@@ -3256,19 +3374,20 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                       visualVideoRefs.current[item.id] = el;
                                     }}
                                     className="h-full w-full object-cover"
-                                    preload="metadata"
+                                    preload="none"
                                     playsInline
                                     muted
                                     loop
                                     src={videoUrl}
+                                    poster={videoPosterUrl ?? undefined}
                                   />
                                   <div
                                     className="absolute inset-0 z-10 transition-opacity duration-300 pointer-events-none"
                                     style={{
-                                        opacity: isVideoHovered ? 0 : 1,
-                                        background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
-                                      }}
-                                    />
+                                      opacity: isVideoHovered ? 0 : 1,
+                                      background: "linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.52))",
+                                    }}
+                                  />
                                 </div>
                               );
                             })}
@@ -3280,8 +3399,9 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                       <div className="h-[1px] mt-8 mb-4" style={{ background: `linear-gradient(90deg, transparent, ${face.color}30, transparent)` }} />
                     </div>
 
-                    {/* 图片和视频区域 — 完全保留原始代码 */}
-                    <div>
+                    {/* 中文注释：旧版视觉图库/视频区已下线，避免继续显示历史素材 */}
+                    {hasLegacyVisualMedia && (
+                      <div>
                       {!hasVisualCdn && (
                         <div
                           className="mb-5 rounded-xl border px-4 py-3 text-sm text-white/70"
@@ -3523,7 +3643,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                         visualVideoRefs.current[item.id] = el;
                                       }}
                                       className="h-full w-full object-cover"
-                                      preload="metadata"
+                                      preload="none"
                                       playsInline
                                       muted
                                       loop
@@ -3587,7 +3707,8 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           </div>
                         )}
                       </div>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -4061,17 +4182,22 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
+                // 中文注释：遮罩层点击即关闭，作为移动端兜底退出手势
                 className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center"
                 onClick={() => setMediaPreview(null)}
               >
                 <motion.button
                   type="button"
-                  className="absolute top-4 right-4 md:top-6 md:right-6 h-10 w-10 rounded-full text-white text-xl leading-none"
+                  // 中文注释：提高关闭按钮层级，避免被媒体容器盖住导致无法点击
+                  className="absolute z-30 top-4 right-4 md:top-6 md:right-6 h-10 w-10 rounded-full text-white text-xl leading-none"
                   style={{
                     border: `1px solid ${face.color}66`,
                     background: "rgba(0,0,0,0.55)",
                   }}
-                  onClick={() => setMediaPreview(null)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setMediaPreview(null);
+                  }}
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label={isEn ? "Close preview" : "关闭预览"}
@@ -4084,20 +4210,21 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="relative flex items-center justify-center w-full h-full max-w-[96vw] max-h-[94vh]"
+                  // 中文注释：不再占满全屏，避免内容容器拦截整个遮罩点击
+                  className="relative z-10 flex items-center justify-center max-w-[92vw] max-h-[84vh]"
                   onClick={(event) => event.stopPropagation()}
                 >
                   {mediaPreview.kind === "image" ? (
                     <img
                       src={mediaPreview.src}
                       alt={mediaPreview.title}
-                      className="max-w-full max-h-full w-auto h-auto object-contain"
+                      className="max-w-[92vw] max-h-[84vh] w-auto h-auto object-contain"
                     />
                   ) : (
                     <video
                       src={mediaPreview.src}
                       poster={mediaPreview.posterSrc ?? undefined}
-                      className="max-w-full max-h-full w-auto h-auto object-contain bg-black"
+                      className="max-w-[92vw] max-h-[84vh] w-auto h-auto object-contain bg-black"
                       controls
                       autoPlay
                       loop
