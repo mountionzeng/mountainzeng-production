@@ -603,8 +603,8 @@ export const DICE_FACES: DiceFace[] = [
   // ── 04 系统 ──────────────────────────────────────────────────────────────
   {
     id: 4,
-    title: "系统",
-    tabLabel: "系统",
+    title: "计算机系统",
+    tabLabel: "计算机系统",
     subtitle: "COMPUTER SYSTEM",
     color: "#A855F7",
     icon: "Settings",
