@@ -25,6 +25,7 @@ const MOBILE_HOME_DICE_TUNING = {
   offsetY: -15,
   scale: 1.61,
 };
+const MOBILE_HOME_LINKED_OFFSET_Y = 15;
 
 const HOME_FACE_COPY_EN: Record<number, HomeFaceCopy> = {
   1: {
@@ -82,10 +83,6 @@ export default function HomeMobile() {
   const [selectedFace, setSelectedFace] = useState<number | null>(null);
   const [showDimension, setShowDimension] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [mobileTune, setMobileTune] = useState(() => ({
-    diceScale: MOBILE_HOME_DICE_TUNING.scale,
-    linkedOffsetY: 15,
-  }));
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const localizedUi = useMemo(
@@ -237,8 +234,8 @@ export default function HomeMobile() {
   );
 
   const activeFaceCopy = getLocalizedFaceText(activeFace);
-  const titleOffsetY = MOBILE_HOME_TITLE_TUNING.offsetY + mobileTune.linkedOffsetY;
-  const diceOffsetY = MOBILE_HOME_DICE_TUNING.offsetY + mobileTune.linkedOffsetY;
+  const titleOffsetY = MOBILE_HOME_TITLE_TUNING.offsetY + MOBILE_HOME_LINKED_OFFSET_Y;
+  const diceOffsetY = MOBILE_HOME_DICE_TUNING.offsetY + MOBILE_HOME_LINKED_OFFSET_Y;
 
   return (
     <div className="min-h-screen bg-black relative overflow-x-hidden">
@@ -335,7 +332,12 @@ export default function HomeMobile() {
         >
           <section className="mt-0.5 shrink-0">
             <div className="mx-auto w-full max-w-[420px] h-[210px] flex items-center justify-center overflow-visible">
-              <div style={{ transform: `translateY(${diceOffsetY}px) scale(${mobileTune.diceScale})`, transformOrigin: "center center" }}>
+              <div
+                style={{
+                  transform: `translateY(${diceOffsetY}px) scale(${MOBILE_HOME_DICE_TUNING.scale})`,
+                  transformOrigin: "center center",
+                }}
+              >
                 <Dice3D
                   onFaceSelected={handleFaceSelected}
                   isRolling={isRolling}
@@ -434,64 +436,6 @@ export default function HomeMobile() {
           />
         )}
       </AnimatePresence>
-
-      {/* 中文注释：移动端首页调参滑轮，用于快速微调骰子大小和“骰子+标题”共同上下位移 */}
-      <section
-        className="fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-40 rounded-xl border border-white/20 bg-black/75 p-3 text-white/85 backdrop-blur-md"
-        style={{ maxWidth: 420, marginInline: "auto" }}
-      >
-        <div className="mb-2 flex items-center justify-between text-[11px] text-white/70">
-          <span>首页滑轮</span>
-          <span>实时调参</span>
-        </div>
-
-        <label className="block text-[12px]">
-          骰子大小: <span className="text-white">{mobileTune.diceScale.toFixed(2)}</span>
-          <input
-            type="range"
-            min={0.8}
-            max={2.4}
-            step={0.01}
-            value={mobileTune.diceScale}
-            onChange={(event) => {
-              const next = Number.parseFloat(event.currentTarget.value);
-              setMobileTune((prev) => ({ ...prev, diceScale: next }));
-            }}
-            className="mt-1 w-full accent-violet-400"
-          />
-        </label>
-
-        <label className="mt-2 block text-[12px]">
-          骰子+标题 Y 位移: <span className="text-white">{mobileTune.linkedOffsetY}px</span>
-          <input
-            type="range"
-            min={-220}
-            max={220}
-            step={1}
-            value={mobileTune.linkedOffsetY}
-            onChange={(event) => {
-              const next = Number.parseInt(event.currentTarget.value, 10);
-              setMobileTune((prev) => ({ ...prev, linkedOffsetY: next }));
-            }}
-            className="mt-1 w-full accent-cyan-400"
-          />
-        </label>
-
-        <pre className="mt-2 rounded-md bg-white/5 p-2 text-[11px] leading-4 text-white/75 overflow-x-auto">
-{JSON.stringify(
-  {
-    mobileHome: {
-      dice: {
-        scale: Number(mobileTune.diceScale.toFixed(2)),
-      },
-      linkedOffsetY: mobileTune.linkedOffsetY,
-    },
-  },
-  null,
-  2
-)}
-        </pre>
-      </section>
     </div>
   );
 }
