@@ -345,6 +345,7 @@ export default function HomeMobile() {
                   onTargetFaceSettled={handleTargetFaceSettled}
                   targetFace={targetFace}
                   activeColor={activeFace.color}
+                  performanceMode="lite"
                 />
               </div>
             </div>

@@ -28,6 +28,7 @@ interface Dice3DProps {
   onTargetFaceSettled?: () => void;
   targetFace?: number;
   activeColor?: string;
+  performanceMode?: "full" | "lite";
 }
 
 const IDLE_RESUME_DELAY_MS = 300;
@@ -47,7 +48,10 @@ export default function Dice3D({
   onTargetFaceSettled,
   targetFace,
   activeColor,
+  performanceMode = "full",
 }: Dice3DProps) {
+  // 中文注释：lite 模式用于移动端性能优化，减少实时重绘和重型滤镜开销。
+  const isLiteMode = performanceMode === "lite";
   const cubeSize = "clamp(46.8px, 6.48vw, 75.6px)";
   const cubeRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: -20, y: 25 });
@@ -63,6 +67,7 @@ export default function Dice3D({
 
   // Idle 悬浮动画
   useEffect(() => {
+    if (isLiteMode) return;
     if (!isIdle || isRolling) return;
     let t = 0;
     const baseX = -20;
@@ -77,7 +82,7 @@ export default function Dice3D({
     };
     idleRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(idleRef.current);
-  }, [isIdle, isRolling]);
+  }, [isIdle, isLiteMode, isRolling]);
 
   const clearSpinEndTimeout = useCallback(() => {
     if (spinEndTimeoutRef.current) {
@@ -204,6 +209,10 @@ export default function Dice3D({
 
   useEffect(() => {
     if (!isRolling) {
+      if (isLiteMode) {
+        setIsIdle(false);
+        return;
+      }
       if (!shouldResumeIdleRef.current) {
         setIsIdle(false);
         return;
@@ -213,7 +222,7 @@ export default function Dice3D({
       }, IDLE_RESUME_DELAY_MS);
       return () => clearTimeout(timer);
     }
-  }, [isRolling]);
+  }, [isLiteMode, isRolling]);
 
   return (
     <div className="flex flex-col items-center select-none gap-10">
@@ -229,17 +238,21 @@ export default function Dice3D({
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none transition-all duration-1000"
           style={{
-            width: isRolling ? "600px" : "500px",
-            height: isRolling ? "600px" : "500px",
+            width: isLiteMode ? (isRolling ? "360px" : "320px") : isRolling ? "600px" : "500px",
+            height: isLiteMode ? (isRolling ? "360px" : "320px") : isRolling ? "600px" : "500px",
             background: isRolling
-              ? "radial-gradient(circle, rgba(139,92,246,0.12) 0%, rgba(244,114,182,0.065) 40%, transparent 70%)"
-              : "radial-gradient(circle, rgba(139,92,246,0.065) 0%, rgba(244,114,182,0.032) 40%, transparent 70%)",
-            filter: `blur(${isRolling ? 60 : 50}px)`,
+              ? isLiteMode
+                ? "radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(244,114,182,0.04) 40%, transparent 70%)"
+                : "radial-gradient(circle, rgba(139,92,246,0.12) 0%, rgba(244,114,182,0.065) 40%, transparent 70%)"
+              : isLiteMode
+                ? "radial-gradient(circle, rgba(139,92,246,0.045) 0%, rgba(244,114,182,0.02) 40%, transparent 70%)"
+                : "radial-gradient(circle, rgba(139,92,246,0.065) 0%, rgba(244,114,182,0.032) 40%, transparent 70%)",
+            filter: `blur(${isLiteMode ? (isRolling ? 34 : 26) : isRolling ? 60 : 50}px)`,
           }}
         />
 
         {/* 特定页面的彩色光晕 */}
-        {activeColor && !isRolling && (
+        {activeColor && !isRolling && !isLiteMode && (
           <div
             key={activeColor}
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
@@ -259,11 +272,11 @@ export default function Dice3D({
           className="absolute left-1/2 -translate-x-1/2 pointer-events-none transition-all duration-700"
           style={{
             bottom: "-60px",
-            width: isRolling ? "180px" : "280px",
-            height: "80px",
+            width: isLiteMode ? (isRolling ? "140px" : "190px") : isRolling ? "180px" : "280px",
+            height: isLiteMode ? "64px" : "80px",
             background: "radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)",
-            filter: "blur(25px)",
-            opacity: isRolling ? 0.4 : 0.8,
+            filter: `blur(${isLiteMode ? 16 : 25}px)`,
+            opacity: isRolling ? 0.4 : isLiteMode ? 0.62 : 0.8,
           }}
         />
 
@@ -315,7 +328,7 @@ export default function Dice3D({
                 <div
                   key={face.id}
                   className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${
-                    isRolling ? "" : "backdrop-blur-sm"
+                    isRolling || isLiteMode ? "" : "backdrop-blur-sm"
                   }`}
                   style={{
                     transform: transforms[i],
@@ -345,19 +358,21 @@ export default function Dice3D({
                   {/* 中心光效 */}
                   <div className="relative flex items-center justify-center">
                     <div
-                      className="absolute rounded-full animate-pulse"
+                      className={`absolute rounded-full ${isLiteMode ? "" : "animate-pulse"}`}
                       style={{
-                        width: "90px",
-                        height: "90px",
-                        background: `radial-gradient(circle, rgba(${r},${g},${b},0.16) 0%, rgba(${r},${g},${b},0.04) 50%, transparent 70%)`,
-                        filter: "blur(20px)",
+                        width: isLiteMode ? "72px" : "90px",
+                        height: isLiteMode ? "72px" : "90px",
+                        background: `radial-gradient(circle, rgba(${r},${g},${b},${isLiteMode ? 0.1 : 0.16}) 0%, rgba(${r},${g},${b},${isLiteMode ? 0.03 : 0.04}) 50%, transparent 70%)`,
+                        filter: `blur(${isLiteMode ? 12 : 20}px)`,
                       }}
                     />
                     <span
                       className="relative text-4xl sm:text-5xl md:text-6xl"
                       style={{
                         color: face.color,
-                        filter: `drop-shadow(0 0 15px rgba(${r},${g},${b},0.5)) drop-shadow(0 0 30px rgba(${r},${g},${b},0.24))`,
+                        filter: isLiteMode
+                          ? `drop-shadow(0 0 8px rgba(${r},${g},${b},0.36))`
+                          : `drop-shadow(0 0 15px rgba(${r},${g},${b},0.5)) drop-shadow(0 0 30px rgba(${r},${g},${b},0.24))`,
                       }}
                     >
                       {renderIcon(face.icon, { className: "w-10 h-10" })}
