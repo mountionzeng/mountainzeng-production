@@ -340,9 +340,9 @@ export const DICE_FACES: DiceFace[] = [
   // ── 03 算法 ──────────────────────────────────────────────────────────────
   {
     id: 3,
-    title: "算法",
-    tabLabel: "算法",
-    subtitle: "ALGORITHM",
+    title: "Ai架构",
+    tabLabel: "Ai架构",
+    subtitle: "ARCHITECTURE",
     color: "#8B5CF6",
     icon: "Binary",
 
