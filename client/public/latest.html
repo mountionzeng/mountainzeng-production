@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Loading latest...</title>
+  </head>
+  <body>
+    <script>
+      // 中文注释：生成唯一查询参数，尽量绕过微信内置浏览器缓存，跳转到最新首页
+      const ts = Date.now();
+      location.replace(`/?v=${ts}`);
+    </script>
+  </body>
+</html>
