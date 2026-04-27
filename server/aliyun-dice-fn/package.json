@@ -1,0 +1,15 @@
+{
+  "name": "mountain-dice-fn",
+  "version": "1.0.0",
+  "description": "Aliyun FC HTTP handler for forged dice sync",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ali-oss": "^6.20.0"
+  },
+  "scripts": {
+    "pack": "rm -f dist.zip && zip -r dist.zip index.js node_modules package.json"
+  }
+}

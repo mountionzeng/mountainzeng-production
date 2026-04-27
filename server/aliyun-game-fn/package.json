@@ -1,0 +1,11 @@
+{
+  "name": "mountain-game-fn",
+  "version": "1.0.0",
+  "description": "Aliyun FC HTTP handler — LLM chat proxy (Anthropic streaming)",
+  "main": "dist/index.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "esbuild handler.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/index.js",
+    "pack": "npm run build && cd dist && rm -f ../game-fn.zip && zip -r ../game-fn.zip index.js && cd .."
+  }
+}

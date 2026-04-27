@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import { gameApiHandler } from "./game-language-model/router";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +10,15 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // 中文注释：把小游戏 API handler 挂在静态资源之前，避免被 SPA fallback 拦截
+  app.use((req, res, next) => {
+    if (req.url?.startsWith("/api/")) {
+      gameApiHandler(req, res, next);
+      return;
+    }
+    next();
+  });
 
   // Serve static files from dist/public in production
   const staticPath =

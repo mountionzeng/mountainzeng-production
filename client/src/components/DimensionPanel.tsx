@@ -11,6 +11,9 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { DICE_FACES } from "@/lib/diceData";
 import type { AlgorithmProject, DiceFace, WorkItem } from "@/lib/diceData";
+import MiniDiceScene from "@/components/MiniDiceScene";
+import TraitChatPanel from "@/components/TraitChatPanel";
+import type { TraitCard } from "@shared/traitCard";
 import { ArrowLeft, Dices, Sparkles, ExternalLink, ChevronRight, ChevronDown } from "lucide-react";
 import {
   buildVisualAigcImageUrl,
@@ -55,7 +58,7 @@ type MediaPreviewState = {
 const FACE_TITLE_EN: Record<number, string> = {
   1: "Visual",
   2: "Product management",
-  3: "Algorithm",
+  3: "Architecture",
   4: "Computer system",
   5: "Trans-disciplinarity",
   6: "Future",
@@ -79,8 +82,8 @@ const PANEL_FACE_META_EN: Record<
     skills: ["Product execution", "Workflow design", "Tooling", "Cross-functional delivery"],
   },
   3: {
-    title: "Algorithm",
-    subtitle: "ALGORITHM",
+    title: "Architecture",
+    subtitle: "ARCHITECTURE",
   },
   4: {
     title: "Computer system",
@@ -204,18 +207,21 @@ function getVisualImageDisplayRow(displayIndex: number): number {
 }
 
 // 中文注释：AIGC 画廊拼贴布局（mosaic），根据序号分配不同跨行跨列组合
-function getAigcGalleryClass(index: number): string {
+function getAigcGalleryClass(index: number, isMobile: boolean = false): string {
+  if (isMobile) {
+    return "col-span-1 row-span-1";
+  }
   if (index === 0) {
-    return "col-span-2 md:col-span-2 row-span-2 md:row-span-3";
+    return "md:col-span-2 md:row-span-3";
   }
   if (index === 1) {
-    return "col-span-2 md:col-span-2 row-span-2";
+    return "md:col-span-2 md:row-span-2";
   }
   if (index % 7 === 0) {
-    return "col-span-2 md:col-span-2 row-span-2";
+    return "md:col-span-2 md:row-span-2";
   }
   if (index % 3 === 0) {
-    return "row-span-2";
+    return "md:row-span-2";
   }
   return "row-span-1";
 }
@@ -228,24 +234,28 @@ const CLASSIC_CG_NO_CROP_IMAGE_NUMBERS = new Set([3, 4, 5]);
 // 中文注释：古法视效第 12/13/14 个视频固定并列一排
 const CLASSIC_CG_VIDEO_ROW_12_14_NUMBERS = new Set([12, 13, 14]);
 
-function getClassicCgGalleryClass(localOrderNo: number, index: number): string {
+function getClassicCgGalleryClass(localOrderNo: number, index: number, isMobile: boolean = false): string {
+  if (isMobile) {
+    // 中文注释：移动端统一卡片尺寸，避免复杂跨行导致排版跳动
+    return "col-span-1 row-span-1";
+  }
   // 中文注释：03/04/05 固定为同一行，避免出现大缝隙
   if (localOrderNo === 3 || localOrderNo === 4) {
     // 中文注释：按需求将第三行高度放大 3 倍
-    return "col-span-1 md:col-span-1 row-span-3 md:row-span-3";
+    return "md:col-span-1 md:row-span-3";
   }
   if (localOrderNo === 5) {
     // 中文注释：与 03/04 保持同一排且同等高度（3 倍）
-    return "col-span-2 md:col-span-2 row-span-3 md:row-span-3";
+    return "md:col-span-2 md:row-span-3";
   }
   if (CLASSIC_CG_VIDEO_ROW_12_14_NUMBERS.has(localOrderNo)) {
-    return "col-span-1 md:col-span-1 row-span-1 md:row-span-1";
+    return "md:col-span-1 md:row-span-1";
   }
   if (CLASSIC_CG_HERO_LOCAL_NUMBERS.has(localOrderNo)) {
     // 中文注释：按用户要求将“最大尺寸”再放大 2 倍
-    return "col-span-2 md:col-span-4 row-span-4 md:row-span-6";
+    return "md:col-span-4 md:row-span-6";
   }
-  return getAigcGalleryClass(index);
+  return getAigcGalleryClass(index, false);
 }
 
 /* ─── 动画变体 ─── */
@@ -2755,9 +2765,12 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   const [isRerolling, setIsRerolling] = useState(false);
   const [hoveredVisualVideoId, setHoveredVisualVideoId] = useState<string | null>(null);
   const [mediaPreview, setMediaPreview] = useState<MediaPreviewState>(null);
+  const [mediaPreviewOpenedAt, setMediaPreviewOpenedAt] = useState(0);
   const [visualVideoVisibleCount, setVisualVideoVisibleCount] = useState(VISUAL_VIDEO_PAGE_SIZE);
   const [visualImageVisibleCount, setVisualImageVisibleCount] = useState(VISUAL_IMAGE_PAGE_SIZE);
   const [browserZoomScale, setBrowserZoomScale] = useState(1);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [miniGameCollectedCards, setMiniGameCollectedCards] = useState<TraitCard[]>([]);
   const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const visualVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -2848,18 +2861,12 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   const localizedFacePatch = isEn ? PANEL_FACE_CONTENT_EN[face.id] : undefined;
   const localizedFace = localizedFacePatch ? ({ ...face, ...localizedFacePatch } as DiceFace) : face;
   const localizedPaperSpotlightItems = isEn ? ALGORITHM_PAPER_SPOTLIGHT_ITEMS_EN : ALGORITHM_PAPER_SPOTLIGHT_ITEMS;
-  const localizedTitle = isEn ? faceMetaEn?.title ?? localizedFace.title : face.title;
-  const localizedSubtitle = isEn ? faceMetaEn?.subtitle ?? localizedFace.subtitle : face.subtitle;
   const localizedCoreStatement = isEn ? faceMetaEn?.coreStatement ?? localizedFace.coreStatement : face.coreStatement;
   const localizedDescription = isEn ? faceMetaEn?.description ?? localizedFace.description : face.description;
   const localizedQuote = isEn ? faceMetaEn?.quote ?? localizedFace.quote : face.quote;
   const localizedSkills = isEn ? faceMetaEn?.skills ?? localizedFace.skills : face.skills;
   const localizedCoreCompetence = isEn ? faceMetaEn?.coreCompetence ?? localizedFace.coreCompetence : face.coreCompetence;
   const isVisualFace = face.id === 1;
-  // 中文注释：按需求隐藏非视觉分支的大标题（产品/算法/系统/学术跨界/无限可能）
-  const shouldHideBranchTitle = !isVisualFace;
-  // 中文注释：算法分支单独放大 ALGORITHM 标识，并压缩其上下间距
-  const isAlgorithmFace = face.id === 3;
   const isEaster = face.id === 6;
   const hasVisualCdn = Boolean(visualCdnBaseUrl);
   const visibleVisualImages = VISUAL_IMAGE_ITEMS.slice(0, visualImageVisibleCount).filter((_, index) => {
@@ -2883,6 +2890,11 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
   const hasMoreVisualVideos = visualVideoVisibleCount < VISUAL_VIDEO_ITEMS.length;
   // 中文注释：旧版视觉图库/视频区仅在仍有旧数据时展示；现在默认关闭
   const hasLegacyVisualMedia = VISUAL_IMAGE_ITEMS.length > 0 || VISUAL_VIDEO_ITEMS.length > 0;
+
+  useEffect(() => {
+    // 中文注释：切换维度时重置小游戏收集态，避免不同分支之间状态串联。
+    setMiniGameCollectedCards([]);
+  }, [faceId]);
   const getOrderedMediaNo = (fileName: string): number => {
     const matched = fileName.match(/^(\d+)/);
     return matched ? Number(matched[1]) : 0;
@@ -2903,7 +2915,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
     if (!item) return null;
 
     const aspectClass = shape === "square" ? "aspect-square" : "aspect-[16/9]";
-    const baseClassName = `${columnClassName} ${aspectClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`;
+    const baseClassName = `${columnClassName} ${aspectClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in touch-manipulation`;
 
     if (item.kind === "image") {
       const imageUrl = buildVisualAigcImageUrl(visualCdnBaseUrl, item.fileName);
@@ -3017,6 +3029,20 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const syncViewportType = () => setIsMobileViewport(mediaQuery.matches);
+
+    syncViewportType();
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncViewportType);
+      return () => mediaQuery.removeEventListener("change", syncViewportType);
+    }
+    mediaQuery.addListener(syncViewportType);
+    return () => mediaQuery.removeListener(syncViewportType);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     // 中文注释：按 visualViewport.scale 读取浏览器缩放，避免 localhost 与线上域名缩放不一致导致分支页视觉比例不同
     const syncBrowserZoomScale = () => {
       const zoom = window.visualViewport?.scale ?? 1;
@@ -3046,7 +3072,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mediaPreview]);
 
-  const zoomCompensation = browserZoomScale > 0 ? 1 / browserZoomScale : 1;
+  const zoomCompensation = !isMobileViewport && browserZoomScale > 0 ? 1 / browserZoomScale : 1;
 
   const playVisualVideoPreview = (videoId: string) => {
     const videoEl = visualVideoRefs.current[videoId];
@@ -3071,6 +3097,17 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
 
   const openMediaPreview = (preview: Exclude<MediaPreviewState, null>) => {
     setMediaPreview(preview);
+    setMediaPreviewOpenedAt(Date.now());
+  };
+
+  const closeMediaPreview = () => {
+    setMediaPreview(null);
+  };
+
+  const closeMediaPreviewFromBackdrop = () => {
+    // 中文注释：忽略打开后的瞬时点击，防止移动端“点开即被遮罩二次点击关闭”
+    if (Date.now() - mediaPreviewOpenedAt < 220) return;
+    setMediaPreview(null);
   };
 
   const handleReroll = () => {
@@ -3097,7 +3134,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-50 bg-[#080808] branch-readable"
       // 中文注释：分支页补偿浏览器缩放（例如 localhost=110%，线上=100%），确保两端视觉尺寸一致
-      style={{ zoom: `${zoomCompensation}` }}
+      style={zoomCompensation === 1 ? undefined : { zoom: `${zoomCompensation}` }}
     >
       <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto">
         {/* 顶部彩色线条 */}
@@ -3199,12 +3236,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                           {/* 左侧：标题区 */}
                           <div className="space-y-[0.1rem]">
-                            <div
-                              className="text-2xl tracking-[0.18em] uppercase font-semibold"
-                              style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
-                            >
-                              {localizedSubtitle}
-                            </div>
                             {localizedCoreStatement && (
                               <div
                                 className="text-lg md:text-xl font-medium leading-relaxed"
@@ -3305,7 +3336,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[92px] md:auto-rows-[120px] gap-1 md:gap-1">
                             {VISUAL_CLASSIC_CG_MEDIA_ITEMS.map((item, index) => {
                               const localOrderNo = index + 1;
-                              const galleryClass = getClassicCgGalleryClass(localOrderNo, index);
+                              const galleryClass = getClassicCgGalleryClass(localOrderNo, index, isMobileViewport);
 
                               if (item.kind === "image") {
                                 const imageUrl = buildVisualClassicCgImageUrl(visualCdnBaseUrl, item.fileName);
@@ -3314,7 +3345,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                                 return (
                                   <div
                                     key={item.id}
-                                    className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
+                                    className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in touch-manipulation`}
                                     style={{
                                       background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
                                     }}
@@ -3349,7 +3380,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                               return (
                                 <div
                                   key={item.id}
-                                  className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in`}
+                                  className={`${galleryClass} rounded-none group transition-all duration-300 relative overflow-hidden hover:scale-[1.01] cursor-zoom-in touch-manipulation`}
                                   style={{
                                     background: `linear-gradient(135deg, ${face.color}10, ${face.color}05)`,
                                   }}
@@ -3421,7 +3452,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                             return (
                               <div
                                 key={item.id}
-                                className={`${index === 0 ? "aspect-[4/3]" : "aspect-[16/9]"} rounded-none relative overflow-hidden ${
+                                className={`touch-manipulation ${index === 0 ? "aspect-[4/3]" : "aspect-[16/9]"} rounded-none relative overflow-hidden ${
                                   imageUrl ? "cursor-zoom-in" : ""
                                 }`}
                                 style={{
@@ -3455,13 +3486,13 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           })}
 
                           {visualImageGridRowsBeforeIsolated.length > 0 && (
-                            <div className="grid grid-cols-3 gap-x-4 gap-y-16">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2 md:gap-x-4 gap-y-6 md:gap-y-16">
                               {visualImageGridRowsBeforeIsolated.map((item) => {
                                 const imageUrl = buildVisualImageUrl(visualCdnBaseUrl, item.fileName);
                                 return (
                                   <div
                                     key={item.id}
-                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                    className={`touch-manipulation aspect-[4/3] rounded-none relative overflow-hidden ${
                                       imageUrl ? "cursor-zoom-in" : ""
                                     }`}
                                     style={{
@@ -3497,13 +3528,13 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           )}
 
                           {visualImageIsolatedRow.length > 0 && (
-                            <div className="grid grid-cols-3 gap-x-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2 md:gap-x-4">
                               {visualImageIsolatedRow.map((item) => {
                                 const imageUrl = buildVisualImageUrl(visualCdnBaseUrl, item.fileName);
                                 return (
                                   <div
                                     key={item.id}
-                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                    className={`touch-manipulation aspect-[4/3] rounded-none relative overflow-hidden ${
                                       imageUrl ? "cursor-zoom-in" : ""
                                     }`}
                                     style={{
@@ -3539,13 +3570,13 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                           )}
 
                           {visualImageGridRowsAfterIsolated.length > 0 && (
-                            <div className="grid grid-cols-3 gap-x-4 gap-y-16">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2 md:gap-x-4 gap-y-6 md:gap-y-16">
                               {visualImageGridRowsAfterIsolated.map((item) => {
                                 const imageUrl = buildVisualImageUrl(visualCdnBaseUrl, item.fileName);
                                 return (
                                   <div
                                     key={item.id}
-                                    className={`aspect-[4/3] rounded-none relative overflow-hidden ${
+                                    className={`touch-manipulation aspect-[4/3] rounded-none relative overflow-hidden ${
                                       imageUrl ? "cursor-zoom-in" : ""
                                     }`}
                                     style={{
@@ -3727,28 +3758,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                       {/* 左侧：标题区 */}
                       <div className="space-y-[0.1rem]">
-                        {/* 副标题 */}
-                        <div
-                          // 中文注释：统一副标题字号与字距，匹配算法页 ALGORITHM 的视觉权重
-                          className="text-2xl tracking-[0.18em] uppercase font-semibold"
-                          style={{ fontFamily: "var(--font-label)", color: `${face.color}cc` }}
-                        >
-                          {localizedSubtitle}
-                        </div>
-
-                        {/* 标题（非视觉分支按需求隐藏） */}
-                        {!shouldHideBranchTitle && (
-                          <h1
-                            className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[0.95] tracking-tight"
-                            style={{ 
-                              fontFamily: "var(--font-display)",
-                              textShadow: `0 0 60px ${face.color}30`,
-                            }}
-                          >
-                            {localizedTitle}
-                          </h1>
-                        )}
-
                         {/* 核心观点 */}
                         {localizedCoreStatement && (
                           <div
@@ -4037,7 +4046,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                         </div>
                       )}
 
-                      {/* 小游戏占位区 */}
+                      {/* 小游戏原型区：左聊天，右骰子墙（复用首页 DICE_FACES 图标与配色） */}
                       <div
                         className="rounded-2xl p-6 md:p-8 relative overflow-hidden"
                         style={{
@@ -4067,18 +4076,6 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                               >
                                 {panelText.miniGameTitle}
                               </h3>
-                              {/* 中文注释：按需求把“游戏概念”文案直接放在标题下方，不再做独立信息卡 */}
-                              <div className="mt-4 space-y-3 text-sm md:text-base leading-relaxed text-white/85 max-w-3xl">
-                                <p>
-                                  {panelText.gameConcept}
-                                </p>
-                                <p>
-                                  {panelText.gameConceptLine1}
-                                </p>
-                                <p>
-                                  {panelText.gameConceptLine2}
-                                </p>
-                              </div>
                             </div>
                             <span
                               className="text-[11px] md:text-xs px-3 py-1.5 rounded-full tracking-[0.2em] uppercase font-semibold"
@@ -4093,64 +4090,27 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                             </span>
                           </div>
 
-                          <div className="grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
+                          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-5">
+                            <TraitChatPanel
+                              accentColor={face.color}
+                              isEn={isEn}
+                              onCollectedCardsChange={setMiniGameCollectedCards}
+                            />
+
+                            {/* 中文注释：右侧多骰子静态交互场景 —— 无动画、悬停可旋转、互相牵引 */}
                             <div
-                              className="aspect-[16/9] rounded-xl relative overflow-hidden"
+                              className="rounded-xl relative overflow-hidden p-4 md:p-6 min-h-[480px]"
                               style={{
-                                background: "linear-gradient(140deg, rgba(255,255,255,0.05), rgba(0,0,0,0.28))",
+                                background: "linear-gradient(140deg, rgba(255,255,255,0.04), rgba(0,0,0,0.42))",
                                 border: `1px solid ${face.color}30`,
                               }}
                             >
-                              <motion.div
-                                className="absolute inset-0"
-                                animate={{ opacity: [0.18, 0.3, 0.18] }}
-                                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                                style={{
-                                  background: `radial-gradient(circle at 50% 55%, ${face.color}50, transparent 62%)`,
-                                }}
+                              <MiniDiceScene
+                                accentColor={face.color}
+                                isEn={isEn}
+                                collectedCards={miniGameCollectedCards}
+                                onForgeComplete={() => setMiniGameCollectedCards([])}
                               />
-                              <div className="absolute inset-0 flex items-center justify-center text-center px-6">
-                                <p
-                                  className="text-base md:text-lg text-white/85 leading-relaxed"
-                                  style={{ fontFamily: "var(--font-body)" }}
-                                >
-                                  {panelText.gamePlaceholderLine1}
-                                  <br />
-                                  {panelText.gamePlaceholderLine2}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div
-                              className="rounded-xl p-4 flex flex-col gap-3"
-                              style={{
-                                background: "linear-gradient(140deg, rgba(255,255,255,0.04), rgba(0,0,0,0.35))",
-                                border: `1px solid ${face.color}2E`,
-                              }}
-                            >
-                              <div
-                                className="text-[11px] tracking-[0.3em] uppercase font-semibold"
-                                style={{ fontFamily: "var(--font-label)", color: `${face.color}AA` }}
-                              >
-                                Interface
-                              </div>
-                              <div className="space-y-2">
-                                <div className="h-9 rounded-lg border border-white/10 bg-black/25" />
-                                <div className="h-9 rounded-lg border border-white/10 bg-black/25" />
-                                <div className="h-9 rounded-lg border border-white/10 bg-black/25" />
-                              </div>
-                              <button
-                                type="button"
-                                disabled
-                                className="mt-1 w-full h-10 rounded-lg text-sm font-semibold text-white/70 cursor-not-allowed"
-                                style={{
-                                  fontFamily: "var(--font-label)",
-                                  background: `${face.color}22`,
-                                  border: `1px solid ${face.color}35`,
-                                }}
-                              >
-                                {panelText.startGamePending}
-                              </button>
                             </div>
                           </div>
                         </div>
@@ -4184,7 +4144,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                 transition={{ duration: 0.2 }}
                 // 中文注释：遮罩层点击即关闭，作为移动端兜底退出手势
                 className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center"
-                onClick={() => setMediaPreview(null)}
+                onClick={closeMediaPreviewFromBackdrop}
               >
                 <motion.button
                   type="button"
@@ -4196,7 +4156,7 @@ export default function DimensionPanel({ faceId, onClose, onReroll, onNavigate, 
                   }}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setMediaPreview(null);
+                    closeMediaPreview();
                   }}
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.95 }}

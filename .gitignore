@@ -7,6 +7,14 @@ dist/
 build/
 *.dist
 
+# Aliyun FC build artifacts (regenerated via npm run pack)
+server/aliyun-*/dist/
+server/aliyun-*/*.zip
+ossutil_output/
+
+# 本地视觉资源（生产从 OSS 加载，仅本地开发兜底用），不入仓库
+client/public/visual-local/
+
 # Environment variables
 .env
 .env.local
