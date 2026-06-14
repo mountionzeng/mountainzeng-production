@@ -58,8 +58,8 @@ type MediaPreviewState = {
 const FACE_TITLE_EN: Record<number, string> = {
   1: "Visual",
   2: "Product management",
-  3: "Architecture",
-  4: "Computer system",
+  3: "Math foundations",
+  4: "Building software",
   5: "Trans-disciplinarity",
   6: "Future",
 };
@@ -82,12 +82,12 @@ const PANEL_FACE_META_EN: Record<
     skills: ["Product execution", "Workflow design", "Tooling", "Cross-functional delivery"],
   },
   3: {
-    title: "Architecture",
-    subtitle: "ARCHITECTURE",
+    title: "Math foundations",
+    subtitle: "FROM MATH TO AI",
   },
   4: {
-    title: "Computer system",
-    subtitle: "COMPUTER SYSTEM",
+    title: "Building software",
+    subtitle: "ENGINEERING",
     coreStatement: "Understanding the system from the ground up",
     skills: ["Plugin engineering", "Performance optimization", "Workflow architecture", "System design"],
   },
@@ -855,7 +855,7 @@ function SystemTrainingBlock({
         className="text-sm tracking-[0.16em] uppercase font-semibold"
         style={{ color: `${color}CC`, fontFamily: "var(--font-label)" }}
       >
-        {isEn ? "COMPUTER SYSTEM FUNDAMENTALS" : training.title}
+        {isEn ? "ENGINEERING FUNDAMENTALS" : training.title}
       </div>
       <div className="space-y-3">
         {training.items.map((item) => (
