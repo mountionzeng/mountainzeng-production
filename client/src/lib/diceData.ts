@@ -340,9 +340,9 @@ export const DICE_FACES: DiceFace[] = [
   // ── 03 算法 ──────────────────────────────────────────────────────────────
   {
     id: 3,
-    title: "Ai架构",
-    tabLabel: "Ai架构",
-    subtitle: "ARCHITECTURE",
+    title: "数学根基",
+    tabLabel: "数学根基",
+    subtitle: "FROM MATH TO AI",
     color: "#8B5CF6",
     icon: "Binary",
 
@@ -603,9 +603,9 @@ export const DICE_FACES: DiceFace[] = [
   // ── 04 系统 ──────────────────────────────────────────────────────────────
   {
     id: 4,
-    title: "计算机系统",
-    tabLabel: "计算机系统",
-    subtitle: "COMPUTER SYSTEM",
+    title: "工程造物",
+    tabLabel: "工程造物",
+    subtitle: "ENGINEERING",
     color: "#A855F7",
     icon: "Settings",
 

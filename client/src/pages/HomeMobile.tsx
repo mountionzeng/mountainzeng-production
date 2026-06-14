@@ -44,13 +44,13 @@ const HOME_FACE_COPY_EN: Record<number, HomeFaceCopy> = {
     buttonText: "See product cases",
   },
   3: {
-    tabLabel: "Architecture",
+    tabLabel: "Math foundations",
     homeDescription:
       "Math gives me a rigorous way of thinking: abstraction, pattern finding, and balancing complexity with efficiency.",
     buttonText: "Read architecture notes",
   },
   4: {
-    tabLabel: "Computer system",
+    tabLabel: "Building software",
     homeDescription:
       "I enjoy creating beautiful visuals, but true efficiency and stability come from understanding system fundamentals and computer internals.",
     buttonText: "Open system map",
