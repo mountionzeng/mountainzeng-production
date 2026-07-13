@@ -47,6 +47,12 @@ jobs:
         # 中文注释：将自定义域名写入构建产物，避免后续部署丢失域名绑定
         run: echo 'mountion.cn' > dist/public/CNAME
 
+      - name: Add Static Routes
+        # 中文注释：为需要直接分享的 SPA 路由生成实体 index，避免 GitHub Pages 返回 404 fallback
+        run: |
+          mkdir -p dist/public/sheself
+          cp dist/public/index.html dist/public/sheself/index.html
+
       - name: Add SPA 404 Fallback
         run: cp dist/public/index.html dist/public/404.html
 
