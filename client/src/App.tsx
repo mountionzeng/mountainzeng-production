@@ -6,12 +6,14 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import QijiApplication from "./pages/QijiApplication";
+import SheselfVideo from "./pages/SheselfVideo";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/qiji"} component={QijiApplication} />
+      <Route path={"/sheself"} component={SheselfVideo} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
