@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Github, Mail } from "lucide-react";
+import { ChevronRight, Github, Mail } from "lucide-react";
 import Dice3D from "@/components/Dice3D";
 import DimensionPanel from "@/components/DimensionPanel";
 import ParticleField from "@/components/ParticleField";
@@ -78,6 +78,36 @@ function WechatIcon({ className }: { className?: string }) {
   );
 }
 
+function XiaohongshuIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <defs>
+        <mask id="xiaohongshu-cutout">
+          <rect width="24" height="24" fill="white" />
+          <text
+            x="12"
+            y="13.7"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="black"
+            fontSize="6"
+            fontWeight="900"
+            letterSpacing="-0.2"
+            style={{ fontFamily: "sans-serif" }}
+          >
+            小红书
+          </text>
+        </mask>
+      </defs>
+      <path
+        d="M6.7 3.9h10.6c1.9 0 2.8.2 3.7 1.1.9.9 1.1 1.8 1.1 3.7v6.6c0 1.9-.2 2.8-1.1 3.7-.9.9-1.8 1.1-3.7 1.1H6.7c-1.9 0-2.8-.2-3.7-1.1-.9-.9-1.1-1.8-1.1-3.7V8.7c0-1.9.2-2.8 1.1-3.7.9-.9 1.8-1.1 3.7-1.1Z"
+        fill="currentColor"
+        mask="url(#xiaohongshu-cutout)"
+      />
+    </svg>
+  );
+}
+
 export default function HomeMobile() {
   const [language, setLanguage] = useState<HomeLanguage>("zh");
   const [isRolling, setIsRolling] = useState(false);
@@ -95,6 +125,7 @@ export default function HomeMobile() {
             wechatTitle: "微信",
             githubTitle: "GitHub",
             emailTitle: "邮箱",
+            xiaohongshuTitle: "小红书",
             copiedPrefix: "已复制到剪贴板",
             copyFailed: "复制失败，请手动复制",
             diceHint: "点骰子随机进入",
@@ -103,6 +134,7 @@ export default function HomeMobile() {
             wechatTitle: "WeChat",
             githubTitle: "GitHub",
             emailTitle: "Email",
+            xiaohongshuTitle: "REDnote",
             copiedPrefix: "copied to clipboard",
             copyFailed: "Copy failed. Please copy manually.",
             diceHint: "Tap dice to enter",
@@ -316,6 +348,18 @@ export default function HomeMobile() {
             >
               <Mail className="h-4.5 w-4.5" />
             </button>
+            <button
+              type="button"
+              title={localizedUi.xiaohongshuTitle}
+              aria-label={localizedUi.xiaohongshuTitle}
+              onClick={(event) =>
+                copyToClipboard("609670762", language === "zh" ? "小红书 609670762" : "REDnote 609670762", event)
+              }
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white"
+              style={{ color: "rgba(216, 180, 254, 0.95)", boxShadow: "0 0 14px rgba(168, 85, 247, 0.28)" }}
+            >
+              <XiaohongshuIcon className="h-5 w-5" />
+            </button>
           </div>
         </section>
 
@@ -389,23 +433,33 @@ export default function HomeMobile() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.24 }}
-              className="mt-2 rounded-2xl border backdrop-blur-xl p-4 flex-1 flex flex-col"
-              style={{
-                background: `linear-gradient(160deg, color-mix(in srgb, ${activeFace.color} 24%, rgba(10,10,16,0.94)), rgba(5,5,8,0.9))`,
-                borderColor: `color-mix(in srgb, ${activeFace.color} 62%, rgba(255,255,255,0.14))`,
-                boxShadow: `0 0 32px color-mix(in srgb, ${activeFace.color} 35%, transparent)`,
-              }}
+              className="mt-3 px-3 flex-1 flex flex-col"
             >
-              <p className="text-white/82 text-[14px] leading-relaxed">{activeFaceCopy.homeDescription}</p>
+              <p
+                className="text-[14px] leading-relaxed"
+                style={{
+                  color: `color-mix(in srgb, ${activeFace.color} 28%, rgba(255,255,255,0.92))`,
+                  textShadow: `0 0 10px ${activeFace.color}66, 0 0 22px ${activeFace.color}33`,
+                }}
+              >
+                {activeFaceCopy.homeDescription}
+              </p>
 
               <div className="mt-3">
                 <button
                   type="button"
                   onClick={() => openFace(activeFace.id)}
-                  className="h-11 w-full px-3 rounded-full text-sm font-medium text-white"
+                  className="group h-11 w-full px-3 rounded-full text-sm font-medium text-white inline-flex items-center justify-center gap-1.5"
                   style={{ background: `color-mix(in srgb, ${activeFace.color} 22%, rgba(0,0,0,0.45))` }}
                 >
-                  {activeFaceCopy.buttonText}
+                  <span>{activeFaceCopy.buttonText}</span>
+                  <ChevronRight
+                    className="h-3.5 w-3.5 transition-transform duration-200 group-active:translate-x-0.5"
+                    strokeWidth={1.7}
+                    style={{
+                      filter: `drop-shadow(0 0 6px ${activeFace.color}AA)`,
+                    }}
+                  />
                 </button>
               </div>
             </motion.article>
