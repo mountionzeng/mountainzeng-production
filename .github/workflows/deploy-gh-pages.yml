@@ -52,6 +52,8 @@ jobs:
         run: |
           mkdir -p dist/public/sheself
           cp dist/public/index.html dist/public/sheself/index.html
+          mkdir -p dist/public/qiji-followup
+          cp dist/public/index.html dist/public/qiji-followup/index.html
 
       - name: Add SPA 404 Fallback
         run: cp dist/public/index.html dist/public/404.html
