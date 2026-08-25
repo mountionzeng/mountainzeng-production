@@ -7,20 +7,23 @@ const productViews = [
   {
     id: "chat-bot",
     label: "Chat Bot",
-    body: "可以感知到拥护的每一个字深沉的每一张图，以及他们在故事中的位置，Bot会为用户提供素材，用户自行判断。",
-    src: "/images/qiji-followup/01-chat-bot.png",
+    body: "随时识别到用户的意图（比方说用户只是想开心，咱们会生成一个喜剧的剧本。用户想和某个人建立联系，咱们就会分析他们之间可能产生情感共鸣的因素），随时感知用户选中的每一张图，每一段文字，并学习用户的每一次修改行为，以及分析该内容在故事中的位置。Bot会为用户提供素材，用户自行判断。",
+    images: [
+      "/images/qiji-followup/00-chat-intent.png",
+      "/images/qiji-followup/01-chat-bot.png",
+    ],
   },
   {
     id: "storyboard",
     label: "Storyboard",
     body: "图片/音乐/视频生成+剪辑都在这个面板上完成，用户可以在对应的表格上直接修改，系统会自动的更新版本。",
-    src: "/images/qiji-followup/02-storyboard.png",
+    images: ["/images/qiji-followup/02-storyboard.png"],
   },
   {
     id: "assets",
     label: "素材仓库",
     body: "整理用户可用于渲染的所有资料以及人物场景艺术skil资产，后期可以把属于用户自己的资产分享给其他人，用户之间可以互相扩写故事共用场景，添加人物改良艺术skil。",
-    src: "/images/qiji-followup/03-assets.png",
+    images: ["/images/qiji-followup/03-assets.png"],
   },
 ];
 
@@ -52,18 +55,31 @@ function ProductViews() {
       </div>
 
       <div className="grid gap-6 py-7 md:grid-cols-[minmax(0,1.55fr)_minmax(15rem,0.85fr)] md:items-start md:gap-10 md:py-10">
-        <div className="aspect-[16/10] overflow-hidden rounded-[5px] bg-black/[0.035] ring-1 ring-black/10">
-          {!missing[view.id] && (
-            <img
-              key={view.id}
-              src={view.src}
-              alt={view.label}
-              className="h-full w-full object-contain"
-              onError={() =>
-                setMissing(value => ({ ...value, [view.id]: true }))
-              }
-            />
-          )}
+        <div
+          className={`grid aspect-[16/10] items-center gap-2 overflow-hidden rounded-[5px] bg-black/[0.035] p-2 ring-1 ring-black/10 sm:gap-3 sm:p-3 ${
+            view.images.length > 1
+              ? "grid-cols-[minmax(0,0.35fr)_minmax(0,1fr)]"
+              : "grid-cols-1"
+          }`}
+        >
+          {view.images.map((src, index) => {
+            const imageKey = `${view.id}-${index}`;
+            return missing[imageKey] ? null : (
+              <img
+                key={src}
+                src={src}
+                alt={
+                  view.images.length > 1
+                    ? `${view.label} 界面截图 ${index + 1}`
+                    : view.label
+                }
+                className="h-full w-full object-contain"
+                onError={() =>
+                  setMissing(value => ({ ...value, [imageKey]: true }))
+                }
+              />
+            );
+          })}
         </div>
         <div className="pt-1">
           <h3 className="text-xl font-semibold leading-snug text-[#1f2328]">
