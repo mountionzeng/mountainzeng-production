@@ -3,6 +3,9 @@ import { useEffect, useState, type ReactNode } from "react";
 const STORY_VIDEO_URL = "/videos/sheself-v1-20260824.mp4";
 const STORY_POSTER_URL = "/images/qiji-followup/sheself-cover.png";
 
+const SHIGUANG_VIDEO_URL = "/videos/shiguang-hackathon-20260830.mp4";
+const SHIGUANG_POSTER_URL = "/images/qiji-followup/shiguang-cover.jpg";
+
 const productViews = [
   {
     id: "chat-bot",
@@ -176,6 +179,49 @@ export default function QijiFollowUpPage() {
               </p>
             </div>
           </article>
+        </section>
+
+        <section className="border-t border-black/10 py-12 sm:py-16 lg:py-20">
+          <h2 className="text-3xl font-semibold tracking-[-0.025em] text-[#111] sm:text-5xl">
+            另一个视频：
+          </h2>
+
+          <div className="mt-9 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-t border-black/10 py-5">
+            <span className="text-sm text-[#0884FF]">2026-08-30</span>
+            <strong className="text-base font-semibold text-[#1f2328]">
+              黑客松项目
+            </strong>
+          </div>
+
+          <h3 className="mb-6 text-2xl font-semibold text-[#111]">拾光Ai</h3>
+
+          <div className="grid gap-8 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-12 md:items-start">
+            <div className="overflow-hidden rounded-[5px] bg-black ring-1 ring-black/10">
+              <video
+                className="block h-auto w-full bg-black"
+                src={SHIGUANG_VIDEO_URL}
+                poster={SHIGUANG_POSTER_URL}
+                aria-label="拾光Ai 黑客松项目视频"
+                controls
+                playsInline
+                preload="metadata"
+              />
+            </div>
+
+            <div className="space-y-5 text-base leading-8 text-[#363c44]">
+              <p>
+                家人之间的联系，最常发生在微信上——情感的流动在家人之间产生的概率更大，所以它做成了微信小程序。为了照顾老年人和小朋友，前端重新做了一遍。
+              </p>
+              <p>
+                后端和「聊会儿」是同一套。拾光Ai
+                换掉的只是前端和使用场景，底下那套东西没有重做。
+              </p>
+              <p>两个用户群加起来 100 人。</p>
+              <p>
+                我希望尽量多地采集用户自己写下的文字。文字越多，图片的抽卡率越低，用户就越能专注在创作里，而不是反复重抽。
+              </p>
+            </div>
+          </div>
         </section>
 
         <section className="border-t border-black/10 py-12 sm:py-16 lg:py-20">
