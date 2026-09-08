@@ -193,7 +193,9 @@ export default function QijiFollowUpPage() {
             </strong>
           </div>
 
-          <h3 className="mb-6 text-2xl font-semibold text-[#111]">拾光Ai</h3>
+          <h3 className="mb-6 text-2xl font-semibold text-[#111]">
+            拾光Ai小程序宣传片
+          </h3>
 
           <div className="grid gap-8 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-12 md:items-start">
             <div className="overflow-hidden rounded-[5px] bg-black ring-1 ring-black/10">
@@ -210,12 +212,9 @@ export default function QijiFollowUpPage() {
 
             <div className="space-y-5 text-base leading-8 text-[#363c44]">
               <p>
-                家人之间的联系，最常发生在微信上——情感的流动在家人之间产生的概率更大，所以它做成了微信小程序。为了照顾老年人和小朋友，前端重新做了一遍。
+                和群友聊下来，家人之间的联系最常发生在微信上——情感的流动在家人之间产生的概率更大，所以它做成了微信小程序。为了照顾老年人和小朋友，前端重新做了一遍，上面这条视频里能看到。
               </p>
-              <p>
-                后端和「聊会儿」是同一套。拾光Ai
-                换掉的只是前端和使用场景，底下那套东西没有重做。
-              </p>
+              <p>后端的数据和代码和 Drinking Time 通用。</p>
               <p>两个用户群加起来 100 人。</p>
               <p>
                 我希望尽量多地采集用户自己写下的文字。文字越多，图片的抽卡率越低，用户就越能专注在创作里，而不是反复重抽。
