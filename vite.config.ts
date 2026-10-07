@@ -203,11 +203,18 @@ function vitePluginStaticHtmlRoutes(): Plugin {
       const routes: Record<string, string> = {
         "/drinking-time-vision": "drinking-time-vision/index.html",
         "/drinking-time-vision/": "drinking-time-vision/index.html",
+        "/shiguang-bp/": "shiguang-bp/index.html",
       };
 
       server.middlewares.use((req, res, next) => {
         // 中文注释：Vite dev server 会把未知路径回退到 React 首页；这里让独立 HTML 页面优先命中。
         const pathname = (req.url ?? "").split("?")[0];
+        // 中文注释：BP 的图片和字体使用相对路径，补齐目录斜杠以保证资源地址正确。
+        if (pathname === "/shiguang-bp") {
+          res.writeHead(302, { Location: (req.url ?? "").replace(pathname, "/shiguang-bp/") });
+          res.end();
+          return;
+        }
         const htmlPath = routes[pathname];
         if (!htmlPath) {
           next();
