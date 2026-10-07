@@ -80,7 +80,7 @@ export default function SheselfVideo() {
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="http://8.160.186.193/drinking-time-vision/#vision"
+                href="/drinking-time-vision/#vision"
                 className="rounded-sm border border-white/20 px-4 py-2 text-sm text-white/72 transition-colors hover:border-white/45 hover:text-white"
                 target="_blank"
                 rel="noopener noreferrer"

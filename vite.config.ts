@@ -196,6 +196,42 @@ function vitePluginGameApi(): Plugin {
   };
 }
 
+function vitePluginStaticHtmlRoutes(): Plugin {
+  return {
+    name: "static-html-routes",
+    configureServer(server) {
+      const routes: Record<string, string> = {
+        "/drinking-time-vision": "drinking-time-vision/index.html",
+        "/drinking-time-vision/": "drinking-time-vision/index.html",
+      };
+
+      server.middlewares.use((req, res, next) => {
+        // 中文注释：Vite dev server 会把未知路径回退到 React 首页；这里让独立 HTML 页面优先命中。
+        const pathname = (req.url ?? "").split("?")[0];
+        const htmlPath = routes[pathname];
+        if (!htmlPath) {
+          next();
+          return;
+        }
+
+        const filePath = path.join(PROJECT_ROOT, "client", "public", htmlPath);
+        fs.readFile(filePath, "utf-8", (error, html) => {
+          if (error) {
+            next();
+            return;
+          }
+
+          res.writeHead(200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache",
+          });
+          res.end(html);
+        });
+      });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, PROJECT_ROOT, "");
   const enableManusDebugCollector = env.ENABLE_MANUS_DEBUG_COLLECTOR === "true";
@@ -205,7 +241,14 @@ export default defineConfig(({ mode }) => {
     ? `${rawBasePath.startsWith("/") ? rawBasePath : `/${rawBasePath}`}`.replace(/\/?$/, "/")
     : "/";
 
-  const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginGameApi()];
+  const plugins = [
+    react(),
+    tailwindcss(),
+    jsxLocPlugin(),
+    vitePluginManusRuntime(),
+    vitePluginGameApi(),
+    vitePluginStaticHtmlRoutes(),
+  ];
 
   // Keep the collector opt-in so public contributors do not record request/response data by default.
   if (enableManusDebugCollector) {
