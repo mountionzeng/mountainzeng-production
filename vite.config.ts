@@ -204,14 +204,15 @@ function vitePluginStaticHtmlRoutes(): Plugin {
         "/drinking-time-vision": "drinking-time-vision/index.html",
         "/drinking-time-vision/": "drinking-time-vision/index.html",
         "/shiguang-bp/": "shiguang-bp/index.html",
+        "/video-1212/": "video-1212/index.html",
       };
 
       server.middlewares.use((req, res, next) => {
         // 中文注释：Vite dev server 会把未知路径回退到 React 首页；这里让独立 HTML 页面优先命中。
         const pathname = (req.url ?? "").split("?")[0];
-        // 中文注释：BP 的图片和字体使用相对路径，补齐目录斜杠以保证资源地址正确。
-        if (pathname === "/shiguang-bp") {
-          res.writeHead(302, { Location: (req.url ?? "").replace(pathname, "/shiguang-bp/") });
+        // 中文注释：独立页面使用相对资源路径，补齐目录斜杠，避免图片和视频加载失败。
+        if (!pathname.endsWith("/") && routes[`${pathname}/`]) {
+          res.writeHead(302, { Location: (req.url ?? "").replace(pathname, `${pathname}/`) });
           res.end();
           return;
         }
