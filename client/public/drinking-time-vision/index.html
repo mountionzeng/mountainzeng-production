@@ -593,7 +593,7 @@
   }
 
   /* =========================================================
-     TOP NAV + ROUTES  (愿景与定位 / 操作功能 / MVP)
+     TOP NAV + ROUTES  (愿景与定位 / 操作功能)
      ========================================================= */
   .route{ display: none; }
   .route.active{ display: block; }
@@ -707,7 +707,7 @@
     .op-step.in .op-icon{ animation: none !important; }
   }
 
-  /* mvp — validation board */
+  /* shared validation / referral panels */
   .belief-origin{
     max-width: 1020px;
   }
@@ -876,52 +876,6 @@
   }
   .mvp-proof-note strong{
     color: var(--ink);
-  }
-  .refer-template{
-    margin-top: 56px;
-    border-top: 1px solid rgba(61,46,38,.16);
-    border-bottom: 1px solid rgba(61,46,38,.16);
-    padding: 28px 0;
-  }
-  .refer-template pre{
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-family:'Noto Sans SC','PingFang SC', sans-serif;
-    font-size: 19px;
-    line-height: 1.85;
-    color: var(--ink-soft);
-    margin: 0;
-  }
-  .refer-actions{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 22px;
-    margin-top: 24px;
-  }
-  .copy-button{
-    appearance: none;
-    border: 1px solid rgba(168,91,77,.45);
-    background: transparent;
-    color: var(--ink);
-    font-family:'JetBrains Mono', monospace;
-    font-size: 13px;
-    letter-spacing: .14em;
-    padding: 11px 15px;
-    cursor: pointer;
-    transition: color .25s ease, border-color .25s ease, background .25s ease;
-  }
-  .copy-button:hover,
-  .copy-button:focus-visible{
-    color: var(--muted-red);
-    border-color: var(--muted-red);
-    background: rgba(232,214,192,.28);
-    outline: none;
-  }
-  .copy-status{
-    font-size: 17px;
-    line-height: 1.6;
-    color: var(--ink-ghost);
   }
   .referral-live-shell{
     align-items: start;
@@ -1108,37 +1062,6 @@
     line-height: 1.7;
     color: var(--ink-ghost);
   }
-  #mvpHero .scene svg{
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: mvpHeroFloat 5.2s ease-in-out infinite;
-  }
-  #mvpHero .mvp-play-mark{
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: mvpPlayPulse 2.2s ease-in-out infinite;
-  }
-  #mvpHero .mvp-signal-path{
-    animation: mvpSignalFlow 2.4s linear infinite;
-  }
-  @keyframes mvpHeroFloat{
-    0%, 100%{ transform: translateY(0); }
-    50%{ transform: translateY(-7px); }
-  }
-  @keyframes mvpPlayPulse{
-    0%, 100%{ transform: scale(1); opacity: .94; }
-    50%{ transform: scale(1.12); opacity: .72; }
-  }
-  @keyframes mvpSignalFlow{
-    to{ stroke-dashoffset: -22; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    #mvpHero .scene svg,
-    #mvpHero .mvp-play-mark,
-    #mvpHero .mvp-signal-path{
-      animation: none !important;
-    }
-  }
   @media (max-width: 960px){
     .belief-origin-chain{ grid-template-columns: 1fr; gap: 26px; }
     .belief-origin-step{ border-right: 0; border-bottom: 1px solid rgba(61,46,38,.12); padding-right: 0; padding-bottom: 24px; }
@@ -1152,7 +1075,6 @@
     .belief-origin-quote{ font-size: 25px; line-height: 1.72; text-align: left; }
     .belief-origin-step strong{ font-size: 23px; }
     .belief-origin-step p{ font-size: 18px; }
-    .route-mvp .ch-display{ font-size: 38px; letter-spacing: .3em; padding-left: .3em; }
     .mvp-signal-grid{ grid-template-columns: 1fr; gap: 22px; padding: 24px 0; }
     .mvp-signal{ min-height: auto; border-right: 0; border-bottom: 1px solid rgba(61,46,38,.12); padding-bottom: 20px; }
     .mvp-signal:last-child{ border-bottom: 0; padding-bottom: 0; }
@@ -1191,10 +1113,9 @@
 </svg>
 
 <nav class="topnav" aria-label="主导航">
-  <a class="brand" href="#vision">小 · 酌</a>
+  <a class="brand" href="#vision">聊 · 会 · 儿</a>
   <a class="tab" data-route="vision" href="#vision">愿景与定位</a>
   <a class="tab" data-route="operations" href="#operations">操作功能</a>
-  <a class="tab" data-route="mvp" href="#mvp">真实场景</a>
 </nav>
 
 <div class="route route-vision active" data-route="vision">
@@ -1823,8 +1744,8 @@
       <div class="copy" data-anim>
         <p class="lead">如果这件事真的成了，我希望它改变的不是市场。</p>
         <p>是人和人之间，多了一种比文字和语言更细腻、更丰富的交流方式。</p>
-        <p>所以再往后，我们会拉起一个<strong>&ldquo;对话群&rdquo;</strong>：几个人在里面聊同一件事，小酌在一旁，把他们的话、也把他们没说出口的思绪，一并接住——到最后你会发现，<em>这支小短片，是几个人一起完成的</em>。</p>
-        <p>你也可以只把故事的一段，递给另一个人，让小酌去提取<strong>他</strong>的感受。同一件事，落在不同人心里，会长出完全不同的反应——而那点不一样，本身就极有戏剧性。一个故事，于是有了好几个版本的心跳。</p>
+        <p>所以再往后，我们会拉起一个<strong>&ldquo;对话群&rdquo;</strong>：几个人在里面聊同一件事，聊会儿在一旁，把他们的话、也把他们没说出口的思绪，一并接住——到最后你会发现，<em>这支小短片，是几个人一起完成的</em>。</p>
+        <p>你也可以只把故事的一段，递给另一个人，让聊会儿去提取<strong>他</strong>的感受。同一件事，落在不同人心里，会长出完全不同的反应——而那点不一样，本身就极有戏剧性。一个故事，于是有了好几个版本的心跳。</p>
         <p>我们终于可以把那些一直说不清的、本来会那样流走的、却最是我们自己的东西，<em>准确地交给另一个人</em>。</p>
       </div>
       <div class="scene-wrap" data-anim>
@@ -1937,8 +1858,8 @@
   </section>
 
   <div class="colophon">
-    <span class="sig">小 · 酌 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
-    <span>欢迎和创始人小酌一下：<a href="https://mountion.cn/" target="_blank" rel="noopener" style="color:var(--brick);letter-spacing:.04em;text-decoration:none;border-bottom:1px solid var(--rose);padding-bottom:1px;">https://mountion.cn/</a></span>
+    <span class="sig">聊 · 会 · 儿 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
+    <span>欢迎和创始人聊会儿：<a href="https://mountion.cn/" target="_blank" rel="noopener" style="color:var(--brick);letter-spacing:.04em;text-decoration:none;border-bottom:1px solid var(--rose);padding-bottom:1px;">https://mountion.cn/</a></span>
   </div>
 
 </main>
@@ -1954,7 +1875,7 @@
   <section class="hero" id="opHero">
     <div class="scene jitter" data-anim style="max-width:460px; margin-bottom:8px;">
       <svg viewBox="0 0 500 400" class="clickable" id="opHeroSvg" aria-hidden="true">
-        <!-- ① 左手机 · 小酌 CHAT（斜放） -->
+        <!-- ① 左手机 · 聊会儿 CHAT（斜放） -->
         <g transform="rotate(-8 106 190)">
         <rect class="ink" x="30" y="16" width="152" height="348" rx="26" fill="var(--paper)"/>
         <circle class="ink ink-thin" cx="54" cy="52" r="13" fill="none"/>
@@ -1964,7 +1885,7 @@
         <line class="ink" x1="76" y1="50" x2="118" y2="50"/>
         <line class="ink ink-thin" x1="76" y1="61" x2="104" y2="61"/>
         <line class="ink ink-thin" x1="30" y1="84" x2="182" y2="84"/>
-        <!-- 小酌在问 -->
+        <!-- 聊会儿在问 -->
         <path class="rose" stroke="none" opacity=".5" d="M56 112 h58 a10 10 0 0 1 10 10 v16 a10 10 0 0 1 -10 10 h-58 a10 10 0 0 1 -10 -10 v-16 a10 10 0 0 1 10 -10 Z"/>
         <path class="ink ink-thin" fill="none" d="M56 112 h58 a10 10 0 0 1 10 10 v16 a10 10 0 0 1 -10 10 h-58 a10 10 0 0 1 -10 -10 v-16 a10 10 0 0 1 10 -10 Z"/>
         <line class="ink ink-thin" x1="66" y1="124" x2="114" y2="124"/>
@@ -2042,7 +1963,7 @@
     </div>
 
     <p class="wordmark-sub" data-anim>操作功能</p>
-    <p class="hero-epigraph" data-anim>聊一件小事，小酌把它拍成一条只属于你的短片。</p>
+    <p class="hero-epigraph" data-anim>聊一件小事，聊会儿把它拍成一条只属于你的短片。</p>
   </section>
 
   <span class="quiet-rule" aria-hidden="true">
@@ -2079,7 +2000,7 @@
             <path style="--len:26" stroke="var(--brick)" d="M26 12 a15 15 0 0 1 0 20"/>
           </svg>
         </div>
-        <div><h3>它听懂</h3><p>小酌读出你话里的情绪——不用你解释，也不用你想词。</p></div>
+        <div><h3>它听懂</h3><p>聊会儿读出你话里的情绪——不用你解释，也不用你想词。</p></div>
       </div>
       <div class="op-step" data-anim>
         <div class="op-mark">
@@ -2121,7 +2042,7 @@
     <div class="split img-right">
       <div class="copy" data-anim>
         <p class="lead">不用会画，也不用会写提示词——你只要聊。</p>
-        <p>别的 AI 出图工具，要你先在脑子里想好画面、再敲一长串描述。小酌反过来：你说人话，它替你把情绪读出来、变成画面。<strong>门槛是零。</strong></p>
+        <p>别的 AI 出图工具，要你先在脑子里想好画面、再敲一长串描述。聊会儿反过来：你说人话，它替你把情绪读出来、变成画面。<strong>门槛是零。</strong></p>
       </div>
       <div class="scene-wrap" data-anim>
         <div class="scene mid">
@@ -2147,7 +2068,7 @@
     <div class="split img-left">
       <div class="copy" data-anim>
         <p class="lead">出来的不是“好看的图”，是“有情绪的画面”。</p>
-        <p>同样一句“我搬家了”，小酌给的不是一张漂亮风景，是<em>黄昏的空房间、地上拉长的影子</em>。懂和不懂，差别全在这儿——它靠的是七年电影级的光线、色调与构图。</p>
+        <p>同样一句“我搬家了”，聊会儿给的不是一张漂亮风景，是<em>黄昏的空房间、地上拉长的影子</em>。懂和不懂，差别全在这儿——它靠的是七年电影级的光线、色调与构图。</p>
       </div>
       <div class="scene-wrap" data-anim>
         <div class="scene mid">
@@ -2248,7 +2169,7 @@
   </section>
 
   <div class="colophon">
-    <span class="sig">小 · 酌 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
+    <span class="sig">聊 · 会 · 儿 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
     <span>HOW &nbsp; IT &nbsp; WORKS &nbsp; · &nbsp; 2026</span>
   </div>
 
@@ -2316,7 +2237,7 @@
 
     <div class="copy" data-anim>
       <p>如果这封信找到了你，是因为我认真读过你的经历，并且相信它值得被更多人一眼看懂。</p>
-      <p style="margin-top:18px; color:var(--ink-soft); font-style:italic;">—— 岱岱 · 小酌 Drinking&nbsp;Time</p>
+      <p style="margin-top:18px; color:var(--ink-soft); font-style:italic;">—— 岱岱 · 聊会儿 Drinking&nbsp;Time</p>
     </div>
 
     <a class="op-backlink" href="#vision">想先了解我们为什么做这件事 · 愿景与定位 →</a>
@@ -2325,377 +2246,9 @@
 </main>
 </div><!-- /route invite -->
 
-<!-- ====================================================================
-     ROUTE ③ · MVP  (five-person service validation)
-     ==================================================================== -->
-<div class="route route-mvp" data-route="mvp">
-<main class="scroll">
-
-<!-- HERO -->
-  <section class="hero" id="mvpHero">
-    <div class="scene jitter" data-anim style="max-width:520px; margin-bottom:8px;">
-      <svg viewBox="0 0 540 390" aria-hidden="true">
-        <path class="ink ink-thin" d="M42 332 C 172 326, 338 338, 502 330"/>
-        <g transform="rotate(-3 160 176)">
-          <rect class="ink" x="62" y="44" width="210" height="270" rx="18" fill="var(--paper)"/>
-          <rect x="78" y="62" width="178" height="72" rx="10" class="rose" stroke="none" opacity=".56"/>
-          <circle cx="118" cy="98" r="22" class="brick" stroke="none" opacity=".75"/>
-          <path class="ink ink-thin" d="M102 119 C 112 108, 124 108, 136 119"/>
-          <line class="ink" x1="154" y1="84" x2="232" y2="84"/>
-          <line class="ink ink-thin" x1="154" y1="104" x2="214" y2="104"/>
-          <line class="ink ink-thin" x1="78" y1="160" x2="236" y2="160"/>
-          <line class="ink ink-thin" x1="78" y1="182" x2="220" y2="182"/>
-          <line class="ink ink-thin" x1="78" y1="204" x2="246" y2="204"/>
-          <line class="ink ink-thin" x1="78" y1="226" x2="194" y2="226"/>
-          <rect class="brick" x="78" y="252" width="74" height="28" rx="14" stroke="none" opacity=".82"/>
-          <line x1="94" y1="266" x2="136" y2="266" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round"/>
-        </g>
-        <g transform="rotate(5 380 190)">
-          <rect x="300" y="92" width="176" height="116" rx="12" fill="var(--ink)" stroke="none" opacity=".92"/>
-          <rect x="308" y="100" width="160" height="72" rx="6" class="rose" stroke="none" opacity=".68"/>
-          <circle cx="430" cy="120" r="11" class="mred" stroke="none"/>
-          <path d="M308 172 L334 148 L354 162 L380 138 L404 162 L428 146 L468 170 L468 172 Z" fill="var(--ink)" opacity=".36" stroke="none"/>
-          <g class="mvp-play-mark">
-            <circle cx="388" cy="138" r="17" fill="var(--paper)" opacity=".94" stroke="none"/>
-            <path d="M383 130 l13 8 l-13 8 Z" fill="var(--ink)" stroke="none"/>
-          </g>
-          <line x1="314" y1="190" x2="460" y2="190" stroke="var(--paper)" stroke-width="2" stroke-linecap="round" opacity=".38"/>
-          <line x1="314" y1="190" x2="366" y2="190" stroke="var(--muted-red)" stroke-width="2.6" stroke-linecap="round"/>
-          <path class="ink" d="M336 242 h104"/>
-          <line class="ink ink-thin" x1="388" y1="208" x2="388" y2="240"/>
-        </g>
-        <path class="ink ink-thin" d="M270 154 C 304 134, 320 134, 342 150"/>
-        <path class="mred" stroke="none" d="M348 151 l-12 -4 l4 12 Z"/>
-        <path class="ink ink-thin mvp-signal-path" d="M278 220 C 310 242, 334 244, 358 224" stroke-dasharray="3 8"/>
-      </svg>
-    </div>
-
-    <p class="wordmark-sub" data-anim>5 条求职短片 · 一次公开测试</p>
-  </section>
-
-  <span class="quiet-rule" aria-hidden="true">
-    <svg viewBox="0 0 80 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M2 8 C 18 4, 32 12, 50 7 C 64 4, 72 9, 78 7"/>
-    </svg>
-  </span>
-
-<!-- 真实问题 -->
-  <section class="chapter" id="mvpJudgement">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">THE &nbsp; REAL &nbsp; PROBLEM</div>
-      <h2 class="ch-display">WHY</h2>
-      <p class="ch-cn">他们会做事，却不一定会“求职”</p>
-    </header>
-    <div class="copy" data-anim>
-      <p class="lead">我计划邀请 5 位有野心、真诚、有才华的年轻人，免费帮助他们制作一条介绍自己的求职短片。</p>
-      <p>他们不是专业的“求职者”。他们可能已经做过有价值的项目、解决过真实问题，却不知道招聘者正在寻找哪些证据，也容易在介绍自己时漏掉关键的信息。</p>
-      <p>传统求职方法可以补全已知规则，但 AI 正在改变岗位任务和能力组合。求职者仍在用旧的语言介绍自己，招聘信息里却可能已经出现了新的要求。</p>
-      <p><strong>这轮 MVP 不假设我们已经知道答案。</strong>小酌先根据真实岗位和真实经历提出判断，再把短片公开给真正做招聘判断的人，看市场会不会给出下一步动作。</p>
-    </div>
-
-    <div class="mvp-signal-grid" data-anim>
-      <div class="mvp-signal">
-        <span class="k">PEOPLE</span>
-        <strong>5 位年轻人</strong>
-        <p>岗位可以不同，但每个人都要有真实项目、作品或经历可以被验证。</p>
-      </div>
-      <div class="mvp-signal">
-        <span class="k">INPUT</span>
-        <strong>真实岗位与真实证据</strong>
-        <p>每人提供一个目标岗位、3–5 条真实 JD，以及自己的项目和作品。</p>
-      </div>
-      <div class="mvp-signal">
-        <span class="k">OFFER</span>
-        <strong>一条 60 秒介绍短片</strong>
-        <p>不是把信息塞得越多越好，而是保留最能帮助招聘者判断的信息。</p>
-      </div>
-      <div class="mvp-signal">
-        <span class="k">PRICE</span>
-        <strong>首批 5 人免费</strong>
-        <p>不向测试者收费，但会认真询问他们是否愿意付费，以及什么价格和条件能够成立。</p>
-      </div>
-    </div>
-  </section>
-
-<!-- 多智能体如何工作 -->
-  <section class="chapter" id="mvpProof">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">THE &nbsp; ENGINE &nbsp; AT &nbsp; WORK</div>
-      <h2 class="ch-display">AGENTS</h2>
-      <p class="ch-cn">小酌已经能实际运行的部分</p>
-    </header>
-    <div class="copy" data-anim>
-      <p class="lead">小酌的后台有多个 Agent 协作。求职不是它唯一能做的事，而是意图被识别后进入的一个具体场景。</p>
-      <p>系统会读取公开的职位描述与行业报告，再结合测试者提供的项目和作品，寻找正在被岗位重新定价的能力信号。它给出的是<strong>内容选择的依据</strong>，不是录用预测，也不是对一个人的最终判决。</p>
-    </div>
-
-    <div class="belief-origin-chain" data-anim>
-      <div class="belief-origin-step">
-        <span>01 · INTENT</span>
-        <strong>意图识别 Agent</strong>
-        <p>识别用户正在找工作，确认目标岗位，并决定调用求职场景所需的信息和流程。</p>
-      </div>
-      <div class="belief-origin-step">
-        <span>02 · DIRECTION</span>
-        <strong>导演 Agent</strong>
-        <p>从经历、作品和岗位要求中提取值得被看见的信息，安排内容权重，并判断它更适合由视觉元素、台词还是屏幕文字说清楚。</p>
-      </div>
-      <div class="belief-origin-step">
-        <span>03 · FILM</span>
-        <strong>其他 Agent 协作成片</strong>
-        <p>继续完成结构、镜头、生成与修改。测试者提出的修改会被保留并尊重。</p>
-      </div>
-    </div>
-
-    <p class="mvp-proof-note" data-anim><strong>求职短片只是第一个商业切入口。</strong>我们选择它，是因为观看、继续了解、联系和面试等反馈相对容易观察；它不是小酌的最终定位。</p>
-  </section>
-
-<!-- 五人实验 -->
-  <section class="chapter" id="mvpCustomers">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">THE &nbsp; FIRST &nbsp; FIVE</div>
-      <h2 class="ch-display">PILOT</h2>
-      <p class="ch-cn">这 5 个人会经历什么</p>
-    </header>
-    <div class="mvp-board">
-      <div class="mvp-panel" data-anim>
-        <h3>1. 带着一个真实目标来</h3>
-        <p>每个人选择一个自己确实想申请的岗位，并提供 3–5 条真实 JD。五个人可以来自完全不同的专业和行业。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>2. 只使用真实经历</h3>
-        <p>项目、作品、选择、失败和成果都必须属于本人。小酌可以追问和补全，但不会替测试者发明能力或包装人设。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>3. 共同完成一条短片</h3>
-        <p>Agent 先完成信息提取、内容取舍和初步生成，再由人和测试者一起修改，直到它准确、自然，并且本人愿意承认“这就是我”。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>4. 获得同意后公开测试</h3>
-        <p>短片和必要的背景信息会放在网站上。公开范围由测试者确认；不愿公开的内容不会为了实验完整而被展示。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>5. 免费，但不回避价格</h3>
-        <p>首批 5 人全部免费。完成后会询问：如果下一次需要同样的服务，是否愿意付费、可接受什么价格，以及付款需要哪些信任条件。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>6. 把修改留下来</h3>
-        <p>记录每次内容取舍、用户修改和最终反馈。只有在获得明确授权后，相应数据才会用于改进小酌。</p>
-      </div>
-    </div>
-  </section>
-
-<!-- 反馈与验证 -->
-  <section class="chapter" id="mvpSignals">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">WHO &nbsp; GETS &nbsp; TO &nbsp; JUDGE</div>
-      <h2 class="ch-display">SIGNALS</h2>
-      <p class="ch-cn">不收集夸奖，只观察判断和动作</p>
-    </header>
-    <div class="mvp-board">
-      <div class="mvp-panel" data-anim>
-        <h3>真实招聘者</h3>
-        <p>看完后是否更容易判断这个人？哪些信息真正有用？是否愿意继续看资料、联系本人或邀请面谈？</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>创业公司创始人</h3>
-        <p>是否看见了简历之外的主动性、判断力和学习能力？哪些内容会增加信任，哪些内容反而显得空泛？</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>测试者本人</h3>
-        <p>视频是否准确？是否愿意公开使用？有没有重要信息仍被遗漏？如果不是免费体验，是否愿意付费？</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>网站上的真实行为</h3>
-        <p>记录播放、看完、继续查看资料和发起联系等动作。好看和点赞可以参考，但不能单独证明这项服务有价值。</p>
-      </div>
-    </div>
-    <p class="mvp-proof-note" data-anim>第一轮不会用 5 个案例证明一套“AI 时代招聘规律”。它只验证：这套方法是否值得继续做，哪些信息真的影响了下一步判断。</p>
-  </section>
-
-<!-- 边界 -->
-  <section class="chapter" id="mvpBoundary">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">WHAT &nbsp; WE &nbsp; WILL &nbsp; NOT &nbsp; CLAIM</div>
-      <h2 class="ch-display">HONEST</h2>
-      <p class="ch-cn">这轮实验不承诺什么</p>
-    </header>
-    <div class="mvp-board">
-      <div class="mvp-panel" data-anim>
-        <h3>不承诺拿到工作</h3>
-        <p>短片最多帮助一个人被更准确地理解，不能替代能力、岗位匹配、面试表现和招聘决策。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>不声称 Agent 已经知道答案</h3>
-        <p>职位描述、行业报告和作品只能帮助系统提出能力假设。真正有效的信号，要由招聘者和市场行为继续校正。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>不把 AI 感当成卖点</h3>
-        <p>视频生成模型只是制作工具。小酌真正要验证的，是能不能更准确地理解一个人，并做出有依据的内容取舍。</p>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>不把求职变成小酌的全部</h3>
-        <p>小酌仍然在做“意图识别 → 故事提炼 → 影像表达”。求职只是目前最适合观察价值交换的入口。</p>
-      </div>
-    </div>
-  </section>
-
-<!-- 收束 -->
-  <section class="chapter" id="mvpClose" style="text-align:center;">
-    <div class="copy" data-anim style="max-width:680px; margin:0 auto; text-align:center;">
-      <p class="seated-line" style="text-align:center;">看完这 60 秒，一个真正可能提供机会的陌生人，会不会更准确地理解这个人，并愿意采取下一步动作？</p>
-    </div>
-    <p data-anim style="text-align:center; margin-top:18px;">
-      <a class="op-backlink" href="#operations">回到产品操作功能 →</a>
-    </p>
-  </section>
-
-  <div class="colophon">
-    <span class="sig">小 · 酌 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
-    <span>FIVE &nbsp; PEOPLE &nbsp; · &nbsp; FIVE &nbsp; FILMS &nbsp; · &nbsp; 2026</span>
-  </div>
-
-</main>
-</div><!-- /route mvp -->
 
 <!-- ====================================================================
-     ROUTE ④ · 推荐入口  (friend-facing referral page)
-     ==================================================================== -->
-<div class="route route-refer" data-route="refer">
-<main class="scroll">
-
-  <section class="hero" id="referHero">
-    <div class="scene jitter" data-anim style="max-width:500px; margin-bottom:8px;">
-      <svg viewBox="0 0 540 390" aria-hidden="true">
-        <path class="ink ink-thin" d="M48 328 C 172 318, 342 340, 500 326"/>
-        <g transform="translate(96 64) rotate(-5 116 116)">
-          <rect class="ink" x="0" y="0" width="220" height="260" rx="18" fill="var(--paper)"/>
-          <rect x="18" y="24" width="184" height="62" rx="10" class="rose" stroke="none" opacity=".56"/>
-          <circle cx="58" cy="56" r="18" class="brick" stroke="none" opacity=".74"/>
-          <line class="ink" x1="92" y1="44" x2="176" y2="44"/>
-          <line class="ink ink-thin" x1="92" y1="64" x2="154" y2="64"/>
-          <line class="ink ink-thin" x1="24" y1="122" x2="184" y2="122"/>
-          <line class="ink ink-thin" x1="24" y1="150" x2="198" y2="150"/>
-          <line class="ink ink-thin" x1="24" y1="178" x2="166" y2="178"/>
-          <path class="ink" d="M52 226 C 74 208, 104 210, 126 226 C 148 244, 178 244, 196 224"/>
-        </g>
-        <g transform="translate(300 98)">
-          <path d="M0 42 C 24 10, 86 4, 126 28 C 164 50, 164 104, 128 128 C 92 154, 34 142, 10 108 C -4 88, -8 62, 0 42 Z" class="rose" stroke="none" opacity=".56"/>
-          <path class="ink" d="M0 42 C 24 10, 86 4, 126 28 C 164 50, 164 104, 128 128 C 92 154, 34 142, 10 108 C -4 88, -8 62, 0 42 Z"/>
-          <path class="ink ink-thin" d="M34 70 C 50 54, 78 54, 94 70"/>
-          <circle class="mred" cx="58" cy="88" r="5" stroke="none"/>
-          <circle class="mred" cx="82" cy="88" r="5" stroke="none"/>
-          <path class="ink ink-thin" d="M44 112 C 66 124, 94 120, 112 102"/>
-          <path class="ink" d="M20 136 L 4 170 L 52 146"/>
-        </g>
-        <path class="ink ink-thin" d="M262 176 C 294 156, 318 152, 344 166" stroke-dasharray="3 8"/>
-        <path class="mred" stroke="none" d="M350 168 l-13 -5 l5 13 Z"/>
-      </svg>
-    </div>
-
-    <p class="wordmark-sub" data-anim>推荐一位合适的人</p>
-    <p class="hero-epigraph" data-anim>如果你认识一位正在被低估、但值得被主流准确看见的人，请把对方介绍给小酌。</p>
-  </section>
-
-  <span class="quiet-rule" aria-hidden="true">
-    <svg viewBox="0 0 80 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M2 8 C 18 4, 32 12, 50 7 C 64 4, 72 9, 78 7"/>
-    </svg>
-  </span>
-
-  <section class="chapter" id="referIntent">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">WHY &nbsp; THIS &nbsp; REFERRAL</div>
-      <h2 class="ch-display">INTENT</h2>
-      <p class="ch-cn">为什么请你推荐</p>
-    </header>
-    <div class="copy" data-anim>
-      <p class="lead">我相信人的感受、经历、判断和关系能力，本身蕴含巨大的价值，不应该只停留在私人表达里。</p>
-      <p>小酌要做的，不是把情绪当成内容消费掉，也不是把一个人包装成更容易被接受的样子。它要把那些尚未被主流语言接住的真实，转译成一种可以交换其他价值的媒介：信任、机会、资本、合作、话语权和主流认可。</p>
-    </div>
-  </section>
-
-  <section class="chapter" id="referFit">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">WHO &nbsp; SHOULD &nbsp; YOU &nbsp; SEND</div>
-      <h2 class="ch-display">REFER</h2>
-      <p class="ch-cn">请推荐这样的人</p>
-    </header>
-    <div class="copy" data-anim>
-      <p class="lead">我正在服务首批 5 位“希望拿到主流认可的人”。</p>
-      <p>被推荐者不需要完美，也不需要已经很会表达。只需要已经有真实积累，并且正在进入一个更大的舞台：申请、升职、创业、融资、出海、媒体曝光、独立执业，或任何需要陌生人快速理解自己的场景。</p>
-    </div>
-    <div class="mvp-board">
-      <div class="mvp-panel" data-anim>
-        <h3>适合推荐</h3>
-        <ul class="mvp-proof-list">
-          <li>有能力、作品、成绩、判断或影响力，但还没有被准确看见</li>
-          <li>正在争取某种主流认可：资本、客户、职位、媒体、行业声誉</li>
-          <li>故事有复杂性，不适合被压成标准简历模板</li>
-          <li>愿意接受一次认真访谈，并对表达提出真实修改</li>
-        </ul>
-      </div>
-      <div class="mvp-panel" data-anim>
-        <h3>暂时不适合</h3>
-        <ul class="mvp-proof-list">
-          <li>只是想做普通简历润色或求职包装</li>
-          <li>没有明确上升场景，也不打算公开使用任何表达</li>
-          <li>只想要“好看的 AI 视频”，但不想参与故事共创</li>
-          <li>不愿意说明哪些内容可授权、哪些内容必须保持私人</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="chapter" id="referHow">
-    <header class="ch-head" data-anim>
-      <div class="ch-mark">WHAT &nbsp; TO &nbsp; SEND &nbsp; BACK</div>
-      <h2 class="ch-display">NOTE</h2>
-      <p class="ch-cn">推荐时发这几句话</p>
-    </header>
-    <div class="copy" data-anim>
-      <p class="lead">你不用写长介绍。只要帮我判断：对方为什么值得被看见，以及现在最需要被谁理解。</p>
-      <p>复制下面这段，填几句你知道的信息，发回给我就可以。你也可以先把这个页面链接发给对方，让对方自己判断要不要参与。</p>
-    </div>
-    <div class="refer-template" data-anim>
-      <pre data-referral-template>我想推荐一位可能适合小酌首批共创的人：
-
-1. 被推荐者是谁 / LinkedIn：
-2. 为什么值得被看见：
-3. 正在争取的主流认可：
-4. 最容易被低估或误解的地方：
-5. 我可以帮你们互相介绍吗：
-
-推荐链接：https://mountionzeng.github.io/Drinking-Time/drinking-time-vision/#refer</pre>
-      <div class="refer-actions">
-        <button class="copy-button" type="button" data-copy-referral>复制推荐模板</button>
-        <span class="copy-status" data-copy-status>复制后发给岱岱，或直接转发这个页面链接。</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="chapter" id="referClose" style="text-align:center;">
-    <div class="copy" data-anim style="max-width:720px; margin:0 auto; text-align:center;">
-      <p class="seated-line" style="text-align:center;">真正有价值的推荐，不是简单说“这个人很厉害”，而是指出“这个人值得被谁更准确地理解”。</p>
-    </div>
-    <p data-anim style="text-align:center; margin-top:26px;">
-      <a class="op-backlink" href="#mvp">查看 MVP 验证 →</a>
-    </p>
-    <p data-anim style="text-align:center; margin-top:18px;">
-      <a class="op-backlink" href="#referrals">打开推荐后台 →</a>
-    </p>
-  </section>
-
-  <div class="colophon">
-    <span class="sig">小 · 酌 &nbsp;·&nbsp; DRINKING&nbsp;TIME</span>
-    <span>REFERRAL &nbsp; · &nbsp; 5 &nbsp; PEOPLE &nbsp; · &nbsp; 2026</span>
-  </div>
-
-</main>
-</div><!-- /route refer -->
-
-<!-- ====================================================================
-     ROUTE ⑤ · 推荐后台  (local/server analytics)
+     ROUTE ④ · 推荐后台  (local/server analytics)
      ==================================================================== -->
 <div class="route route-referrals" data-route="referrals">
 <main class="scroll">
@@ -2791,7 +2344,7 @@
 
   <section class="chapter" id="referralsClose" style="text-align:center;">
     <p data-anim style="text-align:center;">
-      <a class="op-backlink" href="#refer">回到推荐入口 →</a>
+      <a class="op-backlink" href="#vision">回到愿景与定位 →</a>
     </p>
   </section>
 
@@ -2799,22 +2352,16 @@
 </div><!-- /route referrals -->
 
 <script>
-// Scroll fade-in. Older WeChat WebViews may not expose IntersectionObserver.
-const animatedNodes = Array.from(document.querySelectorAll('[data-anim]'));
-let io = null;
-if (typeof window.IntersectionObserver === 'function'){
-  io = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-  animatedNodes.forEach(el => io.observe(el));
-} else {
-  animatedNodes.forEach(el => el.classList.add('in'));
-}
+// Scroll fade-in
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('[data-anim]').forEach(el => io.observe(el));
 
 // =================================================================
 // Hero — steam scatters on click / cursor near cup mouth
@@ -3079,104 +2626,19 @@ if (typeof window.IntersectionObserver === 'function'){
     }
   }
 
-  const sceneIds = ['ch1','ch3','ch4','ch5','ch6','ch7','ch8','ch9'];
-  if (typeof window.IntersectionObserver === 'function'){
-    const sceneIO = new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{
-        if (!e.isIntersecting) return;
-        fireScene(e.target.id);
-        sceneIO.unobserve(e.target);
-      });
-    }, { threshold: 0.28, rootMargin: '0px 0px -8% 0px' });
+  const sceneIO = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if (!e.isIntersecting) return;
+      fireScene(e.target.id);
+      sceneIO.unobserve(e.target);
+    });
+  }, { threshold: 0.28, rootMargin: '0px 0px -8% 0px' });
 
-    sceneIds.forEach(id => {
+  ['ch1','ch3','ch4','ch5','ch6','ch7','ch8','ch9']
+    .forEach(id => {
       const el = document.getElementById(id);
       if (el) sceneIO.observe(el);
     });
-  }
-}
-
-// =================================================================
-// REFERRAL — copy friend-facing recommendation template
-// =================================================================
-{
-  const copyButton = document.querySelector('[data-copy-referral]');
-  const template = document.querySelector('[data-referral-template]');
-  const status = document.querySelector('[data-copy-status]');
-
-  function currentRouteFromHash(){
-    return (location.hash || '#vision').replace(/^#\/?/, '').split('?')[0].toLowerCase() || 'vision';
-  }
-
-  function hashParams(){
-    return new URLSearchParams((location.hash.split('?')[1] || '').split('#')[0]);
-  }
-
-  function referralContext(){
-    const params = hashParams();
-    return {
-      referrerCode: params.get('by') || params.get('ref') || params.get('source') || 'direct',
-      channel: params.get('channel') || 'direct',
-      tracked: params.get('tracked') === '1',
-    };
-  }
-
-  async function trackReferralEvent(eventType){
-    if (currentRouteFromHash() !== 'refer') return;
-    const context = referralContext();
-    if (eventType === 'page_view' && context.tracked) return;
-    const sessionKey = `dt-referral-${eventType}-${context.referrerCode}-${context.channel}`;
-    if (eventType === 'page_view') {
-      try {
-        if (sessionStorage.getItem(sessionKey)) return;
-        sessionStorage.setItem(sessionKey, '1');
-      } catch(e){}
-    }
-
-    try {
-      await fetch('/api/referrals/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType,
-          referrerCode: context.referrerCode,
-          channel: context.channel,
-          landingUrl: location.pathname + location.hash,
-        }),
-      });
-    } catch(e) {
-      // GitHub Pages cannot write to SQLite; local/Node deployments can.
-    }
-  }
-
-  async function copyReferralText(){
-    if (!copyButton || !template) return;
-    const text = template.textContent.trim();
-    try {
-      await navigator.clipboard.writeText(text);
-      if (status) status.textContent = '已复制。把它发给岱岱，或转发这个页面链接。';
-    } catch(e) {
-      const area = document.createElement('textarea');
-      area.value = text;
-      area.setAttribute('readonly', '');
-      area.style.position = 'fixed';
-      area.style.left = '-9999px';
-      document.body.appendChild(area);
-      area.select();
-      try {
-        document.execCommand('copy');
-        if (status) status.textContent = '已复制。把它发给岱岱，或转发这个页面链接。';
-      } catch(err) {
-        if (status) status.textContent = '复制失败，请手动选中上面的模板。';
-      }
-      document.body.removeChild(area);
-    }
-    trackReferralEvent('copy_template');
-  }
-
-  if (copyButton) copyButton.addEventListener('click', copyReferralText);
-  window.addEventListener('hashchange', () => trackReferralEvent('page_view'));
-  trackReferralEvent('page_view');
 }
 
 // =================================================================
@@ -3316,8 +2778,8 @@ if (typeof window.IntersectionObserver === 'function'){
 }
 
 // =================================================================
-// ROUTER — 主导航路由：#vision · #operations · #mvp
-//          另有 #invite（收件人邀请函，不在导航，由 /invite/:code 追踪链接跳入）
+// ROUTER — 主导航路由：#vision · #operations
+//          另有 #invite · #referrals（不在主导航）
 // 纯前端 hash 切换；不碰上面任何一节的动画与交互
 // =================================================================
 {
@@ -3328,8 +2790,8 @@ if (typeof window.IntersectionObserver === 'function'){
     const h = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
     const route = h.split('?')[0];
     if (route === 'operations') return 'operations';
-    if (route === 'mvp') return 'mvp';
     if (route === 'invite') return 'invite';
+    if (route === 'referrals') return 'referrals';
     return 'vision';
   }
 
@@ -3341,8 +2803,7 @@ if (typeof window.IntersectionObserver === 'function'){
     // 让刚切进来、已经在视口里的内容直接淡入；视口下方的交给原有 IntersectionObserver
     const active = document.querySelector('.route.active');
     if (!active) return;
-    const nextFrame = window.requestAnimationFrame || ((callback)=> setTimeout(callback, 16));
-    nextFrame(()=>{
+    requestAnimationFrame(()=>{
       active.querySelectorAll('[data-anim]:not(.in)').forEach(node=>{
         const rect = node.getBoundingClientRect();
         if (rect.top < window.innerHeight * 0.96 && rect.bottom > 0) node.classList.add('in');
